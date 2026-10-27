@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Order a Drink</title>
+<style>
+:root{--bg:#fbf6ee;--card:#fff;--ink:#2b1230;--mute:#7a6680;--gold:#a67a14;--plum:#5b1a5e;--line:#e6d9e6;--ok:#2f7d4f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#1c0b20;--card:#2a1430;--ink:#f6ecd8;--mute:#bba5c0;--gold:#e2b84a;--plum:#c77dd0;--line:#47274d;--ok:#6fd49a}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#1c0b20;--card:#2a1430;--ink:#f6ecd8;--mute:#bba5c0;--gold:#e2b84a;--plum:#c77dd0;--line:#47274d;--ok:#6fd49a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:8px 0 4px;color:var(--gold);text-align:center}
+.sub{text-align:center;color:var(--mute);margin:0 0 14px;font-size:14px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tabs button{flex:1}
+button,input{font:inherit}
+button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+button.on,button.pri{background:var(--plum);color:#fff;border-color:var(--plum)}
+button:disabled{opacity:.45}
+input[type=text],input[type=number]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.drink{width:100%;text-align:left;display:block;margin-bottom:8px;font-size:18px}
+.tag{font-size:12px;color:var(--gold);border:1px solid var(--gold);border-radius:99px;padding:1px 8px;margin-left:6px}
+.mute{color:var(--mute);font-size:14px}
+.st{font-weight:bold;color:var(--ok)}
+.note{font-size:13px;color:var(--mute);text-align:center;margin:8px 0}
+.hide{display:none}
+</style>
+</head>
+<body>
+<h1>Order a Drink</h1>
+<p class="sub">Pick your drink and we will bring it to your table</p>
+<div class="tabs"><button id="tg" class="on">Guest</button><button id="tb">Bartender</button></div>
+<div id="note" class="note"></div>
+
+<section id="guest">
+  <div class="card">
+    <label class="mute">Your table number</label>
+    <input type="number" id="table" inputmode="numeric" min="1" placeholder="e.g. 7">
+  </div>
+  <div id="menu"></div>
+  <div id="mine"></div>
+</section>
+
+<section id="bar" class="hide">
+  <h2 style="margin:0 0 8px">Incoming orders</h2>
+  <div id="queue"></div>
+  <h2 style="margin:18px 0 8px">Drink menu</h2>
+  <div id="edit"></div>
+  <div class="card">
+    <input type="text" id="newname" placeholder="New drink name">
+    <div class="row" style="margin-top:8px"><label><input type="checkbox" id="newspiked"> Spiked</label><button class="pri" id="add">Add drink</button></div>
+  </div>
+</section>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* STEP 1: paste your Firebase settings below, replacing the placeholder values */
+var FIREBASE_CONFIG={apiKey:"AIzaSyAMWgxbGsq4yiQrsuLYJ1pEb5Qc-8o4zg0",authDomain:"spark-drinks-2d185.firebaseapp.com",databaseURL:"https://spark-drinks-2d185-default-rtdb.firebaseio.com",projectId:"spark-drinks-2d185",appId:"1:497288236361:web:468bd29601daa92e621e98"};
+/* STEP 2: choose your bartender PIN */
+var BARTENDER_PIN="1234", barOK=false;
+var DEFAULT_MENU=[{name:"Enchanted Bloom",spiked:false,out:false},{name:"Sunlit Rose",spiked:false,out:false},{name:"Velvet Spark",spiked:true,out:false}];
+var menu=DEFAULT_MENU.slice(), orders=[], myIds=[], db=null;
+var $=function(i){return document.getElementById(i)};
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+
+function render(){
+  var m="";
+  menu.forEach(function(d,i){
+    m+='<button class="drink" data-i="'+i+'"'+(d.out?' disabled':'')+'>'+esc(d.name)+(d.spiked?'<span class="tag">spiked</span>':'')+(d.out?' <span class="mute">(sold out)</span>':'')+'</button>';
+  });
+  $("menu").innerHTML=m;
+  var mine=orders.filter(function(o){return myIds.indexOf(o.id)>-1}).sort(function(a,b){return b.ts-a.ts});
+  $("mine").innerHTML=mine.length?'<h3>Your orders</h3>'+mine.map(function(o){return '<div class="card row"><span>'+esc(o.drink)+' &middot; Table '+esc(String(o.table))+'</span><span class="st">'+esc(o.status)+'</span></div>'}).join(""):"";
+  var open=orders.filter(function(o){return o.status!=="Delivered"}).sort(function(a,b){return a.ts-b.ts});
+  $("queue").innerHTML=open.length?open.map(function(o){
+    return '<div class="card"><div class="row"><b>'+esc(o.drink)+'</b><span>Table '+esc(String(o.table))+'</span></div><div class="mute">'+esc(o.status)+'</div><div class="row" style="margin-top:8px">'+
+    ["Being made","Ready","Delivered"].map(function(s){return '<button data-o="'+o.id+'" data-s="'+s+'">'+s+'</button>'}).join("")+'</div></div>';
+  }).join(""):'<p class="mute">No open orders yet.</p>';
+  $("edit").innerHTML=menu.map(function(d,i){
+    return '<div class="card row"><span>'+esc(d.name)+(d.spiked?'<span class="tag">spiked</span>':'')+'</span><span><button data-t="'+i+'">'+(d.out?'Back in':'Sold out')+'</button> <button data-r="'+i+'">Remove</button></span></div>';
+  }).join("");
+}
+
+function saveMenu(){
+  if(db){try{db.ref("menu").set(menu)}catch(e){}}
+  render();
+}
+function saveOrder(o){
+  if(db){try{db.ref("orders/"+o.id).set(o)}catch(e){}}
+  else{var k=orders.findIndex(function(x){return x.id===o.id});if(k>-1)orders[k]=o;else orders.push(o)}
+  render();
+}
+
+$("tg").onclick=function(){$("guest").classList.remove("hide");$("bar").classList.add("hide");$("tg").className="on";$("tb").className=""};
+$("tb").onclick=function(){if(!barOK){var p=prompt("Bartender PIN");if(p!==BARTENDER_PIN)return;barOK=true}$("bar").classList.remove("hide");$("guest").classList.add("hide");$("tb").className="on";$("tg").className=""};
+
+$("menu").onclick=function(e){
+  var b=e.target.closest("button[data-i]");if(!b)return;
+  var t=$("table").value.trim();
+  if(!t){$("table").focus();alert("Please enter your table number first.");return}
+  var d=menu[+b.dataset.i];
+  var o={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),drink:d.name,table:t,status:"Received",ts:Date.now()};
+  myIds.push(o.id);saveOrder(o);
+};
+$("queue").onclick=function(e){
+  var b=e.target.closest("button[data-o]");if(!b)return;
+  var o=orders.find(function(x){return x.id===b.dataset.o});
+  if(o){o.status=b.dataset.s;saveOrder(o)}
+};
+$("edit").onclick=function(e){
+  var t=e.target.closest("button[data-t]"),r=e.target.closest("button[data-r]");
+  if(t){menu[+t.dataset.t].out=!menu[+t.dataset.t].out;saveMenu()}
+  if(r){menu.splice(+r.dataset.r,1);saveMenu()}
+};
+$("add").onclick=function(){
+  var n=$("newname").value.trim();if(!n)return;
+  menu.push({name:n,spiked:$("newspiked").checked,out:false});
+  $("newname").value="";$("newspiked").checked=false;saveMenu();
+};
+
+render();
+(function(){
+  if(!window.firebase||!FIREBASE_CONFIG.apiKey){$("note").textContent="Demo mode: add your Firebase settings to share orders between phones.";return}
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db=firebase.database();
+    db.ref("menu").on("value",function(x){var v=x.val();if(v){menu=(Array.isArray(v)?v:Object.values(v)).filter(Boolean);render()}});
+    db.ref("orders").on("value",function(x){var v=x.val()||{};orders=Object.keys(v).map(function(k){return Object.assign({id:k},v[k])});render()});
+  }catch(e){db=null;$("note").textContent="Demo mode: could not connect to Firebase."}
+})();
+</script>
+</body>
+</html>
