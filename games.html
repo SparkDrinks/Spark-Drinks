@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shower Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Marcellus&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Light garden look: blush ground with the invitation's magenta, orange, gold, blue and green as accents.
+   Layout: one column "phone" for guests, wide two-pane console for the moderator, a full TV board for the big screen.
+   */
+:root{
+  color-scheme:light;
+  --ground:#f8f2fb; --ground-2:#efe4f7; --card:#ffffff; --line:#dcc6ea;
+  --ink:#33163f; --muted:#7a5d86; --violet:#7b3fb8; --mint:#e3f3e6;
+  --rose:#e8338f; --flame:#f6892f; --gold:#e0a826; --leaf:#2f8a4c; --sky:#3f74d6;
+  --bad:#e0475b;
+  --f-script:"Great Vibes","Brush Script MT",cursive;
+  --f-caps:"Marcellus","Trajan Pro",Georgia,serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  background-image:radial-gradient(900px 420px at 50% -160px,color-mix(in srgb,var(--rose) 24%,transparent),transparent 70%),
+  radial-gradient(650px 520px at -10% 35%,color-mix(in srgb,var(--violet) 22%,transparent),transparent 70%),
+  radial-gradient(700px 520px at 110% 70%,color-mix(in srgb,var(--flame) 18%,transparent),transparent 70%),
+  radial-gradient(900px 560px at 40% 115%,color-mix(in srgb,var(--leaf) 30%,transparent),transparent 70%),
+  radial-gradient(500px 400px at 100% 0%,color-mix(in srgb,var(--leaf) 16%,transparent),transparent 70%);background-attachment:fixed}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px}
+header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.brand h1{font-family:var(--f-script);font-weight:400;font-size:2.5rem;line-height:1;margin:0;
+  background:linear-gradient(90deg,var(--rose),var(--flame) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand p{margin:2px 0 0;font-family:var(--f-caps);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem;color:var(--leaf)}
+.seg{display:inline-flex;background:var(--ground-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:999px;font-weight:600;font-size:.85rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--rose);color:#fff}
+h2{color:var(--violet);font-family:var(--f-caps);font-weight:400;letter-spacing:.06em;font-size:1.3rem;margin:0;text-wrap:balance}
+h3{color:var(--leaf);font-family:var(--f-caps);font-weight:400;letter-spacing:.05em;font-size:1.02rem;margin:0}
+.eyebrow{font-family:var(--f-caps);text-transform:uppercase;letter-spacing:.16em;font-size:.68rem;color:#b5800f}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.between{justify-content:space-between}
+.card{background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--mint) 35%,var(--card)));border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0;box-shadow:0 2px 12px color-mix(in srgb,var(--violet) 10%,transparent)}
+.btn{border:1px solid var(--line);background:var(--ground-2);padding:9px 14px;border-radius:10px;font-weight:600}
+.btn:hover{border-color:var(--gold)}
+.btn.primary{background:linear-gradient(135deg,var(--rose),var(--flame));border-color:transparent;color:#fff}
+.btn.gold{background:var(--gold);color:#2a1530;border-color:transparent}
+.btn.sm{padding:5px 10px;font-size:.8rem;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:.74rem;font-weight:700;letter-spacing:.02em}
+.pill.a{background:color-mix(in srgb,var(--sky) 16%,transparent);color:#244a96}
+.pill.b{background:color-mix(in srgb,var(--flame) 18%,transparent);color:#9a4a0a}
+.pill.live{background:var(--rose);color:#fff}
+.pill.ok{background:color-mix(in srgb,var(--leaf) 16%,transparent);color:#1e6236}
+.pill.warn{background:color-mix(in srgb,var(--gold) 24%,transparent);color:#7a5600}
+.pill.no{background:color-mix(in srgb,var(--bad) 18%,transparent);color:#9b1c1c}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+input[type=text],input[type=number],select{background:var(--ground-2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+input[type=number]{width:70px}
+.num{font-variant-numeric:tabular-nums}
+/* phone column */
+.phone{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.tabs{position:sticky;bottom:0;box-shadow:0 -4px 18px color-mix(in srgb,var(--rose) 12%,transparent);display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:color-mix(in srgb,#fff 92%,transparent);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:16px;padding:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom,0px));z-index:5}
+.tabs button{border:0;background:none;border-radius:11px;padding:7px 2px;font-size:.72rem;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabs button svg{width:20px;height:20px}
+.tabs button[aria-pressed="true"]{background:var(--ground-2);color:var(--violet)}
+.hero{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.score{font-family:var(--f-caps);font-size:2.4rem;line-height:1;color:var(--rose)}
+.livebtn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:16px;border-radius:var(--r);border:0;
+  background:linear-gradient(135deg,var(--rose),var(--flame));color:#fff}
+.livebtn strong{font-family:var(--f-caps);font-weight:400;font-size:1.25rem;letter-spacing:.04em}
+.banner{background:var(--gold);color:#2a1530;border-radius:12px;padding:10px 14px;font-weight:600;display:flex;gap:10px;align-items:center;justify-content:space-between}
+/* moderator */
+.console{display:grid;grid-template-columns:220px 1fr;gap:16px}
+.side{display:flex;flex-direction:column;gap:4px}
+.side button{text-align:left;border:0;background:none;padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted)}
+.side button[aria-pressed="true"]{background:var(--card);color:var(--violet);box-shadow:inset 3px 0 0 var(--leaf)}
+@media (max-width:720px){.console{grid-template-columns:1fr}.side{flex-direction:row;overflow-x:auto}.side button{white-space:nowrap}.side button[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--gold)}}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.gamelist{display:grid;gap:8px}
+.gamerow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--ground-2);border:1px solid var(--line)}
+.gamerow.on{border-color:var(--rose);box-shadow:0 0 0 1px var(--rose)}
+.gnum{font-family:var(--f-caps);color:var(--rose);font-size:1.1rem;width:24px;text-align:center}
+table{width:100%;border-collapse:collapse}
+td,th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{font-family:var(--f-caps);font-weight:400;letter-spacing:.08em;font-size:.72rem;text-transform:uppercase;color:var(--leaf)}
+.tscroll{overflow-x:auto}
+/* team score bar */
+.tbar{display:grid;grid-template-columns:1fr 1fr;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.tbar>div{padding:10px 12px}
+.tbar .ta{background:color-mix(in srgb,var(--sky) 16%,var(--card))}
+.tbar .tb{background:color-mix(in srgb,var(--flame) 18%,var(--card));text-align:right}
+.tbar b{font-family:var(--f-caps);font-weight:400;font-size:1.6rem;display:block;line-height:1.1}
+/* long word */
+.lw{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px;min-height:300px}
+.lw .col{background:color-mix(in srgb,var(--mint) 60%,var(--card));border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.tiles{display:flex;flex-wrap:wrap;gap:5px}
+.tile{width:34px;height:38px;border-radius:6px;background:linear-gradient(#fbe7b3,#e9c46a);color:#3a2408;font-family:var(--f-caps);font-size:1.25rem;display:grid;place-items:center;box-shadow:0 2px 0 #9b7a2b;position:relative}
+.tile small{position:absolute;right:3px;bottom:1px;font-size:.5rem;font-family:var(--f-body)}
+.tile.new{animation:flip .9s cubic-bezier(.2,.8,.3,1.2)}
+@keyframes flip{0%{transform:translateY(-30px) rotateY(180deg) scale(1.6);opacity:0}60%{transform:translateY(4px) rotateY(0) scale(1.1);opacity:1}100%{transform:none}}
+.names{display:flex;flex-direction:column;gap:4px;overflow:auto;max-height:330px}
+.names button{text-align:left;border:1px solid transparent;background:var(--card);border-radius:8px;padding:7px 8px;font-size:.82rem;display:flex;justify-content:space-between;gap:4px}
+.names button[aria-pressed="true"]{border-color:var(--gold)}
+.names button.got{color:var(--leaf)}
+.names button.lock{color:var(--muted);text-decoration:line-through}
+.opts{display:grid;gap:6px}
+.opts button{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:9px;text-align:left;font-weight:600}
+.opts button:hover{border-color:var(--gold)}
+@media (max-width:520px){.lw{grid-template-columns:1fr 1fr}.lw .col.q{grid-column:1/-1}}
+/* crossword */
+.cwbox{position:relative;overflow:hidden;border-radius:var(--r);border:1px solid var(--line);padding:14px;isolation:isolate;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--rose) 14%,var(--card)),color-mix(in srgb,var(--violet) 12%,var(--card)) 45%,color-mix(in srgb,var(--leaf) 14%,var(--card)) 80%,color-mix(in srgb,var(--flame) 12%,var(--card)))}
+.cwbox .wm{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.16;pointer-events:none}
+.cw{display:grid;gap:2px;width:100%;max-width:440px;margin:0 auto;position:relative}
+.cell{aspect-ratio:1;position:relative;min-width:0}
+.cell input{min-width:0;box-shadow:0 1px 2px color-mix(in srgb,var(--violet) 25%,transparent)}
+.cell.blk{background:transparent}
+.cell input{width:100%;height:100%;border:1px solid var(--line);border-radius:3px;background:#fff;color:#2a1530;text-align:center;font-weight:700;font-size:clamp(.6rem,3.2vw,1rem);text-transform:uppercase;padding:0}
+.cell input.hl{background:#ffe9b8}
+.cell input.done{background:#bfe8c9}
+.cell .n{position:absolute;top:0;left:2px;font-size:.45rem;color:#6b3d63;pointer-events:none;font-weight:700}
+.clues{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.clues ol{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px}
+.clues li{font-size:.82rem;cursor:pointer;padding:3px 5px;border-radius:6px}
+.clues li.done{color:var(--leaf);text-decoration:line-through}
+.clues li.act{background:var(--mint)}
+@media (max-width:420px){.clues{grid-template-columns:1fr}}
+/* bingo */
+.bingo{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.bingo .h{font-family:var(--f-caps);text-align:center;font-size:1.4rem;color:var(--rose)}
+.bingo button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--ground-2);font-size:1.15rem;font-weight:700}
+.bingo button.m{background:var(--violet);border-color:var(--violet);color:#fff}
+.bingo button.free{background:var(--leaf);border-color:var(--leaf);font-size:.7rem;color:#fff}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.called{display:grid;grid-template-columns:repeat(15,1fr);gap:3px}
+.called span{font-size:.62rem;text-align:center;padding:3px 0;border-radius:4px;background:var(--ground-2);color:var(--muted)}
+.called span.on{background:var(--gold);color:#2a1530;font-weight:700}
+.ball{width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7df,var(--gold) 60%,#b88a2a);color:#2a1530;display:grid;place-items:center;font-family:var(--f-caps);font-size:1.5rem;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+/* trivia / superlatives */
+.choices{display:grid;gap:8px}
+.choice{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);background:var(--ground-2);padding:12px 14px;border-radius:12px;text-align:left;font-weight:600}
+.choice[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.choice.right{border-color:var(--leaf);background:color-mix(in srgb,var(--leaf) 25%,var(--ground-2))}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--gold)}
+.votes{display:flex;gap:3px}
+.votes i{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block}
+/* hunt */
+.hunt{display:grid;gap:8px}
+.item{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;background:color-mix(in srgb,var(--mint) 55%,var(--card));border:1px solid var(--line);border-radius:12px;padding:8px}
+.thumb{width:52px;height:52px;border-radius:8px;background:var(--card);object-fit:cover;display:grid;place-items:center;color:var(--muted);font-family:var(--f-caps);font-size:1.2rem;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.upl{position:relative;overflow:hidden}
+.upl input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* big screen */
+.tv{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+@media (max-width:760px){.tv{grid-template-columns:1fr}}
+.tv .stage{min-height:360px;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center;background:linear-gradient(160deg,#fff,color-mix(in srgb,var(--flame) 12%,var(--ground-2)) 70%,color-mix(in srgb,var(--leaf) 14%,var(--ground-2)));border:1px solid var(--line);border-radius:20px;padding:24px}
+.tv .stage h2{font-size:2rem}
+.huge{font-family:var(--f-caps);font-size:clamp(3rem,10vw,6rem);line-height:1;color:var(--rose)}
+.winner{font-family:var(--f-script);font-size:clamp(3rem,9vw,5.5rem);line-height:1;background:linear-gradient(90deg,var(--rose),var(--flame),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.72rem;color:var(--muted)}
+.swatches input[type=color]{width:46px;height:46px;border:2px solid var(--line);border-radius:10px;background:none;padding:2px}
+.invite{width:100%;max-width:150px;border-radius:10px;border:1px solid var(--line)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100% - 32px);text-align:center}
+.demo{font-size:.72rem;color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:4px 8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head><body>
+<div class="wrap">
+  <header class="top"><div class="brand"><h1>Shower Games</h1><p>Honoring Raveen &amp; Stafford Jr. · January 2</p></div></header>
+  <main id="app"></main>
+</div>
+<div id="toast" class="toast" hidden></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ===== Shower Games, live version =====
+   STEP 1: Firebase settings (same project as Spark Drinks; games live under their own folder in the database).
+   STEP 2: Moderator PIN. Change it before the party if you like. */
+var FIREBASE_CONFIG={apiKey:"AIzaSyAMWgxbGsq4yiQrsuLYJ1pEb5Qc-8o4zg0",authDomain:"spark-drinks-2d185.firebaseapp.com",databaseURL:"https://spark-drinks-2d185-default-rtdb.firebaseio.com",projectId:"spark-drinks-2d185",appId:"1:497288236361:web:468bd29601daa92e621e98"};
+var MOD_PIN="0102";
+var ROOT="showergames";
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rnd=n=>Math.floor(Math.random()*n);
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const store={get(k,d){try{const v=localStorage.getItem("sg_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("sg_"+k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- content ---------- */
+const GAMES=[
+ {id:"split",name:"Team Splitter",note:"Opening icebreaker"},
+ {id:"longword",name:"Long Word Wins",note:"Mingle and collect tiles"},
+ {id:"hunt",name:"Scavenger Hunt",note:"Open all night"},
+ {id:"trivia",name:"Trivia",note:"In pods, majority rules"},
+ {id:"crossword",name:"Crossword",note:"Solo or share a screen"},
+ {id:"sup",name:"Superlatives",note:"Who is most likely to…"},
+ {id:"bingo",name:"Bingo",note:"Closes the night"}];
+const FQ=[
+ {q:"What's my favorite season?",o:["Winter","Spring","Summer","Fall"]},
+ {q:"Beach, mountains or city?",o:["Beach","Mountains","City"]},
+ {q:"Coffee, tea or neither?",o:["Coffee","Tea","Neither"]},
+ {q:"Morning person, night owl or afternoon napper?",o:["Morning person","Night owl","Afternoon napper"]},
+ {q:"What's my favorite meal of the day?",o:["Breakfast","Lunch","Dinner"]},
+ {q:"Dogs, cats or no pets?",o:["Dogs","Cats","No pets"]}];
+const HUNT=[
+ ["Pacifier","I keep things quiet, but I'm no librarian."],["Rubber duck","I float through every bath time."],
+ ["Baby socks","Two tiny warmers for ten tiny toes."],["Baby bottle","Milk's favorite ride."],
+ ["Rattle","Shake me and I'll talk back."],["Small stuffed bird","A songbird that never sings, perched somewhere soft."],
+ ["Onesie","One piece, with snaps at the bottom."],["Teething ring","Chew on this when new teeth come in."]];
+const CW_WORDS=[["STROLLER","Baby's ride around town"],["BASSINET","A small bed for a newborn"],["NURSERY","Baby's room"],["LULLABY","A song that sends baby to sleep"],
+ ["SWADDLE","Wrapping baby up snug"],["BLANKET","Keeps baby warm"],["DIAPER","The raffle's star item"],["CRADLE","A bed that rocks"],
+ ["GIGGLE","Baby's happiest sound"],["CRIB","Where baby sleeps"],["BURP","What happens after a bottle"],["BIB","Catches the spills at mealtime"]];
+const TRIVIA=[
+ ["How many bones is a newborn born with?",["100","206","300","500"],2],
+ ["About how many diapers does a newborn use each day?",["2 to 4","8 to 12","15 to 20","25"],1],
+ ["About how many hours a day does a newborn sleep?",["6","8 to 10","14 to 17","20 to 22"],2],
+ ["Around what age does a baby's first tooth usually appear?",["2 months","6 months","12 months","18 months"],1],
+ ["When do most babies start crawling?",["2 to 4 months","6 to 10 months","12 to 14 months","18 months"],1],
+ ["A newborn's kneecaps are made mostly of what?",["Bone","Cartilage","Muscle","Fat"],1],
+ ["Around what age do babies usually take their first steps?",["6 months","9 months","12 months","24 months"],2],
+ ["Hard: on day one, a newborn's stomach is about the size of what?",["A pea","A cherry","A walnut","An egg"],1],
+ ["Hard: what is a newborn's normal resting heart rate?",["60 to 80 bpm","80 to 100 bpm","120 to 160 bpm","200 to 220 bpm"],2],
+ ["Hard: about how far away can a newborn see clearly?",["2 to 4 inches","8 to 12 inches","3 feet","10 feet"],1]];
+const SUPS=["Cry the hardest when the baby is born?","Spoil the baby rotten?","Fall asleep before the baby does?","Show up with the biggest gift?",
+ "Change a diaper the wrong way?","Know every word of the baby's favorite cartoon?","Sing the baby to sleep with a lullaby?","Volunteer for the 3:00 AM feeding?"];
+const SUP_OPTS=["Stafford Jr. (Roy)","Raveen"];
+// secret words by first letter, for the balanced generator
+const WORDBANK={A:["APPLE","AMBER","ARBOR","ANCHOR"],E:["EMBER","EAGLE","EASEL","ECHO"],I:["ISLAND","IVORY","IRIS","IGLOO"],O:["ORCHID","OCEAN","OLIVE","OPAL"],U:["UMBRELLA","UNICORN","UKULELE","UPBEAT"],
+ S:["SUNSET","SPARROW","SATIN"],T:["TULIP","TIGER","TEACUP"],R:["RIVER","ROBIN","RIBBON"],N:["NECTAR","NUTMEG","NAPKIN"],L:["LANTERN","LILAC","LEMON"],D:["DAISY","DOVE","DIMPLE"],
+ C:["CANDLE","CLOVER","COCOA"],M:["MEADOW","MAPLE","MELODY"],P:["PETAL","PEACH","PILLOW"],H:["HARBOR","HONEY","HAZEL"],G:["GARDEN","GINGER","GLOW"],B:["BUTTERFLY","BLOSSOM","BREEZE"],
+ K:["KITE","KOALA"],W:["WILLOW","WAFFLE"],F:["FERN","FEATHER"],Y:["YARN","YELLOW"]};
+const VOWELS="AEIOU";
+const CONS_ORDER="STRNLDCMPHGBKWFY";
+
+/* ---------- live data ---------- */
+const D={state:{},players:{},scores:{},team:{A:0,B:0},mine:{hunt:{},lw:{},cw:{}},photos:{},tv:{},tvr:{},sup:{},claims:{},cwAll:{}};
+const L={ // local view state
+ view:location.hash==="#moderator"?"mod":location.hash==="#screen"?"tv":"player",
+ ptab:"home",mtab:"games",modOK:store.get("modOK",false),
+ me:store.get("active",null),profiles:store.get("profiles",[]),joining:false,
+ lwSel:null,lwNew:-1,cwAct:null,cwEntry:store.get("cwEntry",{}),cwPartners:[],marks:store.get("marks",{}),
+ dict:null,connected:false,demo:false,confirmReset:false};
+let db=null;
+const R=p=>db.ref(ROOT+"/"+p);
+
+/* ---------- helpers on top of data ---------- */
+const P=id=>D.players[id]||{name:"Guest",m:1,d:1,fq:0,fa:0,word:"APPLE",t:0};
+const ids=()=>Object.keys(D.players).sort((a,b)=>(D.players[a].t||0)-(D.players[b].t||0));
+const st=()=>D.state||{};
+function teamOf(id){const o=(st().override||{})[id];if(o)return o;const p=P(id);
+ if((st().split||"seasons")==="seasons")return (p.m===12||p.m<=5)?"A":"B";return p.d%2?"A":"B"}
+function teamName(t){return (st().split||"seasons")==="seasons"?(t==="A"?"Winter & Spring":"Summer & Fall"):(t==="A"?"Odd birthdays":"Even birthdays")}
+const members=t=>ids().filter(i=>teamOf(i)===t);
+function makePods(){const out={};["A","B"].forEach(t=>{const m=members(t);const n=Math.max(1,Math.ceil(m.length/8));m.forEach((x,k)=>out[x]=t+(k%n+1))});return out}
+const podOf=id=>(st().pods||{})[id]||null;
+const podMembers=pk=>Object.keys(st().pods||{}).filter(i=>st().pods[i]===pk&&D.players[i]);
+const pv=k=>((st().pv||{})[k]!=null?st().pv[k]:{hunt:3,crossword:1,trivia:2,bingo:5,sup:2,longword:1}[k]);
+const score=id=>D.scores[id]||0;
+const ranked=()=>ids().sort((a,b)=>score(b)-score(a));
+const letter=n=>"BINGO"[Math.floor((n-1)/15)];
+function fmtLeft(end){const s=Math.max(0,Math.round((end-Date.now())/1000));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
+
+/* points: every point goes to the person; team points are passed separately so a pod's win counts once */
+function award(pids,pts,team,teamPts){
+ if(!db)return;
+ pids.forEach(id=>R("scores/"+id).transaction(v=>(v||0)+pts));
+ if(team&&teamPts)R("team/"+team).transaction(v=>(v||0)+teamPts);
+}
+
+/* ---------- crossword layout (checked to interlock) ---------- */
+function buildCW(){
+ const g={},placed=[];
+ const can=(w,r,c,d)=>{const[dr,dc]=d==="A"?[0,1]:[1,0];let k=0;
+  if(g[(r-dr)+","+(c-dc)]||g[(r+dr*w.length)+","+(c+dc*w.length)])return -1;
+  for(let i=0;i<w.length;i++){const p=[r+dr*i,c+dc*i],ch=g[p];
+   if(ch){if(ch!==w[i])return -1;k++}else if(g[(p[0]+dc)+","+(p[1]+dr)]||g[(p[0]-dc)+","+(p[1]-dr)])return -1}return k};
+ const put=(w,r,c,d)=>{const[dr,dc]=d==="A"?[0,1]:[1,0];for(let i=0;i<w.length;i++)g[(r+dr*i)+","+(c+dc*i)]=w[i];placed.push({w,r,c,d})};
+ const words=CW_WORDS.map(x=>x[0]);put(words[0],0,0,"A");let rest=words.slice(1);
+ for(let pass=0;pass<3;pass++){const left=[];for(const w of rest){let best=null;
+   for(const key of Object.keys(g)){const[pr,pc]=key.split(",").map(Number),ch=g[key];
+    for(let i=0;i<w.length;i++){if(w[i]!==ch)continue;for(const d of["A","D"]){const r=d==="A"?pr:pr-i,c=d==="A"?pc-i:pc;const k=can(w,r,c,d);if(k>0&&(!best||k>best[0]))best=[k,r,c,d]}}}
+   if(best)put(w,best[1],best[2],best[3]);else left.push(w)}rest=left}
+ const ks=Object.keys(g).map(k=>k.split(",").map(Number));const r0=Math.min(...ks.map(k=>k[0])),c0=Math.min(...ks.map(k=>k[1]));
+ const Rr=Math.max(...ks.map(k=>k[0]))-r0+1,C=Math.max(...ks.map(k=>k[1]))-c0+1;
+ placed.forEach(p=>{p.r-=r0;p.c-=c0;p.clue=CW_WORDS.find(x=>x[0]===p.w)[1];p.id=CW_WORDS.findIndex(x=>x[0]===p.w)});
+ const starts={};let n=0;placed.slice().sort((a,b)=>a.r-b.r||a.c-b.c).forEach(p=>{const k=p.r+","+p.c;if(!starts[k])starts[k]=++n;p.num=starts[k]});
+ const sol={};placed.forEach(p=>{for(let i=0;i<p.w.length;i++)sol[p.d==="A"?p.r+","+(p.c+i):(p.r+i)+","+p.c]=p.w[i]});
+ return {R:Rr,C,placed,starts,sol};
+}
+const CW=buildCW();
+const cellsOf=p=>[...Array(p.w.length)].map((_,i)=>p.d==="A"?p.r+","+(p.c+i):(p.r+i)+","+p.c);
+
+/* ---------- bingo card: unique per guest and round ---------- */
+function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+ return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return((h^=h>>>16)>>>0)/4294967296}}
+function cardFor(id,round){const r=seeded(id+"|"+round);const cols=[];for(let c=0;c<5;c++){const a=[...Array(15)].map((_,i)=>c*15+i+1);for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}cols.push(a.slice(0,5))}cols[2][2]=0;return cols}
+function hasBingo(card,isOn){const m=n=>n===0||isOn(n);for(let i=0;i<5;i++){if([0,1,2,3,4].every(j=>m(card[j][i])))return true;if([0,1,2,3,4].every(j=>m(card[i][j])))return true}
+ return [0,1,2,3,4].every(j=>m(card[j][j]))||[0,1,2,3,4].every(j=>m(card[j][4-j]))}
+
+/* ---------- connect ---------- */
+function connect(){
+ if(!window.firebase||!FIREBASE_CONFIG.apiKey){L.demo=true;render();return}
+ try{firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database()}catch(e){L.demo=true;render();return}
+ db.ref(".info/connected").on("value",s=>{L.connected=!!s.val();renderSoon()});
+ const on=(p,fn)=>R(p).on("value",s=>{fn(s.val());renderSoon()});
+ on("state",v=>{D.state=v||{};applyTheme()});
+ on("players",v=>{D.players=v||{};L.playersLoaded=true});
+ on("scores",v=>D.scores=v||{});
+ on("team",v=>D.team=Object.assign({A:0,B:0},v||{}));
+ watchMine();
+ // moderator-only feeds
+ if(L.view!=="player"){on("photos",v=>D.photos=v||{});on("tv",v=>D.tv=v||{});on("tvr",v=>D.tvr=v||{});on("sup",v=>D.sup=v||{});on("claims",v=>D.claims=v||{})}
+ else{on("tv",v=>D.tv=v||{});on("sup",v=>D.sup=v||{});on("claims",v=>D.claims=v||{})}
+}
+let mineRefs=[];
+function watchMine(){
+ mineRefs.forEach(r=>r.off());mineRefs=[];if(!db||!L.me)return;
+ ["hunt","lw","cw"].forEach(k=>{const r=R(k+"/"+L.me);r.on("value",s=>{D.mine[k]=s.val()||{};renderSoon()});mineRefs.push(r)});
+}
+function loadDict(){fetch("https://cdn.jsdelivr.net/npm/an-array-of-english-words@2.0.0/index.json").then(r=>r.json()).then(a=>{L.dict=new Set(a.map(w=>w.toUpperCase()))}).catch(()=>{L.dict=false})}
+
+/* ---------- theme ---------- */
+function applyTheme(){const t=st().theme||{};["rose","flame","gold","violet","leaf"].forEach(k=>{if(t[k])document.documentElement.style.setProperty("--"+k,t[k])})}
+function paletteFrom(src,cb){const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");x.drawImage(img,0,0,64,64);
+ const d=x.getImageData(0,0,64,64).data,b=[...Array(18)].map(()=>({w:0,r:0,g:0,bl:0}));
+ for(let i=0;i<d.length;i+=4){const r=d[i]/255,g=d[i+1]/255,bl=d[i+2]/255,mx=Math.max(r,g,bl),mn=Math.min(r,g,bl),s=mx?(mx-mn)/mx:0;if(s<.45||mx<.4)continue;
+  let h;if(mx===r)h=((g-bl)/(mx-mn))%6;else if(mx===g)h=(bl-r)/(mx-mn)+2;else h=(r-g)/(mx-mn)+4;h=(h*60+360)%360;const o=b[Math.floor(h/20)],w=s*mx;o.w+=w;o.r+=d[i]*w;o.g+=d[i+1]*w;o.bl+=d[i+2]*w}
+ const top=b.map((o,k)=>({...o,k})).filter(o=>o.w>0).sort((p,q)=>q.w-p.w);const pick=[];
+ for(const o of top){if(pick.every(p=>Math.min(Math.abs(p.k-o.k),18-Math.abs(p.k-o.k))>=2))pick.push(o);if(pick.length===5)break}
+ const hex=o=>"#"+[o.r,o.g,o.bl].map(v=>Math.round(v/o.w).toString(16).padStart(2,"0")).join("");
+ const byHue=h=>pick.slice().sort((a,b)=>Math.min(Math.abs(a.k-h),18-Math.abs(a.k-h))-Math.min(Math.abs(b.k-h),18-Math.abs(b.k-h)))[0];
+ const out={};if(pick.length){out.rose=hex(byHue(17));out.flame=hex(byHue(1));out.gold=hex(byHue(2.5));out.violet=hex(byHue(14));out.leaf=hex(byHue(6))}cb(out)};img.src=src}
+function shrinkPhoto(file,cb){const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const s=Math.min(1,360/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);cb(c.toDataURL("image/jpeg",.6))};img.src=fr.result};fr.readAsDataURL(file)}
+
+/* ---------- render with focus kept ---------- */
+let rq=null;function renderSoon(){if(rq)return;rq=requestAnimationFrame(()=>{rq=null;render()})}
+function render(){
+ const a=document.activeElement;let keep=null;
+ if(a&&a.closest&&a.closest("#app")&&(a.tagName==="INPUT"||a.tagName==="SELECT")){keep={id:a.id,cell:a.dataset.cell,val:a.value,ss:a.selectionStart}}
+ const app=$("#app");
+ app.innerHTML=L.demo?`<div class="card stack"><h2>Can't reach the game server</h2><p class="muted">Check the internet connection, then reload this page.</p></div>`:
+  L.view==="mod"?(L.modOK?moderator():pinScreen()):L.view==="tv"?bigscreen():player();
+ bind(app);
+ if(keep){const el=keep.cell?app.querySelector(`[data-cell="${keep.cell}"]`):keep.id?document.getElementById(keep.id):null;
+  if(el){if(!keep.cell&&el.tagName==="INPUT"&&["text","password","number"].includes(el.type)){el.value=keep.val;}if(!keep.cell&&el.tagName==="INPUT"&&el.type==="text"){el.value=keep.val;try{el.setSelectionRange(keep.ss,keep.ss)}catch(e){}}el.focus()}}
+ document.querySelectorAll("[data-timer]").forEach(el=>el.textContent=fmtLeft(+el.dataset.timer));
+}
+function bind(root){root.querySelectorAll("[data-act]").forEach(el=>{const ev=el.tagName==="BUTTON"?"click":(el.type==="color"?"input":"change");el.addEventListener(ev,e=>ACT[el.dataset.act](el,e))})}
+setInterval(()=>{document.querySelectorAll("[data-timer]").forEach(el=>el.textContent=fmtLeft(+el.dataset.timer));modTick()},1000);
+window.addEventListener("hashchange",()=>{L.view=location.hash==="#moderator"?"mod":location.hash==="#screen"?"tv":"player";location.reload()});
+
+const ICON={home:'<path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/>',play:'<path d="M7 5v14l12-7z"/>',hunt:'<circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/>',board:'<path d="M5 20V10M12 20V4M19 20v-7"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'};
+const ic=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
+const status=()=>L.connected?"":`<div class="banner" style="background:var(--ground-2);color:var(--ink)"><span>Reconnecting…</span></div>`;
+function teamBar(){return `<div class="tbar"><div class="ta"><span class="small">${teamName("A")}</span><b class="num">${D.team.A||0}</b></div><div class="tb"><span class="small">${teamName("B")}</span><b class="num">${D.team.B||0}</b></div></div>`}
+
+/* ================= GUEST ================= */
+function player(){
+ if(L.me&&L.playersLoaded&&!D.players[L.me]){L.profiles=L.profiles.filter(i=>D.players[i]);store.set("profiles",L.profiles);L.me=L.profiles[0]||null;store.set("active",L.me);watchMine()}
+ if(!L.me||L.joining)return `<div class="phone">${status()}${joinScreen()}</div>`;
+ if(!D.players[L.me])return `<div class="phone"><div class="card muted">Loading your profile…</div></div>`;
+ const A=st().announce;const seen=store.get("annSeen",0);
+ const ann=A&&A.t>seen?`<div class="banner"><span>${esc(A.text)}</span><button class="btn sm" data-act="dismiss">OK</button></div>`:"";
+ const live=st().live;
+ if(live&&store.get("lastLive","")!==live+"|"+(st().liveT||0)){store.set("lastLive",live+"|"+(st().liveT||0));L.ptab="live"}
+ const body={home:pHome,live:pLive,hunt:pHunt,board:pBoard,me:pProfile}[L.ptab]();
+ const tab=(k,l)=>`<button data-act="ptab" data-k="${k}" aria-pressed="${L.ptab===k}">${ic(k==="live"?"play":k)}${l}</button>`;
+ return `<div class="phone">${status()}${ann}${body}<nav class="tabs">${tab("home","Home")}${tab("live","Live game")}${tab("hunt","Hunt")}${tab("board","Leaders")}${tab("me","Profile")}</nav></div>`;
+}
+function joinScreen(){
+ const d=store.get("draft",{name:"",m:1,d:1,fq:0,fa:null});
+ return `<section class="card stack"><div class="eyebrow">Welcome to the shower</div><h2>Join the games</h2>
+ <label class="stack" style="gap:4px"><span class="small">Your name</span><input type="text" id="jName" maxlength="24" value="${esc(d.name)}" placeholder="First name and last initial" autocomplete="off"></label>
+ <div class="row"><label class="stack" style="gap:4px;flex:1"><span class="small">Birth month</span><select id="jMonth">${["January","February","March","April","May","June","July","August","September","October","November","December"].map((x,k)=>`<option value="${k+1}" ${k+1===d.m?"selected":""}>${x}</option>`).join("")}</select></label>
+ <label class="stack" style="gap:4px"><span class="small">Day</span><input type="number" id="jDay" min="1" max="31" value="${d.d}"></label></div>
+ <label class="stack" style="gap:4px"><span class="small">Pick a fun-fact question about you</span><select id="jQ" data-act="jQ">${FQ.map((f,k)=>`<option value="${k}" ${k===d.fq?"selected":""}>${f.q}</option>`).join("")}</select></label>
+ <div class="stack" style="gap:6px"><span class="small">Your answer</span><div class="row">${FQ[d.fq].o.map((o,k)=>`<button class="btn sm ${k===d.fa?"gold":""}" data-act="jA" data-k="${k}">${o}</button>`).join("")}</div></div>
+ <p class="small muted" style="margin:0">Other guests have to ask you this in person to unlock your secret word.</p>
+ <button class="btn primary" data-act="join">Join</button>${L.profiles.length?`<button class="btn" data-act="cancelJoin">Back</button>`:""}</section>`;
+}
+function draftFromForm(){const d=store.get("draft",{name:"",m:1,d:1,fq:0,fa:null});const n=$("#jName"),m=$("#jMonth"),dd=$("#jDay");
+ if(n)d.name=n.value;if(m)d.m=+m.value;if(dd)d.d=Math.min(31,Math.max(1,+dd.value||1));store.set("draft",d);return d}
+function rank(id){return ranked().indexOf(id)+1}
+function pHome(){
+ const t=teamOf(L.me),g=GAMES.find(x=>x.id===st().live);const found=Object.values(D.mine.hunt||{}).filter(v=>v==="ok").length;
+ const sw=L.profiles.length>1?`<div class="row">${L.profiles.filter(id=>D.players[id]).map(id=>`<button class="btn sm ${id===L.me?"gold":""}" data-act="switchP" data-id="${id}">${esc(P(id).name)}</button>`).join("")}</div>`:"";
+ return `${sw}<section class="card hero"><div><div class="eyebrow">Welcome, ${esc(P(L.me).name)}</div><h2 style="margin-top:4px">You're on <span class="pill ${t.toLowerCase()}">${teamName(t)}</span></h2><p class="muted small" style="margin:6px 0 0">Rank #${rank(L.me)} of ${ids().length} in the room</p></div><div style="text-align:right"><div class="score num">${score(L.me)}</div><div class="small muted">your points</div></div></section>
+ ${g?`<button class="livebtn" data-act="ptab" data-k="live"><span><span class="pill live"><span class="dot"></span>Live now</span><br><strong>${g.name}</strong></span>${ic("play")}</button>`:`<div class="card muted">The next game starts soon. Your phone will switch to it automatically.</div>`}
+ ${teamBar()}
+ <button class="card row between" data-act="ptab" data-k="hunt" style="text-align:left;width:100%"><span><span class="eyebrow">Open all night</span><br><b>Scavenger Hunt</b> <span class="muted small">· ${found} of ${HUNT.length} found</span></span>${ic("hunt").replace("<svg","<svg width='22' height='22'")}</button>`;
+}
+function pLive(){
+ const live=st().live;if(!live)return `<div class="card muted">No game is live right now. Your phone will switch when one starts.</div>`;
+ const g=GAMES.find(x=>x.id===live);
+ return `<div class="row between"><div><span class="eyebrow">Live game</span><h2>${g.name}</h2></div><span class="pill live"><span class="dot"></span>Live</span></div>`+({split:gSplit,longword:gLong,hunt:pHunt,trivia:gTrivia,crossword:gCross,sup:gSup,bingo:gBingo}[live])();
+}
+function gSplit(){
+ const t=teamOf(L.me),p=P(L.me);
+ const why=(st().split||"seasons")==="seasons"?`Your birthday is ${MON[p.m-1]} ${p.d}, so you're with everyone born in ${t==="A"?"winter or spring":"summer or fall"}.`:`Your birthday falls on an ${p.d%2?"odd":"even"} day of the month.`;
+ const mates=members(t).filter(i=>i!==L.me);
+ return `<section class="card stack" style="text-align:center"><div class="eyebrow">Your team for the whole night</div><div class="winner" style="font-size:3rem">${teamName(t)}</div><p class="muted">${(st().override||{})[L.me]?"The moderator placed you on this team.":why}</p></section>
+ <section class="card"><h3>Find your teammates</h3><p class="small muted">Go say hello to these ${mates.length} people.</p><div class="row">${mates.map(i=>`<span class="pill ${t.toLowerCase()}">${esc(P(i).name)}</span>`).join("")}</div></section>`;
+}
+/* Long Word Wins */
+function myTiles(){const lw=D.mine.lw||{},got=lw.got||{};const t=[{l:P(L.me).word[0],from:"your word"}];Object.keys(got).sort((a,b)=>(+got[a]||0)-(+got[b]||0)).forEach(id=>{if(D.players[id])t.push({l:P(id).word[0],from:P(id).name})});return t}
+function gLong(){
+ const lw=D.mine.lw||{},got=lw.got||{},lock=lw.lock||{},end=st().lwEnd,over=end&&Date.now()>end;
+ const timer=end?(over?`<span class="pill no">Time's up</span>`:`<span class="pill warn num" data-timer="${end}">${fmtLeft(end)}</span>`):`<span class="pill warn">Waiting for the timer</span>`;
+ const tiles=myTiles().map((t,k,a)=>`<div class="tile ${k===a.length-1&&L.lwNew===k?"new":""}" title="From ${esc(t.from)}">${t.l}<small>1</small></div>`).join("");
+ const names=ids().filter(i=>i!==L.me).map(i=>{const cls=got[i]?"got":lock[i]?"lock":"";return `<button class="${cls}" data-act="lwSel" data-id="${i}" aria-pressed="${L.lwSel===i}"><span>${esc(P(i).name)}</span><span>${got[i]?"✓":lock[i]?"✕":""}</span></button>`}).join("");
+ let q=`<p class="muted small">Tap a name, then ask that person their question in person.</p>`;
+ if(L.lwSel&&D.players[L.lwSel]){const i=L.lwSel,p=P(i),f=FQ[p.fq];
+  if(got[i])q=`<p><b>${esc(p.name)}</b>'s word is <b>${p.word}</b>. You earned the tile <b>${p.word[0]}</b>.</p>`;
+  else if(lock[i])q=`<p><b>${esc(p.name)}</b>'s word is locked. You get one try per person.</p>`;
+  else q=`<div class="eyebrow">Ask ${esc(p.name)}</div><p style="margin:2px 0 6px;font-weight:600">${f.q}</p><div class="opts">${f.o.map((o,k)=>`<button data-act="lwAns" data-k="${k}" ${over?"disabled":""}>${o}</button>`).join("")}</div>`}
+ const sub=lw.word?`<p class="pill ok">You played ${lw.word} for ${lw.pts} points</p>`:
+  `<div class="row"><input type="text" id="lwWord" placeholder="Spell a word with your tiles" style="flex:1" autocomplete="off" autocapitalize="characters"><button class="btn primary" data-act="lwSubmit">Play word</button></div><p class="small muted" style="margin:0">Each tile can be used once. One point per letter. You get one play.</p>`;
+ return `<div class="row between"><span class="muted small">Your secret word: <b>${P(L.me).word}</b> · ${myTiles().length} tiles</span>${timer}</div>
+ <div class="lw"><div class="col"><h3>Your tiles</h3><div class="tiles">${tiles}</div></div><div class="col"><h3>Who you're talking to</h3><div class="names">${names||'<span class="small muted">Waiting for guests to join</span>'}</div></div><div class="col q"><h3>Their question</h3>${q}</div></div>
+ <section class="card stack">${sub}</section>`;
+}
+/* Trivia */
+function gTrivia(){
+ const qi=st().tvQ||0,[q,opts,ans]=TRIVIA[qi],pk=podOf(L.me);
+ if(!pk)return `<div class="card muted">You joined after pods were set. Ask the moderator to reset the pods, or cheer on this round.</div>`;
+ const votes=(D.tv[qi]||{}),res=(votes._res||{})[pk],phase=st().tvPhase||"vote",tiePods=st().tvTie||{};
+ const inRevote=phase==="revote"&&tiePods[pk];
+ const myVote=inRevote?((D.tvr||{})[qi]||{})[L.me]:votes[L.me];
+ const locked=res||(phase!=="vote"&&!inRevote);
+ const ch=opts.map((o,k)=>`<button class="choice ${res&&k===ans?"right":""}" data-act="tvVote" data-k="${k}" aria-pressed="${myVote===k}" ${locked?"disabled":""}><span><b class="gnum" style="display:inline">${"ABCD"[k]}</b> ${o}</span></button>`).join("");
+ let msg=`<p class="small muted" style="margin:0">Your pod: ${podMembers(pk).map(i=>esc(P(i).name)).join(", ")}. Talk it over. The majority picks your pod's answer. No speed bonus.</p>`;
+ if(inRevote)msg=`<div class="banner"><span>Your pod tied. Talk it over and vote again.</span><span class="num" data-timer="${st().tvRevoteEnd}">${fmtLeft(st().tvRevoteEnd)}</span></div>`;
+ if(res)msg=`<div class="card" style="background:var(--ground-2)">${res.tie?"<b>Your pod stayed tied.</b> No points this question.":res.correct?`<b>Your pod picked "${opts[res.pick]}". Correct!</b> Everyone in your pod gets ${pv("trivia")} points.`:`<b>Your pod picked "${opts[res.pick]}".</b> The answer was "${opts[ans]}".`}</div>`;
+ else if(myVote!=null&&!inRevote)msg+=`<p class="pill ok" style="align-self:flex-start">Vote in. Waiting for the moderator to close voting.</p>`;
+ return `<section class="card stack"><div class="row between"><span class="eyebrow">Question ${qi+1} of ${TRIVIA.length}</span><span class="pill ${teamOf(L.me).toLowerCase()}">Pod ${pk}</span></div><h2 style="font-family:var(--f-body);font-weight:700;font-size:1.2rem;letter-spacing:0">${esc(q.replace(/^Hard: /,""))}</h2>${q.startsWith("Hard")?`<span class="pill no" style="align-self:flex-start">Hard one</span>`:""}<div class="choices">${ch}</div>${msg}</section>`;
+}
+/* Crossword */
+const foot=(x,y,r,f)=>`<g transform="translate(${x} ${y}) rotate(${r})" fill="${f}"><ellipse cx="0" cy="0" rx="9" ry="15"/><ellipse cx="1" cy="-6" rx="7" ry="7"/><circle cx="-6" cy="-19" r="3.2"/><circle cx="-1.5" cy="-21" r="2.7"/><circle cx="2.5" cy="-20.5" r="2.4"/><circle cx="6" cy="-18.5" r="2.1"/><circle cx="8.5" cy="-15.5" r="1.8"/></g>`;
+const hand=(x,y,r,f)=>`<g transform="translate(${x} ${y}) rotate(${r})" fill="${f}"><rect x="-11" y="-6" width="22" height="22" rx="10"/><rect x="-10" y="-24" width="5" height="20" rx="2.5"/><rect x="-4.5" y="-28" width="5" height="24" rx="2.5"/><rect x="1" y="-26" width="5" height="22" rx="2.5"/><rect x="6.5" y="-20" width="4.5" height="17" rx="2.2"/><rect x="-21" y="0" width="5" height="15" rx="2.5" transform="rotate(-40 -18 7)"/></g>`;
+const rose=(x,y,s)=>{let p=`<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 30 C-6 60 -2 90 0 120" stroke="var(--leaf)" stroke-width="5" fill="none"/><path d="M0 70 C-30 55 -45 70 -50 80 C-30 88 -12 82 0 70Z" fill="var(--leaf)"/><path d="M0 92 C28 78 44 90 48 100 C28 108 12 102 0 92Z" fill="var(--leaf)"/>`;
+ [0,72,144,216,288].forEach(a=>p+=`<ellipse cx="0" cy="-21" rx="23" ry="29" fill="var(--rose)" transform="rotate(${a})"/>`);
+ [36,108,180,252,324].forEach(a=>p+=`<ellipse cx="0" cy="-12.6" rx="15.4" ry="18.2" fill="var(--violet)" transform="rotate(${a})"/>`);
+ return p+`<path d="M-12 0 C-12 -14 12 -14 12 0 C12 10 -6 12 -6 2 C-6 -4 4 -4 3 1" stroke="var(--rose)" stroke-width="3" fill="none"/></g>`};
+const WM=`<svg class="wm" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${foot(48,70,-18,"var(--violet)")}${foot(78,40,-8,"var(--violet)")}${foot(330,330,160,"var(--leaf)")}${foot(360,300,170,"var(--leaf)")}${foot(60,350,20,"var(--flame)")}${hand(340,70,15,"var(--rose)")}${hand(300,55,-10,"var(--flame)")}${hand(150,360,-5,"var(--violet)")}${rose(200,190,1.15)}</svg>`;
+function gCross(){
+ const solved=D.mine.cw||{};let cells="";
+ const act=L.cwAct!=null?CW.placed[L.cwAct]:null,actCells=new Set(act?cellsOf(act):[]);
+ const done=new Set();CW.placed.forEach(p=>{if(solved[p.id])cellsOf(p).forEach(k=>done.add(k))});
+ for(let r=0;r<CW.R;r++)for(let c=0;c<CW.C;c++){const k=r+","+c;
+  if(!CW.sol[k]){cells+=`<div class="cell blk"></div>`;continue}
+  const v=done.has(k)?CW.sol[k]:(L.cwEntry[k]||"");
+  cells+=`<div class="cell">${CW.starts[k]?`<span class="n">${CW.starts[k]}</span>`:""}<input maxlength="1" data-cell="${k}" value="${v}" class="${done.has(k)?"done":actCells.has(k)?"hl":""}" ${done.has(k)?"readonly":""} autocomplete="off" autocapitalize="characters" aria-label="Square row ${r+1} column ${c+1}"></div>`}
+ const list=d=>CW.placed.map((p,k)=>({p,k})).filter(o=>o.p.d===d).sort((a,b)=>a.p.num-b.p.num).map(({p,k})=>`<li data-clue="${k}" class="${solved[p.id]?"done":""} ${L.cwAct===k?"act":""}"><b>${p.num}.</b> ${p.clue} (${p.w.length})</li>`).join("");
+ const n=Object.keys(solved).length;
+ const partners=L.cwPartners.filter(i=>D.players[i]);
+ return `<div class="row between"><span class="muted small">${n} of ${CW.placed.length} words · ${pv("crossword")} pt each</span></div>
+ <section class="card stack" style="gap:8px"><div class="row between"><span class="small"><b>Sharing this screen?</b> Add who's solving with you. Everyone here gets full points.</span></div>
+ <div class="row">${partners.map(i=>`<span class="pill ok">${esc(P(i).name)} <button class="btn sm" style="padding:0 6px" data-act="cwDrop" data-id="${i}" aria-label="Remove ${esc(P(i).name)}">×</button></span>`).join("")}<select id="cwAdd" data-act="cwAdd"><option value="">Add a partner…</option>${ids().filter(i=>i!==L.me&&!partners.includes(i)).map(i=>`<option value="${i}">${esc(P(i).name)}</option>`).join("")}</select></div></section>
+ <section class="cwbox">${WM}<div class="cw" style="grid-template-columns:repeat(${CW.C},minmax(0,1fr))">${cells}</div></section>
+ <section class="card clues"><div><h3>Across</h3><ol>${list("A")}</ol></div><div><h3>Down</h3><ol>${list("D")}</ol></div></section>`;
+}
+/* Superlatives */
+function gSup(){
+ const qi=st().supQ||0,votes=D.sup[qi]||{},res=votes._res,pair=st().supPair||[],my=votes[L.me];
+ const upFront=pair.filter(i=>D.players[i]).map(i=>esc(P(i).name)).join(" &amp; ")||"to be picked";
+ const ch=SUP_OPTS.map((o,k)=>`<button class="choice" data-act="supVote" data-k="${k}" aria-pressed="${my===k}" ${res?"disabled":""}><span>${o}</span></button>`).join("");
+ let out=`<section class="card stack"><div class="row between"><span class="eyebrow">Question ${qi+1} of ${SUPS.length}</span><span class="small muted">Up front: ${upFront}</span></div><h2 style="font-family:var(--f-body);font-weight:700;font-size:1.2rem;letter-spacing:0">Who is most likely to ${SUPS[qi].charAt(0).toLowerCase()+SUPS[qi].slice(1)}</h2><div class="choices">${ch}</div>
+ <p class="small muted" style="margin:0">${pair.includes(L.me)?"You're up front! Vote without looking at your partner.":`You're voting with ${teamName(teamOf(L.me))}.`} If the pair agrees, they each score. If not, the team that agrees more strongly takes the round.</p>${my!=null&&!res?'<p class="pill ok" style="align-self:flex-start">Vote in</p>':""}</section>`;
+ if(res)out+=supResult(res);
+ return out;
+}
+function supResult(r){const row=(t,pct,top)=>`<div class="stack" style="gap:4px"><div class="row between small"><span class="pill ${t.toLowerCase()}">${teamName(t)}</span><span class="num">${pct}% picked ${SUP_OPTS[top]}</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>`;
+ return `<section class="card stack"><h3>Results</h3>${r.pa!=null?`<p class="small" style="margin:0">Up front: ${esc(r.na)} picked <b>${SUP_OPTS[r.pa]}</b>, ${esc(r.nb)} picked <b>${r.pb!=null?SUP_OPTS[r.pb]:"nobody"}</b>.</p>`:""}${row("A",r.pctA,r.topA)}${row("B",r.pctB,r.topB)}<p style="margin:0;font-weight:700">${esc(r.msg)}</p></section>`}
+/* Bingo */
+function gBingo(){
+ const round=st().bingoRound||1,called=st().called||[],card=cardFor(L.me,round),mk=L.marks[round]||[];
+ const last=called[called.length-1],claim=((D.claims||{})[round]||{})[L.me];
+ let grid='<div class="bingo">'+"BINGO".split("").map(l=>`<div class="h">${l}</div>`).join("");
+ for(let r=0;r<5;r++)for(let c=0;c<5;c++){const n=card[c][r];grid+=n===0?`<button class="free" disabled>FREE</button>`:`<button class="${mk.includes(n)?"m":""}" data-act="bMark" data-n="${n}">${n}</button>`}
+ grid+="</div>";
+ const claimUI=claim?(claim.ok?`<p class="pill ok" style="align-self:center">Bingo confirmed! +${pv("bingo")} points</p>`:`<p class="pill warn" style="align-self:center">Bingo sent. Waiting for the moderator to confirm.</p>`):`<button class="btn gold" data-act="bCall">BINGO!</button>`;
+ return `<section class="card row between"><div><span class="eyebrow">Round ${round} · last call</span><h2>${last?letter(last)+"-"+last:"Starting soon"}</h2><span class="small muted">${called.length} numbers called</span></div>${last?`<div class="ball">${letter(last)}${last}</div>`:""}</section>
+ <section class="card stack">${grid}${claimUI}<p class="small muted" style="margin:0;text-align:center">Tap numbers as they're called. A full row, column or diagonal wins.</p></section>`;
+}
+/* Scavenger hunt */
+function pHunt(){
+ const mine=D.mine.hunt||{};
+ const items=HUNT.map(([name,hint],k)=>{const s=mine[k];
+  const tag=s==="ok"?`<span class="pill ok">Found</span>`:s==="up"?`<span class="pill warn">Saving…</span>`:`<label class="btn sm primary upl">${s==="removed"?"Try again":"Snap it"}<input type="file" accept="image/*" capture="environment" data-act="huntUp" data-k="${k}" aria-label="Photo of mystery item ${k+1}"></label>`;
+  return `<div class="item"><div class="thumb">${k+1}</div><div><b style="display:block">${s==="ok"?name:"Mystery item "+(k+1)}</b><span class="small muted">${hint}</span>${s==="removed"?'<span class="small" style="display:block;color:var(--bad)">The moderator didn\'t accept that photo.</span>':""}</div>${tag}</div>`}).join("");
+ const found=Object.values(mine).filter(v=>v==="ok").length;
+ return `<section class="card stack"><div class="row between"><div><span class="eyebrow">Open until the end of the night</span><h2>Scavenger Hunt</h2></div><div class="score num" style="font-size:1.6rem">${found}/${HUNT.length}</div></div><p class="small muted" style="margin:0">Find them in any order and take a photo of each. ${pv("hunt")} points per item. The moderators check every photo.</p></section><div class="hunt">${items}</div>`;
+}
+function pBoard(){const order=ranked();
+ return `${teamBar()}<section class="card tscroll"><table><thead><tr><th>#</th><th>Guest</th><th>Team</th><th style="text-align:right">Pts</th></tr></thead><tbody>${order.map((i,k)=>`<tr ${i===L.me?'style="background:var(--ground-2)"':""}><td class="num">${k+1}</td><td>${esc(P(i).name)}${i===L.me?" (you)":""}</td><td><span class="pill ${teamOf(i).toLowerCase()}">${teamOf(i)}</span></td><td class="num" style="text-align:right">${score(i)}</td></tr>`).join("")}</tbody></table></section>`}
+function pProfile(){const p=P(L.me),f=FQ[p.fq];
+ return `<section class="card stack"><div class="eyebrow">Your profile</div><h2>${esc(p.name)}</h2><p class="small" style="margin:0">Birthday: ${MON[p.m-1]} ${p.d} · Team ${teamName(teamOf(L.me))}</p><p class="small" style="margin:0">Your question: ${f.q} <b>${f.o[p.fa]}</b></p><p class="small" style="margin:0">Your secret word: <b>${p.word}</b></p></section>
+ <section class="card stack"><h3>Sharing this phone?</h3><p class="small muted" style="margin:0">A friend without a smartphone can join here too. Each of you keeps your own points, and you can switch players from Home.</p><button class="btn" data-act="addFriend">Add another player on this phone</button></section>`}
+
+/* ================= MODERATOR ================= */
+function pinScreen(){return `<section class="card stack" style="max-width:380px;margin:0 auto"><div class="eyebrow">Moderators only</div><h2>Enter the moderator PIN</h2><input type="password" id="pin" inputmode="numeric" autocomplete="off"><button class="btn primary" data-act="pin">Open the console</button><a class="small muted" href="./">I'm a guest</a></section>`}
+function moderator(){
+ const tab=(k,l)=>`<button data-act="mtab" data-k="${k}" aria-pressed="${L.mtab===k}">${l}</button>`;
+ const body={games:mGames,teams:mTeams,scores:mScores,setup:mSetup}[L.mtab]();
+ return `${status()}<div class="console"><nav class="side">${tab("games","Game control")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("setup","Setup")}</nav><div class="stack" style="min-width:0">${body}</div></div>`;
+}
+function mGames(){
+ const live=st().live;
+ const rows=GAMES.map((g,k)=>`<div class="gamerow ${live===g.id?"on":""}"><span class="gnum">${k+1}</span><div><b>${g.name}</b><div class="small muted">${g.note}</div></div>${live===g.id?`<button class="btn sm" data-act="endGame">End</button>`:`<button class="btn sm primary" data-act="goLive" data-id="${g.id}">Go live</button>`}</div>`).join("");
+ return `<section class="card stack"><div class="row between"><h2>Tonight's games</h2><span class="small muted">${ids().length} guests joined · starting a game moves every phone into it</span></div><div class="gamelist">${rows}</div></section>${tools()}${reviewQueue()}
+ <section class="card stack"><h3>Send an announcement</h3><div class="row"><input type="text" id="annText" style="flex:1" placeholder="Bingo starts in 5 minutes!"><button class="btn primary" data-act="announce">Send to every phone</button></div></section>`;
+}
+function tools(){
+ const id=st().live;
+ if(id==="bingo"){const called=st().called||[],last=called[called.length-1],round=st().bingoRound||1;
+  let board='<div class="called">';for(let n=1;n<=75;n++)board+=`<span class="${called.includes(n)?"on":""}">${n}</span>`;board+="</div>";
+  const cl=(D.claims||{})[round]||{};
+  const claims=Object.keys(cl).map(pid=>{const ok=hasBingo(cardFor(pid,round),n=>called.includes(n));return `<div class="row between"><span><b>${esc(P(pid).name)}</b> called bingo ${ok?'<span class="pill ok">Card checks out</span>':'<span class="pill no">Not a bingo yet</span>'}</span>${cl[pid].ok?'<span class="pill ok">Confirmed</span>':`<span class="row"><button class="btn sm gold" data-act="bConfirm" data-id="${pid}" ${ok?"":"disabled"}>Confirm</button><button class="btn sm" data-act="bDeny" data-id="${pid}">Deny</button></span>`}</div>`}).join("");
+  return `<section class="card stack"><div class="row between"><h3>Bingo caller · round ${round}</h3><div class="row">${last?`<div class="ball" style="width:56px;height:56px;font-size:1rem">${letter(last)}${last}</div>`:""}<button class="btn primary" data-act="callNext">Call next number</button><button class="btn" data-act="newBingo">New round</button></div></div><div class="tscroll">${board}</div>${claims?`<h3>Bingo calls</h3>${claims}`:'<p class="small muted" style="margin:0">Bingo calls from guests show up here.</p>'}</section>`}
+ if(id==="trivia"){const qi=st().tvQ||0,v=D.tv[qi]||{},phase=st().tvPhase||"vote";const voted=Object.keys(v).filter(k=>k!=="_res").length;
+  const pods=[...new Set(Object.values(st().pods||{}))].sort();
+  const res=v._res||{};
+  return `<section class="card stack"><div class="row between"><div><h3>Trivia · question ${qi+1} of ${TRIVIA.length}</h3><span class="small muted">${esc(TRIVIA[qi][0])}</span></div><span class="pill warn">${voted} votes in</span></div>
+  <div class="row">${phase==="vote"?`<button class="btn primary" data-act="tvClose">Close voting</button>`:phase==="revote"?`<span class="pill warn">Tied pods revoting · <span class="num" data-timer="${st().tvRevoteEnd}">${fmtLeft(st().tvRevoteEnd)}</span></span><button class="btn primary" data-act="tvFinish">Finish revote now</button>`:`<button class="btn primary" data-act="tvNext" ${qi>=TRIVIA.length-1?"disabled":""}>Send next question</button>`}<button class="btn" data-act="podsReset">Reset pods</button></div>
+  <div class="row small">${pods.map(pk=>`<span class="pill ${pk[0].toLowerCase()}">Pod ${pk}: ${res[pk]?(res[pk].tie?"tied":res[pk].correct?"right":"wrong"):"—"}</span>`).join("")}</div></section>`}
+ if(id==="sup"){const qi=st().supQ||0,v=D.sup[qi]||{},pair=st().supPair||["",""];const voted=Object.keys(v).filter(k=>k!=="_res").length;
+  return `<section class="card stack"><div class="row between"><h3>Superlatives · question ${qi+1} of ${SUPS.length}</h3><span class="pill warn">${voted} votes in</span></div><div class="row"><span class="small">Pair up front:</span>${[0,1].map(s=>`<select data-act="pairPick" data-s="${s}"><option value="">Pick a guest</option>${ids().map(i=>`<option value="${i}" ${pair[s]===i?"selected":""}>${esc(P(i).name)}</option>`).join("")}</select>`).join("")}</div>
+  <div class="row">${v._res?`<button class="btn primary" data-act="supNext" ${qi>=SUPS.length-1?"disabled":""}>Next question</button>`:`<button class="btn primary" data-act="supReveal">Reveal results</button>`}</div>${v._res?supResult(v._res):'<span class="small muted">The app works out each team\'s agreement percentage for you.</span>'}</section>`}
+ if(id==="longword")return `<section class="card row between"><div><h3>Long Word Wins timer</h3><span class="small muted">${st().lwEnd?`<span class="num" data-timer="${st().lwEnd}">${fmtLeft(st().lwEnd)}</span> left`:"Not started"}</span></div><div class="row"><input type="number" id="lwMins" min="5" max="45" value="${st().lwMins||15}"><span class="small">min</span><button class="btn primary" data-act="lwStart">${st().lwEnd?"Restart":"Start timer"}</button></div></section>`;
+ return "";
+}
+function reviewQueue(){
+ const list=Object.keys(D.photos||{}).map(k=>Object.assign({key:k},D.photos[k])).filter(x=>!x.checked).sort((a,b)=>a.t-b.t);
+ return `<section class="card stack"><div class="row between"><h3>Scavenger Hunt photos</h3><span class="small muted">${list.length} to check · points are given right away</span></div>${list.length?list.slice(0,12).map(x=>`<div class="item"><div class="thumb">${x.img?`<img src="${x.img}" alt="">`:"?"}</div><div><b>${esc(P(x.who).name)}</b><div class="small muted">Says it's the ${HUNT[x.k][0].toLowerCase()}</div></div><div class="row"><button class="btn sm gold" data-act="pOk" data-key="${x.key}">Looks good</button><button class="btn sm" data-act="pNo" data-key="${x.key}">Remove</button></div></div>`).join(""):`<p class="small muted" style="margin:0">All caught up.</p>`}</section>`;
+}
+function mTeams(){
+ const col=t=>{const m=members(t);return `<section class="card stack"><div class="row between"><h3>${teamName(t)}</h3><span class="pill ${t.toLowerCase()}">${m.length} players</span></div><div class="stack" style="gap:4px">${m.map(i=>`<div class="row between small"><span>${esc(P(i).name)} <span class="muted">${MON[P(i).m-1]} ${P(i).d}</span>${podOf(i)?` <span class="muted">· pod ${podOf(i)}</span>`:""}${(st().override||{})[i]?' <span class="pill warn">moved</span>':""}</span><span class="row"><button class="btn sm" data-act="move" data-id="${i}">Move to ${t==="A"?"B":"A"}</button><button class="btn sm" data-act="kick" data-id="${i}" aria-label="Remove ${esc(P(i).name)}">Remove</button></span></div>`).join("")||'<span class="small muted">Nobody yet</span>'}</div></section>`};
+ return `<section class="card stack"><h2>How should the room split?</h2><div class="seg" role="group" aria-label="Team split"><button data-act="split" data-v="seasons" aria-pressed="${(st().split||"seasons")==="seasons"}">Seasons</button><button data-act="split" data-v="oddeven" aria-pressed="${st().split==="oddeven"}">Odd &amp; even birthdays</button></div><p class="small muted" style="margin:0">${(st().split||"seasons")==="seasons"?"Winter and spring birthdays form one team, summer and fall the other.":"Odd days of the month form one team, even days the other."} Once the first game after the split starts, latecomers join the smaller team.</p>${st().locked?'<span class="pill warn" style="align-self:flex-start">Teams are locked in</span>':""}</section><div class="grid2">${col("A")}${col("B")}</div>`;
+}
+function mScores(){const order=ranked();const tie=(D.team.A||0)===(D.team.B||0);
+ return `${teamBar()}<section class="card row between"><span class="small">${tie?"The teams are tied. Run the tiebreaker: each team agrees on one number guess, closest wins.":"Ready to crown a team?"}</span><button class="btn gold" data-act="winner">${st().showWinner?"Hide winner":"Show winner on big screen"}</button></section>
+ <section class="card row between"><span class="small">Team points</span><span class="row">${["A","B"].map(t=>`<span class="pill ${t.toLowerCase()}">${teamName(t)}</span><button class="btn sm" data-act="tadj" data-t="${t}" data-d="-1">−</button><button class="btn sm" data-act="tadj" data-t="${t}" data-d="1">+</button>`).join("")}</span></section>
+ <section class="card tscroll"><table><thead><tr><th>#</th><th>Guest</th><th>Team</th><th style="text-align:right">Points</th><th style="text-align:right">Fix</th></tr></thead><tbody>${order.map((i,k)=>`<tr><td class="num">${k+1}</td><td>${esc(P(i).name)}</td><td><span class="pill ${teamOf(i).toLowerCase()}">${teamName(teamOf(i))}</span></td><td class="num" style="text-align:right">${score(i)}</td><td style="text-align:right;white-space:nowrap"><button class="btn sm" data-act="adj" data-id="${i}" data-d="-1" aria-label="Take a point from ${esc(P(i).name)}">−</button> <button class="btn sm" data-act="adj" data-id="${i}" data-d="1" aria-label="Give a point to ${esc(P(i).name)}">+</button></td></tr>`).join("")}</tbody></table></section>
+ <section class="card stack"><h3>Prizes</h3><div class="row small"><span class="pill warn">Diaper raffle</span><span>Draw a random winner from the guests who joined.</span><button class="btn sm" data-act="raffle">Draw</button></div>${st().raffle?`<p style="margin:0">Raffle winner: <b>${esc(st().raffle)}</b></p>`:""}</section>`}
+function mSetup(){
+ const cs=getComputedStyle(document.documentElement),v=k=>cs.getPropertyValue(k).trim();
+ const PV=[["hunt","Scavenger Hunt","per item"],["crossword","Crossword","per word"],["trivia","Trivia","per right answer"],["bingo","Bingo","per bingo"],["sup","Superlatives","per round"],["longword","Long Word Wins","per letter"]];
+ const url=location.href.split("#")[0];
+ return `<section class="card stack"><h2>Guest QR code</h2><div class="row" style="align-items:flex-start;gap:16px"><div id="qr" style="background:#fff;padding:8px;border-radius:10px"></div><div class="stack" style="flex:1;min-width:200px"><p class="small" style="margin:0">Print this or show it at the door. Guests scan it and join.</p><p class="small muted" style="margin:0;word-break:break-all">${esc(url)}</p><p class="small muted" style="margin:0">Big screen for the TV: <span style="word-break:break-all">${esc(url)}#screen</span></p><p class="small muted" style="margin:0">Moderators: <span style="word-break:break-all">${esc(url)}#moderator</span> with the PIN.</p></div></div></section>
+ <section class="card stack"><h2>Theme</h2><p class="small muted" style="margin:0">Upload the invitation or a logo and the colors change on every phone. You can also pick them by hand.</p><label class="btn upl" style="align-self:flex-start">Upload an image<input type="file" accept="image/*" data-act="themeImg" aria-label="Theme image"></label>
+ <div class="swatches">${[["rose","Main"],["flame","Second"],["gold","Highlight"],["violet","Violet"],["leaf","Green"]].map(([k,l])=>`<label><input type="color" value="${v("--"+k)}" data-act="color" data-k="${k}">${l}</label>`).join("")}</div></section>
+ <section class="card stack"><h2>Point values</h2><div class="grid2" style="gap:8px">${PV.map(([k,n,u])=>`<label class="row between" style="background:var(--ground-2);padding:8px 10px;border-radius:10px"><span>${n} <span class="muted small">${u}</span></span><input type="number" min="0" max="20" value="${pv(k)}" data-act="pv" data-k="${k}"></label>`).join("")}</div></section>
+ <section class="card stack"><h2>Start fresh</h2><p class="small muted" style="margin:0">Clears every guest, score, photo and vote. Use it after a test run, before the party.</p>${L.confirmReset?`<div class="row"><span class="small">Type RESET to confirm:</span><input type="text" id="resetTxt" style="width:110px"><button class="btn primary" data-act="doReset">Clear everything</button><button class="btn" data-act="cancelReset">Cancel</button></div>`:`<button class="btn" data-act="askReset" style="align-self:flex-start">Clear all game data</button>`}</section>`;
+}
+function drawQR(){const el=$("#qr");if(!el||!window.QRCode)return;el.innerHTML="";new QRCode(el,{text:location.href.split("#")[0],width:150,height:150,colorDark:"#33163f",colorLight:"#ffffff"})}
+
+/* ================= BIG SCREEN ================= */
+function bigscreen(){
+ const order=ranked().slice(0,10),g=GAMES.find(x=>x.id===st().live),s=st();let stage;
+ if(s.showWinner){const w=(D.team.A||0)===(D.team.B||0)?null:((D.team.A||0)>(D.team.B||0)?"A":"B");stage=`<div class="eyebrow">Tonight's champions</div><div class="winner">${w?teamName(w):"It's a tie!"}</div><p class="muted">${w?`${D.team[w]} points`:"Time for the tiebreaker question."}</p>`}
+ else if(!g)stage=`<div class="winner">Welcome!</div><p class="muted">Scan the QR code at the door to join the games.</p><div id="qr" style="background:#fff;padding:10px;border-radius:12px;align-self:center"></div>`;
+ else if(s.live==="bingo"){const c=s.called||[],last=c[c.length-1];stage=`<div class="eyebrow">Bingo · last call</div><div class="huge">${last?letter(last)+"-"+last:"Get ready"}</div><p class="muted">${c.slice(-6,-1).reverse().map(n=>letter(n)+"-"+n).join(" · ")}</p>`}
+ else if(s.live==="trivia"){const[q,o,ans]=TRIVIA[s.tvQ||0];const shown=s.tvPhase==="done";stage=`<div class="eyebrow">Trivia · question ${(s.tvQ||0)+1}</div><h2>${esc(q.replace(/^Hard: /,""))}</h2><div class="grid2" style="text-align:left">${o.map((x,k)=>`<div class="card ${shown&&k===ans?"choice right":""}"><b class="gnum">${"ABCD"[k]}</b> ${x}</div>`).join("")}</div>${s.tvPhase==="revote"?`<p class="banner" style="justify-content:center">Tied pods are revoting · <span class="num" data-timer="${s.tvRevoteEnd}">${fmtLeft(s.tvRevoteEnd)}</span></p>`:""}`}
+ else if(s.live==="longword")stage=`<div class="eyebrow">Long Word Wins</div><div class="huge num" ${s.lwEnd?`data-timer="${s.lwEnd}"`:""}>${s.lwEnd?fmtLeft(s.lwEnd):(s.lwMins||15)+":00"}</div><p class="muted">Go meet people and collect their letters.</p>`;
+ else if(s.live==="sup"){const qi=s.supQ||0,res=(D.sup[qi]||{})._res;stage=`<div class="eyebrow">Superlatives</div><h2>Who is most likely to ${SUPS[qi].charAt(0).toLowerCase()+SUPS[qi].slice(1)}</h2><p class="muted">Up front: ${(s.supPair||[]).filter(i=>D.players[i]).map(i=>esc(P(i).name)).join(" &amp; ")||"to be picked"}</p>${res?supResult(res):""}`}
+ else if(s.live==="split")stage=`<div class="eyebrow">Find your team</div><div class="grid2"><div><div class="winner" style="font-size:2.6rem">${teamName("A")}</div><p class="muted">${members("A").length} players</p></div><div><div class="winner" style="font-size:2.6rem">${teamName("B")}</div><p class="muted">${members("B").length} players</p></div></div>`;
+ else stage=`<div class="eyebrow">Now playing</div><div class="winner">${g.name}</div><p class="muted">Play on your phone.</p>`;
+ return `${s.announce?`<div class="banner" style="margin-bottom:12px"><span>${esc(s.announce.text)}</span></div>`:""}<div class="tv"><section class="stage">${stage}</section><div class="stack">${teamBar()}<section class="card"><h3>Leaderboard</h3><table><tbody>${order.map((i,k)=>`<tr><td class="num">${k+1}</td><td>${esc(P(i).name)}</td><td class="num" style="text-align:right">${score(i)}</td></tr>`).join("")}</tbody></table></section></div></div>`;
+}
+
+/* ================= ACTIONS ================= */
+const setState=patch=>db&&R("state").update(patch);
+const ACT={
+ ptab:el=>{L.ptab=el.dataset.k;render()},
+ mtab:el=>{L.mtab=el.dataset.k;render();if(L.mtab==="setup")setTimeout(drawQR,0)},
+ dismiss:()=>{store.set("annSeen",(st().announce||{}).t||0);render()},
+ // join
+ jQ:el=>{const d=draftFromForm();d.fq=+el.value;d.fa=null;store.set("draft",d);render()},
+ jA:el=>{const d=draftFromForm();d.fa=+el.dataset.k;store.set("draft",d);render()},
+ join:()=>{const d=draftFromForm();if(!d.name.trim())return toast("Enter your name first");if(d.fa==null)return toast("Pick your answer to the fun-fact question");if(!db)return toast("Not connected yet");
+  const id=R("players").push().key;const word=pickWord();const p={name:d.name.trim().slice(0,24),m:d.m,d:d.d,fq:d.fq,fa:d.fa,word,t:Date.now()};
+  const upd={};upd["players/"+id]=p;upd["scores/"+id]=0;
+  if(st().locked){const a=members("A").length,b=members("B").length;upd["state/override/"+id]=a<=b?"A":"B"}
+  db.ref(ROOT).update(upd).then(()=>{L.profiles.push(id);store.set("profiles",L.profiles);L.me=id;store.set("active",id);L.joining=false;store.set("draft",{name:"",m:1,d:1,fq:0,fa:null});watchMine();L.ptab="home";render();toast("You're in!")})},
+ cancelJoin:()=>{L.joining=false;render()},
+ addFriend:()=>{L.joining=true;render()},
+ switchP:el=>{L.me=el.dataset.id;store.set("active",L.me);watchMine();render()},
+ // long word
+ lwSel:el=>{L.lwSel=el.dataset.id;L.lwNew=-1;render()},
+ lwAns:el=>{const i=L.lwSel,p=P(i);if(+el.dataset.k===p.fa){R("lw/"+L.me+"/got/"+i).set(Date.now());L.lwNew=myTiles().length;toast("New tile: "+p.word[0])}else{R("lw/"+L.me+"/lock/"+i).set(true);toast("Not quite. "+p.name+"'s word is now locked for you.")}},
+ lwSubmit:()=>{const w=($("#lwWord").value||"").trim().toUpperCase().replace(/[^A-Z]/g,"");if(w.length<2)return toast("Type a word first");
+  const pool=myTiles().map(t=>t.l);for(const ch of w){const k=pool.indexOf(ch);if(k<0)return toast("You don't have a tile for "+ch);pool.splice(k,1)}
+  if(L.dict===null)return toast("Still loading the dictionary. Try again in a moment.");
+  if(L.dict&&!L.dict.has(w))return toast(w+" isn't in the dictionary");
+  const pts=w.length*pv("longword");
+  R("lw/"+L.me+"/word").transaction(cur=>cur?undefined:w,(e,ok)=>{if(ok){R("lw/"+L.me+"/pts").set(pts);award([L.me],pts,teamOf(L.me),pts);toast(w+" scores "+pts+" points")}})},
+ // trivia
+ tvVote:el=>{const qi=st().tvQ||0,pk=podOf(L.me);const rev=st().tvPhase==="revote"&&(st().tvTie||{})[pk];R((rev?"tvr/":"tv/")+qi+"/"+L.me).set(+el.dataset.k)},
+ tvClose:()=>resolveTrivia(false),
+ tvFinish:()=>resolveTrivia(true),
+ tvNext:()=>setState({tvQ:Math.min(TRIVIA.length-1,(st().tvQ||0)+1),tvPhase:"vote",tvTie:null,tvRevoteEnd:null}),
+ podsReset:()=>{setState({pods:makePods()});toast("Pods reset from everyone who has joined")},
+ // superlatives
+ supVote:el=>R("sup/"+(st().supQ||0)+"/"+L.me).set(+el.dataset.k),
+ supReveal:()=>resolveSup(),
+ supNext:()=>setState({supQ:Math.min(SUPS.length-1,(st().supQ||0)+1)}),
+ pairPick:el=>{const p=(st().supPair||["",""]).slice();p[+el.dataset.s]=el.value;setState({supPair:p})},
+ // bingo
+ bMark:el=>{const n=+el.dataset.n,round=st().bingoRound||1;if(!(st().called||[]).includes(n)){el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");return toast(letter(n)+"-"+n+" hasn't been called yet")}
+  const mk=L.marks[round]||[];L.marks[round]=mk.includes(n)?mk.filter(x=>x!==n):mk.concat(n);store.set("marks",L.marks);render()},
+ bCall:()=>{const round=st().bingoRound||1,card=cardFor(L.me,round),mk=L.marks[round]||[];
+  if(!hasBingo(card,n=>mk.includes(n)))return toast("Not yet. Mark a full row, column or diagonal first.");
+  R("claims/"+round+"/"+L.me).set({t:Date.now(),ok:false});toast("Bingo sent to the moderator")},
+ bConfirm:el=>{const round=st().bingoRound||1,pid=el.dataset.id;R("claims/"+round+"/"+pid+"/ok").transaction(v=>v?undefined:true,(e,ok)=>{if(ok)award([pid],pv("bingo"),teamOf(pid),pv("bingo"))})},
+ bDeny:el=>R("claims/"+(st().bingoRound||1)+"/"+el.dataset.id).remove(),
+ callNext:()=>{const c=(st().called||[]).slice();const left=[...Array(75)].map((_,i)=>i+1).filter(n=>!c.includes(n));if(!left.length)return toast("Every number has been called");c.push(left[rnd(left.length)]);setState({called:c})},
+ newBingo:()=>{setState({bingoRound:(st().bingoRound||1)+1,called:[]});toast("New round. Every guest gets a fresh card.")},
+ // hunt
+ huntUp:el=>{const k=+el.dataset.k,f=el.files[0];if(!f)return;const me=L.me;R("hunt/"+me+"/"+k).set("up");
+  shrinkPhoto(f,img=>{R("photos/"+me+"_"+k).set({who:me,k,img,t:Date.now(),checked:false}).then(()=>R("hunt/"+me+"/"+k).transaction(v=>v==="ok"?undefined:"ok",(e,ok)=>{if(ok){award([me],pv("hunt"),teamOf(me),pv("hunt"));toast("Found it! +"+pv("hunt")+" points")}}))})},
+ pOk:el=>R("photos/"+el.dataset.key).update({checked:true,img:null}),
+ pNo:el=>{const x=D.photos[el.dataset.key];if(!x)return;R("photos/"+el.dataset.key).update({checked:true,img:null});R("hunt/"+x.who+"/"+x.k).set("removed");award([x.who],-pv("hunt"),teamOf(x.who),-pv("hunt"));toast("Photo removed and points taken back")},
+ // moderator general
+ pin:()=>{if(($("#pin").value||"").trim()===MOD_PIN){L.modOK=true;store.set("modOK",true);render()}else toast("That PIN isn't right")},
+ goLive:el=>{const id=el.dataset.id,patch={live:id,liveT:Date.now(),showWinner:false};
+  if(id!=="split"&&!st().locked)patch.locked=true;
+  if(id==="trivia"&&!st().pods)patch.pods=makePods();
+  if(id==="sup"&&!(st().supPair||[]).filter(Boolean).length){const a=ids();if(a.length>1){const x=a[rnd(a.length)];let y=x;while(y===x)y=a[rnd(a.length)];patch.supPair=[x,y]}}
+  setState(patch);toast(GAMES.find(g=>g.id===id).name+" is live on every phone")},
+ endGame:()=>setState({live:null}),
+ announce:()=>{const t=($("#annText").value||"").trim();if(!t)return toast("Type a message first");setState({announce:{text:t,t:Date.now()}});$("#annText").value="";toast("Sent to every phone")},
+ split:el=>setState({split:el.dataset.v,override:null,pods:null}),
+ move:el=>{const i=el.dataset.id;R("state/override/"+i).set(teamOf(i)==="A"?"B":"A")},
+ kick:el=>{const i=el.dataset.id;R("players/"+i).remove();R("scores/"+i).remove();toast("Removed. Their points no longer count on the leaderboard.")},
+ adj:el=>award([el.dataset.id],+el.dataset.d,null,0),
+ tadj:el=>R("team/"+el.dataset.t).transaction(v=>(v||0)+ +el.dataset.d),
+ winner:()=>setState({showWinner:!st().showWinner}),
+ raffle:()=>{const a=ids();if(!a.length)return;setState({raffle:P(a[rnd(a.length)]).name})},
+ pv:el=>R("state/pv/"+el.dataset.k).set(Math.max(0,+el.value||0)),
+ color:el=>R("state/theme/"+el.dataset.k).set(el.value),
+ themeImg:el=>{const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>paletteFrom(r.result,t=>{setState({theme:Object.assign({},st().theme||{},t)});toast("Colors updated on every phone")});r.readAsDataURL(f)},
+ lwStart:()=>{const m=Math.max(1,+$("#lwMins").value||15);setState({lwMins:m,lwEnd:Date.now()+m*60000});toast("Timer started on every phone")},
+ askReset:()=>{L.confirmReset=true;render()},cancelReset:()=>{L.confirmReset=false;render()},
+ doReset:()=>{if(($("#resetTxt").value||"").trim()!=="RESET")return toast("Type RESET in capitals to confirm");const keep={theme:st().theme||null,pv:st().pv||null};db.ref(ROOT).set({state:keep}).then(()=>{L.confirmReset=false;toast("All game data cleared")})},
+ cwAdd:el=>{if(el.value){L.cwPartners.push(el.value);render()}},
+ cwDrop:el=>{L.cwPartners=L.cwPartners.filter(i=>i!==el.dataset.id);render()}
+};
+
+function pickWord(){
+ const firsts=ids().map(i=>P(i).word[0]);const vow=firsts.filter(l=>VOWELS.includes(l)).length;
+ const wantVowel=firsts.length===0||vow/firsts.length<.38;
+ const pool=wantVowel?VOWELS.split(""):CONS_ORDER.split("");
+ const cnt=l=>firsts.filter(x=>x===l).length;const min=Math.min(...pool.map(cnt));const letters=pool.filter(l=>cnt(l)===min);
+ const l=letters[rnd(letters.length)];const ws=WORDBANK[l];return ws[rnd(ws.length)];
+}
+/* trivia: majority per pod; tied pods get a short revote; still tied means no points */
+function resolveTrivia(finish){
+ const qi=st().tvQ||0,[,opts,ans]=TRIVIA[qi],pods=st().pods||{},votes=D.tv[qi]||{},rev=D.tvr[qi]||{},tie=st().tvTie||{};
+ const keys=[...new Set(Object.values(pods))];const results={},newTie={};
+ keys.forEach(pk=>{if((votes._res||{})[pk])return;const mem=Object.keys(pods).filter(i=>pods[i]===pk);
+  const src=finish&&tie[pk]?rev:votes;if(finish&&!tie[pk])return;
+  const t=opts.map(()=>0);mem.forEach(i=>{if(src[i]!=null)t[src[i]]++});
+  const max=Math.max(...t);if(max===0){results[pk]={tie:true,none:true};return}
+  const tops=t.map((n,k)=>n===max?k:-1).filter(k=>k>=0);
+  if(tops.length>1){if(finish)results[pk]={tie:true};else newTie[pk]=true;return}
+  const pick=tops[0],correct=pick===ans;results[pk]={pick,correct};
+  if(correct)award(mem.filter(i=>D.players[i]),pv("trivia"),pk[0],pv("trivia"))});
+ const upd={};Object.keys(results).forEach(pk=>upd["tv/"+qi+"/_res/"+pk]=results[pk]);
+ if(Object.keys(newTie).length){upd["state/tvPhase"]="revote";upd["state/tvTie"]=newTie;upd["state/tvRevoteEnd"]=Date.now()+15000}
+ else{upd["state/tvPhase"]="done";upd["state/tvTie"]=null}
+ db.ref(ROOT).update(upd);
+}
+let finishing=false;
+function modTick(){const s=st();if(L.view==="mod"&&L.modOK&&s.live==="trivia"&&s.tvPhase==="revote"&&s.tvRevoteEnd&&Date.now()>s.tvRevoteEnd+1500&&!finishing){finishing=true;resolveTrivia(true);setTimeout(()=>finishing=false,4000)}}
+/* superlatives: pair agrees -> pair scores; otherwise stronger team agreement wins */
+function resolveSup(){
+ const qi=st().supQ||0,v=D.sup[qi]||{};if(v._res)return;const [a,b]=st().supPair||[];
+ const pa=a?v[a]:null,pb=b?v[b]:null;const pts=pv("sup");
+ const count=t=>{const m=members(t).filter(i=>i!==a&&i!==b&&v[i]!=null);const c=[0,0];m.forEach(i=>c[v[i]]++);const top=c[0]>=c[1]?0:1;return{top,pct:m.length?Math.round(100*c[top]/m.length):0,n:m.length}};
+ const A=count("A"),B=count("B");let msg;
+ if(pa!=null&&pa===pb){award([a,b],pts,null,0);msg=`The pair agreed on ${SUP_OPTS[pa]}. ${P(a).name} and ${P(b).name} each get ${pts} points.`}
+ else if(A.pct===B.pct)msg=`The teams tied at ${A.pct}%. No point this round.`;
+ else{const w=A.pct>B.pct?"A":"B";award(members(w),pts,w,pts);msg=`${teamName(w)} agreed more strongly and takes the round. Each member gets ${pts} points.`}
+ R("sup/"+qi+"/_res").transaction(cur=>cur?undefined:{pa:pa==null?null:pa,pb:pb==null?null:pb,na:a?P(a).name:"",nb:b?P(b).name:"",topA:A.top,pctA:A.pct,topB:B.top,pctB:B.pct,msg});
+}
+
+/* crossword typing */
+document.addEventListener("click",e=>{const li=e.target.closest("[data-clue]");if(!li)return;L.cwAct=+li.dataset.clue;render();const p=CW.placed[L.cwAct];const el=document.querySelector(`[data-cell="${p.r},${p.c}"]`);el&&el.focus()});
+document.addEventListener("focusin",e=>{const k=e.target.dataset&&e.target.dataset.cell;if(!k)return;const[r,c]=k.split(",").map(Number);
+ const inW=p=>p.d==="A"?r===p.r&&c>=p.c&&c<p.c+p.w.length:c===p.c&&r>=p.r&&r<p.r+p.w.length;
+ if(L.cwAct!=null&&inW(CW.placed[L.cwAct]))return;
+ L.cwAct=CW.placed.findIndex(inW);
+ document.querySelectorAll("[data-cell]").forEach(el=>{if(!el.classList.contains("done"))el.classList.toggle("hl",cellsOf(CW.placed[L.cwAct]).includes(el.dataset.cell))});
+ document.querySelectorAll("[data-clue]").forEach(el=>el.classList.toggle("act",+el.dataset.clue===L.cwAct))});
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.cell;if(!k||e.target.readOnly)return;
+ const v=e.target.value.toUpperCase().replace(/[^A-Z]/g,"").slice(-1);e.target.value=v;L.cwEntry[k]=v;store.set("cwEntry",L.cwEntry);
+ const solved=D.mine.cw||{};
+ const cellOK=(kk,ch)=>L.cwEntry[kk]===ch||CW.placed.some(q=>solved[q.id]&&cellsOf(q).includes(kk));
+ L.cwSent=L.cwSent||{};
+ CW.placed.forEach(p=>{if(solved[p.id]||L.cwSent[L.me+p.id])return;if(cellsOf(p).every((kk,j)=>cellOK(kk,p.w[j]))){L.cwSent[L.me+p.id]=1;
+  const people=[L.me].concat(L.cwPartners.filter(i=>D.players[i]));
+  people.forEach(pid=>R("cw/"+pid+"/"+p.id).transaction(cur=>cur?undefined:true,(err,ok)=>{if(ok)award([pid],pv("crossword"),teamOf(pid),pv("crossword"))}));
+  toast("Solved: "+p.w)}});
+ if(v&&L.cwAct!=null){const p=CW.placed[L.cwAct],cs=cellsOf(p),i=cs.indexOf(k);if(i>=0&&i<cs.length-1){const nx=document.querySelector(`[data-cell="${cs[i+1]}"]`);nx&&nx.focus()}}});
+
+document.addEventListener("input",e=>{if(["jName","jDay"].includes(e.target.id))draftFromForm()});
+document.addEventListener("change",e=>{if(e.target.id==="jMonth")draftFromForm()});
+/* boot */
+render();connect();loadDict();
+if(L.view==="tv")setInterval(()=>{if(!st().live)drawQR()},4000);
+const qrWatch=new MutationObserver(()=>{if($("#qr")&&!$("#qr").children.length)drawQR()});qrWatch.observe(document.body,{childList:true,subtree:true});
+
+</script>
+</body></html>
