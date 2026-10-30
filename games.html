@@ -581,6 +581,9 @@ body:has(.phone){background-image:radial-gradient(900px 440px at 50% -170px,colo
 #net i{width:8px;height:8px;border-radius:50%;background:var(--gold);flex:none;animation:netp 1.2s ease-in-out infinite}
 #net.off i{background:#ff8a80}
 @keyframes netp{50%{opacity:.35}}
+/* phone: when the header carries moderator controls, put them on their own line so the title has room */
+@media (max-width:640px){header.top:has(>.row){flex-wrap:wrap}header.top:has(>.row) .brand{flex:1 1 100%}header.top:has(>.row)>.row{order:-1;width:100%;justify-content:flex-end;flex-wrap:nowrap}header.top:has(>.row)>.row .pill{white-space:nowrap}}
+.brand h1{overflow-wrap:normal;padding-bottom:.08em}
 </style>
 </head><body>
 <div class="wrap">
