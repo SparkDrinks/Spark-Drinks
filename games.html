@@ -2483,7 +2483,7 @@ Object.assign(ACT,{
  invToggle:el=>{const v=(D.invites||{})[el.dataset.k];if(v)RT(`invites/${el.dataset.k}/active`).set(!v.active)},
  invDel:el=>RT("invites/"+el.dataset.k).remove(),
  /* new-event page */
- nwCheck:async()=>{const code=(dv("nw_inv","")).toUpperCase().replace(/[^A-Z0-9]/g,"");const v=(await RT("invites/"+code).once("value")).val();
+ nwCheck:async()=>{const box=document.querySelector('[data-draft="nw_inv"]');const code=String((box&&typeof box.value==="string"&&box.value)||dv("nw_inv",QS.get("invite")||"")).toUpperCase().replace(/[^A-Z0-9]/g,"");if(!code)return toast("Type your invite code");L.drafts.nw_inv=code;const v=(await RT("invites/"+code).once("value")).val();
   if(!v||!v.active)return toast("That invite code isn't valid. Ask the host for a new one.");if((v.used||0)>=1||v.event)return toast("That invite code has already been used.");L.newInv=code;render(true)},
  nwType:el=>{L.drafts.nw_type=el.value;render(true)},
  nwImg:el=>{const f=el.files[0];if(!f)return;shrinkImage(f,640,.72,img=>{L.drafts.nw_image=img;extractPalette(img,pal=>{L.palette=pal;const th=autoTheme(pal);Object.keys(th).forEach(k=>L.drafts["ts_c_"+k]=th[k]);previewTheme("ts_");render(true)})})},
