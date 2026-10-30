@@ -1966,8 +1966,8 @@ function setupSteps(){const s=(D.meta&&D.meta.setup)||{},c=C();
   {k:"practice",done:!!s.practice,label:"Do a practice run",go:"event",tip:"Event tab → Start a practice run, then try every button."},
   {k:"share",done:!!s.share,label:"Print the kit or share the link",go:"print",tip:"Printable kit has the door sign, cheat sheet and answer key."}]}
 function markSetup(k){if(db&&EV&&D.meta&&!(D.meta.setup||{})[k])ER("meta/setup/"+k).set(true)}
-function checklist(){if(D.meta&&D.meta.practice)return "";const steps=setupSteps(),left=steps.filter(x=>!x.done).length;if(!left&&!L.showChecklist)return "";if(store.get("ckHide_"+EV,false)&&!L.showChecklist)return `<button class="btn sm as" data-act="showChecklist">Show the setup checklist (${left} left)</button>`;
- return `<section class="card stack checklist"><div class="row between"><div><h2>Setup checklist</h2><span class="small muted">${left?`${steps.length-left} of ${steps.length} done. Work down the list and you're ready.`:"All done. You're ready for the party!"}</span></div><div class="row"><button class="btn sm" data-act="tour">Take the tour</button><button class="btn sm" data-act="hideChecklist">Hide</button></div></div>
+function checklist(){if(D.meta&&D.meta.practice)return "";const steps=setupSteps(),left=steps.filter(x=>!x.done).length;if(store.get("ckHide_"+EV,false)&&!L.showChecklist||!left&&!L.showChecklist)return `<button class="btn sm as" data-act="showChecklist">Show the setup checklist (${left?left+" left":"all done"})</button>`;
+ return `<section class="card stack checklist"><div class="row between"><div><h2>Setup checklist</h2><span class="small muted">${left?`${steps.length-left} of ${steps.length} done. Work down the list and you're ready.`:"All done. You're ready for the party!"}</span></div><div class="row">${L.confirm==="ckReset"?`<span class="small">Clear every check mark?</span><button class="btn sm gold" data-act="ckReset">Yes, start over</button><button class="btn sm" data-act="cancelConfirm">No</button>`:`<button class="btn sm" data-act="tour">Take the tour</button><button class="btn sm" data-act="askCkReset">Start over</button><button class="btn sm" data-act="hideChecklist">Hide</button>`}</div></div>
  <div class="bar"><i style="width:${Math.round(100*(steps.length-left)/steps.length)}%"></i></div>
  <ol class="cklist">${steps.map((x,i)=>`<li class="${x.done?"done":""} ${!x.done&&steps.findIndex(y=>!y.done)===i?"next":""}"><span class="ck">${x.done?"✓":i+1}</span><div class="grow"><b>${x.label}</b><span class="small muted db">${x.tip}</span></div>${x.done?"":x.go==="print"?`<a class="btn sm" href="${esc(eventURL(EV,"print"))}" target="_blank" rel="noopener" data-act="markShare">Open</a>`:`<button class="btn sm ${steps.findIndex(y=>!y.done)===i?"primary":""}" data-act="mtab" data-k="${x.go}">Go</button>`}</li>`).join("")}</ol></section>`}
 
@@ -2197,6 +2197,8 @@ const ACT={
  hint:(el,e)=>{e&&e.preventDefault&&e.preventDefault();L.hint=L.hint===el.dataset.k?null:el.dataset.k;render(true)},
  showChecklist:()=>{store.set("ckHide_"+EV,false);L.showChecklist=true;render(true)},
  hideChecklist:()=>{store.set("ckHide_"+EV,true);L.showChecklist=false;render(true)},
+ askCkReset:()=>{L.confirm="ckReset";render(true)},
+ ckReset:async()=>{L.confirm=null;await ER("meta/setup").set({reset:true});store.set("ckHide_"+EV,false);L.showChecklist=true;toast("Checklist started over");render(true)},
  markShare:()=>markSetup("share"),
  tour:()=>{L.mtab="live";render(true);L.tourI=0;setTimeout(tourStep,100)},
  tourNext:()=>{L.tourI=(L.tourI||0)+1;if(L.tourI>=TOUR.length){L.tourI=null;store.set("tourDone",true)}tourStep()},
@@ -2868,7 +2870,7 @@ Object.assign(HINTS,{
 function setupSteps(){const s=(D.meta&&D.meta.setup)||{},c=C();
  return [
   {k:"details",done:!!s.details,label:"Add the event details",go:"event",tip:"Event tab: title, guests of honor and date, then Save details."},
-  {k:"pin",done:!!s.pin||!!Object.keys(D.mods||{}).length,label:"Add your moderators",go:"event",tip:"Event tab → Moderators. Give each helper their own PIN. You can remove anyone at any time."},
+  {k:"pin",done:!!s.pin||!s.reset&&!!Object.keys(D.mods||{}).length,label:"Add your moderators",go:"event",tip:"Event tab → Moderators. Give each helper their own PIN. You can remove anyone at any time."},
   {k:"content",done:!!s.content,label:"Review the games and questions",go:"content",tip:"Content tab. Edit questions or use Get ideas with AI."},
   {k:"moments",done:!!s.moments,label:"Plan the moments",go:"moments",tip:"Moments tab. Add photos and songs, set up the reveal and check the evening order."},
   {k:"menu",done:!!s.menu,label:"Set up the menu (optional)",go:"menu",tip:"Menu tab. Type it or upload a picture, and choose a fixed menu or let guests choose."},
