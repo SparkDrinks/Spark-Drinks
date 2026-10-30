@@ -344,6 +344,16 @@ a.btn.primary{color:#fff}
 .tv td:first-child,.tscroll td:first-child{width:2.2em}
 .steps .row select{width:auto}
 
+.cgdock{position:absolute;z-index:4}
+.cgdock iframe{width:100%;height:100%;border:0;display:block;background:transparent;color-scheme:light}
+.cgph{width:100%;min-height:60px}
+.bench{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:14px;align-items:start}
+.bench>div:last-child{grid-column:1/-1}
+@media (max-width:720px){.bench{grid-template-columns:1fr}}
+textarea.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.4}
+.evfull{grid-column:1/-1}
+.upl{position:relative;overflow:hidden}
+
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}
 </style>
 </head><body>
@@ -359,6 +369,7 @@ a.btn.primary{color:#fff}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+const CG_SRCDOC="<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Great+Vibes&family=Marcellus&family=Figtree:wght@400;500;600;700&display=swap\">\n<style>\n:root{--rose:#e8338f;--flame:#f6892f;--gold:#e0a826;--violet:#7b3fb8;--leaf:#2f8a4c;--sky:#3f74d6;--ink:#33163f;--muted:#7a5d86;--card:#fff;--ground-2:#efe4f7;--line:#dcc6ea;--fs:15px;\n --f-script:\"Great Vibes\",\"Brush Script MT\",cursive;--f-caps:\"Marcellus\",Georgia,serif;--f-body:\"Figtree\",system-ui,-apple-system,\"Segoe UI\",sans-serif}\n*{box-sizing:border-box}html,body{margin:0;background:transparent;color:var(--ink);font-family:var(--f-body);font-size:var(--fs);line-height:1.45}\n#root{display:flex;flex-direction:column;gap:12px;padding:2px}\nh1,h2,h3{font-family:var(--f-caps);font-weight:400;margin:0;color:var(--violet);text-wrap:balance}h1{font-size:1.6rem}h2{font-size:1.3rem}h3{font-size:1.05rem;color:var(--leaf)}\np{margin:0}img{max-width:100%;border-radius:10px}\n.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 2px 12px color-mix(in srgb,var(--violet) 10%,transparent)}\n.stack{display:flex;flex-direction:column;gap:10px}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.center{text-align:center;align-items:center;justify-content:center}\n.title{font-family:var(--f-script);font-size:clamp(2.2rem,8vw,3.6rem);line-height:1.05;background:linear-gradient(90deg,var(--rose),var(--flame) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}\n.big{font-family:var(--f-caps);font-size:clamp(2.4rem,10vw,5rem);line-height:1;color:var(--rose)}\n.muted{color:var(--muted)}.small{font-size:.85rem}\n.btn{border:1px solid var(--line);background:var(--ground-2);color:var(--ink);padding:10px 16px;border-radius:11px;font:inherit;font-weight:600;cursor:pointer;transition:transform .12s}\n.btn:active{transform:scale(.97)}.btn.primary{background:linear-gradient(135deg,var(--rose),var(--flame));border-color:transparent;color:#fff}.btn.gold{background:var(--gold);border-color:transparent;color:#2a1530}\n.btn:disabled{opacity:.45;cursor:not-allowed}.btn.sent{opacity:.7}\n.choices{display:grid;gap:8px}.choice{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);background:var(--ground-2);padding:13px 15px;border-radius:12px;text-align:left;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;width:100%}\n.choice.selected{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}.choice.right{border-color:var(--leaf);background:color-mix(in srgb,var(--leaf) 22%,var(--card))}.choice.wrong{opacity:.55}\n.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:700;background:var(--ground-2)}\n.pill.a{background:color-mix(in srgb,var(--sky) 18%,transparent);color:#244a96}.pill.b{background:color-mix(in srgb,var(--flame) 20%,transparent);color:#9a4a0a}\n.avatar{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;background:var(--ground-2);border:1px solid var(--line);font-size:17px;vertical-align:middle}\n.list{list-style:none;margin:0;padding:0;display:grid;gap:6px}.list li{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--ground-2);border-radius:10px}\n.timer{font-family:var(--f-caps);font-variant-numeric:tabular-nums;font-size:1.4rem;color:var(--flame)}\ninput,select,textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0;width:100%}\ninput[type=file]{display:none}label.btn{display:inline-block;text-align:center}\ntable{width:100%;border-collapse:collapse}td,th{padding:7px;border-bottom:1px solid var(--line);text-align:left}\n.err{background:#fde8ec;border:1px solid #e0475b;color:#7a1325;border-radius:12px;padding:12px;font-size:.9rem}\n.enter{animation:enter .5s cubic-bezier(.2,1.2,.4,1) both}@keyframes enter{from{opacity:0;transform:translateY(-12px) scale(.96)}}\n.pop{animation:pop .4s cubic-bezier(.2,1.4,.4,1)}@keyframes pop{from{transform:scale(.6);opacity:0}}\n@media (prefers-reduced-motion:reduce){.enter,.pop{animation:none}}\n<\/style><\/head><body><div id=\"root\"><\/div>\n<script>\n(function(){\n\"use strict\";\nvar G=null,role=\"player\",ctxData={players:[],teams:{}},state=null,offset=0,seen={},media={},asked={},hasTick=false;\nvar root=document.getElementById(\"root\");\nfunction post(m){m.__cg=1;parent.postMessage(m,\"*\")}\nfunction clone(o){return o===undefined?undefined:JSON.parse(JSON.stringify(o))}\nfunction esc(s){return String(s==null?\"\":s).replace(/[&<>\"']/g,function(c){return{\"&\":\"&amp;\",\"<\":\"&lt;\",\">\":\"&gt;\",'\"':\"&quot;\",\"'\":\"&#39;\"}[c]})}\nfunction mkctx(d,effects){\n var players=(d.players||[]).slice(),byId={};players.forEach(function(p){byId[p.id]=p});\n function need(n){return function(){if(!effects)throw new Error(n+\" can only be used in setup, onAction, onHostAction or onTick, not while drawing\")}}\n return{players:players,me:d.me||null,myTeam:d.me&&byId[d.me]?byId[d.me].team:null,teams:d.teams||{A:\"Team A\",B:\"Team B\"},now:Date.now()+offset,role:d.role,\n  player:function(id){return byId[id]||null},name:function(id){return id===\"host\"?\"Host\":(byId[id]||{}).name||\"Someone\"},playersOn:function(t){return players.filter(function(p){return p.team===t})},\n  random:Math.random,randInt:function(n){return Math.floor(Math.random()*n)},\n  shuffle:function(a){a=(a||[]).slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}return a},\n  pick:function(a){return a&&a.length?a[Math.floor(Math.random()*a.length)]:undefined},esc:esc,\n  award:function(id,pts){need(\"ctx.award\")();effects.push({t:\"award\",id:String(id),pts:+pts||0})},\n  awardTeam:function(team,pts){need(\"ctx.awardTeam\")();effects.push({t:\"team\",team:team===\"B\"?\"B\":\"A\",pts:+pts||0})},\n  celebrate:function(text){need(\"ctx.celebrate\")();effects.push({t:\"celebrate\",text:String(text||\"\").slice(0,80)})},\n  formatTime:function(ms){var s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+\":\"+String(s%60).padStart(2,\"0\")}}}\nfunction draw(){\n if(!G)return;if(state==null){root.innerHTML='<p class=\"muted small\" style=\"text-align:center\">Loading the game\u2026<\/p>';report();return}var fn=role===\"host\"?G.renderHost:role===\"screen\"?G.renderScreen:G.renderPlayer,html=\"\";\n try{html=fn?fn(clone(state)||{},mkctx(ctxData,null)):(role===\"host\"?'<p class=\"muted small\">This game has no host controls.<\/p>':\"\")}\n catch(e){html='<div class=\"err\">This game hit a problem while drawing: '+esc(e&&e.message)+'<\/div>';post({type:\"error\",where:\"drawing the \"+role+\" view\",message:String(e&&e.message||e)})}\n var saved={},a=document.activeElement,fName=a&&a.name&&root.contains(a)?a.name:null,sel=null;\n root.querySelectorAll(\"[name]\").forEach(function(el){if(el.type===\"file\")return;saved[el.name]=el.type===\"checkbox\"?el.checked:el.type===\"radio\"?(el.checked?el.value:saved[el.name]):el.value});\n if(fName){try{sel=[a.selectionStart,a.selectionEnd]}catch(e){}}\n root.innerHTML=html;\n root.querySelectorAll(\"[name]\").forEach(function(el){if(!(el.name in saved)||el.type===\"file\"||el.hasAttribute(\"data-keep-value\"))return;if(el.type===\"checkbox\")el.checked=saved[el.name];else if(el.type===\"radio\")el.checked=el.value===saved[el.name];else if(el.tagName!==\"SELECT\"||saved[el.name])el.value=saved[el.name]});\n if(fName){var f=root.querySelector('[name=\"'+fName.replace(/\"/g,'')+'\"]');if(f){f.focus({preventScroll:true});try{if(sel)f.setSelectionRange(sel[0],sel[1])}catch(e){}}}\n root.querySelectorAll(\"[data-anim-key]\").forEach(function(el){var k=el.getAttribute(\"data-anim-key\");if(!seen[k]){seen[k]=1;el.classList.add(\"enter\")}});\n root.querySelectorAll(\"img[data-media]\").forEach(function(img){var k=img.getAttribute(\"data-media\");if(media[k])img.src=media[k];else if(!asked[k]){asked[k]=1;post({type:\"media\",key:k})}});\n tickTimers();report()}\nfunction tickTimers(){var n=Date.now()+offset;root.querySelectorAll(\"[data-countdown]\").forEach(function(el){var end=+el.getAttribute(\"data-countdown\"),left=end-n;el.textContent=left>0?Math.floor(left/60000)+\":\"+String(Math.floor(left/1000)%60).padStart(2,\"0\"):(el.getAttribute(\"data-done\")||\"0:00\")})}\nsetInterval(tickTimers,250);\nvar lastH=0;function report(){var h=Math.ceil(root.getBoundingClientRect().height)+6;if(Math.abs(h-lastH)>1){lastH=h;post({type:\"height\",h:h})}}\nif(window.ResizeObserver)new ResizeObserver(report).observe(root);setInterval(report,500);\nfunction send(action){post({type:\"act\",action:action})}\nfunction collect(scope){var form={};scope.querySelectorAll(\"[name]\").forEach(function(i){if(i.type===\"file\")return;if(i.type===\"checkbox\")form[i.name]=i.checked;else if(i.type===\"radio\"){if(i.checked)form[i.name]=i.value}else form[i.name]=i.value});return form}\nfunction numify(v){return v!=null&&/^-?\\d+(\\.\\d+)?$/.test(v)?+v:v}\nfunction fire(el){var scope=el.closest(\"[data-form]\")||root,v=el.getAttribute(\"data-value\");\n send({type:el.getAttribute(\"data-action\"),value:v===null?null:numify(v),form:collect(scope)});\n if(el.closest(\"[data-form]\"))scope.querySelectorAll(\"input[name]:not([type=radio]):not([type=checkbox]),textarea[name]\").forEach(function(i){i.value=\"\"});\n el.classList.add(\"sent\")}\nroot.addEventListener(\"click\",function(e){var el=e.target.closest(\"[data-action]\");if(!el||el.disabled)return;e.preventDefault();fire(el)});\nroot.addEventListener(\"keydown\",function(e){if(e.key!==\"Enter\"||e.target.tagName===\"TEXTAREA\")return;var f=e.target.closest(\"[data-form]\");if(!f)return;var b=f.querySelector(\"[data-action]\");if(b){e.preventDefault();fire(b)}});\nroot.addEventListener(\"change\",function(e){var el=e.target;if(!el.matches||!el.matches(\"input[type=file][data-photo]\")||!el.files[0])return;var type=el.getAttribute(\"data-photo\"),fr=new FileReader();\n fr.onload=function(){var img=new Image();img.onload=function(){var s=Math.min(1,720/Math.max(img.width,img.height)),c=document.createElement(\"canvas\");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext(\"2d\").drawImage(img,0,0,c.width,c.height);send({type:type,value:c.toDataURL(\"image/jpeg\",.68),photo:true,form:{}})};img.src=fr.result};fr.readAsDataURL(el.files[0])});\nfunction genericBot(st,botId,d){\n if(!G.renderPlayer)return null;var box=document.createElement(\"div\");try{box.innerHTML=G.renderPlayer(clone(st)||{},mkctx(Object.assign({},d,{me:botId}),null))}catch(e){return null}\n var btns=[].slice.call(box.querySelectorAll(\"[data-action]\")).filter(function(b){return!b.disabled});if(!btns.length)return null;\n var b=btns[Math.floor(Math.random()*btns.length)],scope=b.closest(\"[data-form]\")||box;\n scope.querySelectorAll(\"input[name],textarea[name],select[name]\").forEach(function(i){if(i.tagName===\"SELECT\"){var o=i.querySelectorAll(\"option\");if(o.length)i.value=o[Math.floor(Math.random()*o.length)].value}else if(i.type===\"number\"){var mn=+i.min||1,mx=+i.max||100;i.value=String(mn+Math.floor(Math.random()*(mx-mn+1)))}else if(i.type===\"checkbox\"||i.type===\"radio\"){i.checked=Math.random()<.5}else i.value=[\"Sunshine\",\"Lullaby\",\"Pickles\",\"Grandma\",\"Blue\",\"Seven\"][Math.floor(Math.random()*6)]});\n var v=b.getAttribute(\"data-value\");return{type:b.getAttribute(\"data-action\"),value:v===null?null:numify(v),form:collect(scope)}}\nwindow.addEventListener(\"message\",function(e){\n if(e.source!==parent)return;var m=e.data||{};\n if(m.type===\"load\"){role=m.role||\"player\";offset=m.offset||0;var r=document.documentElement;Object.keys(m.vars||{}).forEach(function(k){r.style.setProperty(k,m.vars[k])});\n  try{var def=null;new Function(\"defineGame\",String(m.code||\"\"))(function(d){def=d});if(!def||typeof def!==\"object\")throw new Error(\"The code never calls defineGame({...}).\");\n   if(typeof def.setup!==\"function\")throw new Error(\"defineGame needs a setup(ctx) function.\");if(typeof def.renderPlayer!==\"function\")throw new Error(\"defineGame needs a renderPlayer(state, ctx) function.\");\n   G=def;hasTick=typeof def.onTick===\"function\";post({type:\"ready\",title:String(def.title||\"\"),hasTick:hasTick,hasBot:typeof def.botAction===\"function\"});draw()}\n  catch(err){post({type:\"error\",where:\"loading the game\",message:String(err&&err.message||err),fatal:true})}}\n else if(m.type===\"render\"){state=m.state;ctxData=m.ctx||ctxData;if(m.offset!=null)offset=m.offset;draw()}\n else if(m.type===\"media\"){media[m.key]=m.src;root.querySelectorAll('img[data-media=\"'+m.key+'\"]').forEach(function(i){i.src=m.src})}\n else if(m.type===\"call\"){var effects=[],res={type:\"result\",id:m.id,ok:true};\n  try{if(!G)throw new Error(\"The game isn't loaded.\");var ctx=mkctx(m.ctx||ctxData,effects),s=clone(m.state),out;\n   if(m.fn===\"setup\"){out=G.setup(ctx);if(out===undefined)throw new Error(\"setup(ctx) must return the starting state object.\")}\n   else if(m.fn===\"action\"){out=G.onAction?G.onAction(s,m.action,ctx):s;if(out===undefined)out=s}\n   else if(m.fn===\"hostAction\"){var f=G.onHostAction||G.onAction;out=f?f(s,m.action,ctx):s;if(out===undefined)out=s}\n   else if(m.fn===\"tick\"){out=G.onTick?G.onTick(s,ctx):s;if(out===undefined)out=s}\n   else if(m.fn===\"check\"){res.action=null;var d=m.ctx,pl=d.players,st2=G.setup(mkctx(d,[]));if(!st2||typeof st2!==\"object\")throw new Error(\"setup(ctx) must return the starting state object.\");\n    var views=[[\"renderPlayer\",\"the guest phone\",pl[0].id],[\"renderHost\",\"the host controls\",null],[\"renderScreen\",\"the big screen\",null]];\n    function drawAll(label){views.forEach(function(v){if(typeof G[v[0]]!==\"function\")return;var h;try{h=G[v[0]](clone(st2),mkctx(Object.assign({},d,{me:v[2]}),null))}catch(e){throw new Error(e.message+\" (in \"+v[0]+\", \"+label+\")\")}if(typeof h!==\"string\")throw new Error(v[0]+\" must return an HTML string (\"+label+\")\")})}\n    function hostAct(){if(!G.renderHost)return null;var box=document.createElement(\"div\");box.innerHTML=G.renderHost(clone(st2),mkctx(d,null));var bs=box.querySelectorAll(\"[data-action]\");if(!bs.length)return null;var b=bs[Math.floor(Math.random()*bs.length)];var v=b.getAttribute(\"data-value\");return{type:b.getAttribute(\"data-action\"),value:v===null?null:numify(v),form:collect(b.closest(\"[data-form]\")||box),from:\"host\",name:\"Host\",team:null}}\n    drawAll(\"right after setup\");\n    for(var step=0;step<14;step++){var ha=step%3===0?hostAct():null,label;\n     if(ha){var hf=G.onHostAction||G.onAction;try{var o=hf?hf(clone(st2),ha,mkctx(d,[])):st2;st2=o===undefined?st2:o}catch(e){throw new Error(e.message+' (in onHostAction, after the host tapped \"'+ha.type+'\")')}label='after the host tapped \"'+ha.type+'\"'}\n     else{var p=pl[step%pl.length],ga=genericBot(st2,p.id,d);if(!ga)continue;ga.from=p.id;ga.name=p.name;ga.team=p.team;try{var o2=G.onAction?G.onAction(clone(st2),ga,mkctx(d,[])):st2;st2=o2===undefined?st2:o2}catch(e){throw new Error(e.message+' (in onAction, after a guest tapped \"'+ga.type+'\")')}label='after a guest tapped \"'+ga.type+'\"'}\n     if(G.onTick){try{var o3=G.onTick(clone(st2),mkctx(d,[]));st2=o3===undefined?st2:o3}catch(e){throw new Error(e.message+\" (in onTick)\")}}\n     var js=JSON.stringify(st2);if(!js||js[0]!==\"{\")throw new Error(\"The game state stopped being a plain object (\"+label+\").\");drawAll(label)}\n    post(res);return}\n   else if(m.fn===\"bot\"){var a=G.botAction?G.botAction(s,m.botId,mkctx(Object.assign({},m.ctx,{me:m.botId}),null)):genericBot(m.state,m.botId,m.ctx);res.action=a||null;post(res);return}\n   var json=JSON.stringify(out);if(json===undefined||json[0]!==\"{\")throw new Error(\"The game state must be a plain object.\");if(json.length>400000)throw new Error(\"The game state is too big. Keep photos and long lists out of it.\");\n   res.state=JSON.parse(json);res.changed=json!==JSON.stringify(m.state);res.effects=effects}\n  catch(err){res.ok=false;res.error=String(err&&err.message||err);res.where={setup:\"starting the game\",action:\"handling a player's tap\",hostAction:\"handling a host button\",tick:\"the once-a-second timer\"}[m.fn]||m.fn}\n  post(res)}});\npost({type:\"boot\"});\n})();\n<\/script><\/body><\/html>\n";
 /* ================= Party Games — content & translations ================= */
 const GAMES=[
  {id:"split",name:"Team Splitter",es:"Formar equipos",note:"Opening icebreaker"},
@@ -471,7 +482,7 @@ const ES={
 "Get ready":"Prepárate","Let's play!":"¡A jugar!",
 "Home":"Inicio","Live game":"Juego","Hunt":"Búsqueda","Photos":"Fotos","Leaders":"Ranking",
 "Welcome":"Bienvenido","Join the games":"Únete a los juegos","Your name":"Tu nombre","First name and last initial":"Nombre e inicial del apellido",
-"Birth month":"Mes de nacimiento","Day":"Día","Pick your picture":"Elige tu imagen","Take a selfie":"Tómate una selfie",
+"Birth month":"Mes de nacimiento","Day":"Día","Pick your picture":"Elige tu imagen","Take a selfie":"Tómate una selfie","Retake selfie":"Tomar otra selfie","Using your selfie":"Usando tu selfie","or pick a picture above":"o elige una imagen arriba","Your picture":"Tu imagen","Picture updated":"Imagen actualizada",
 "Pick a fun-fact question about you":"Elige una pregunta divertida sobre ti","Your answer":"Tu respuesta",
 "Other guests have to ask you this in person to unlock your secret word.":"Los demás invitados tendrán que preguntarte esto en persona para desbloquear tu palabra secreta.",
 "Join":"Unirme","Back":"Volver","Enter your name first":"Primero escribe tu nombre","Pick your answer to the fun-fact question":"Elige tu respuesta a la pregunta",
@@ -604,8 +615,12 @@ const supLine=it=>L.lang==="es"&&it.es?`${t("Who is most likely to")} ${supQ(it)
 const st=()=>D.state||{};
 const P=id=>D.players[id]||{name:"Guest",m:1,d:1,fq:0,fa:0,word:"APPLE",t:0};
 const ids=()=>Object.keys(D.players).sort((a,b)=>(D.players[a].t||0)-(D.players[b].t||0));
+const DAYS_IN=[31,29,31,30,31,30,31,31,30,31,30,31];
+const fixDay=(m,d)=>Math.min(DAYS_IN[(m||1)-1],Math.max(1,+d||1));
+/* Seasons: "month" = Dec–May is winter & spring; "dates" = winter starts Dec 21, summer starts Jun 21 */
+function inWinterSpring(m,d){if((st().seasonMode||"month")==="dates"){if(m===12)return d>=21;if(m===6)return d<=20;return m<=5}return m===12||m<=5}
 function teamOf(id){const o=(st().override||{})[id];if(o)return o;const p=P(id);
- if((st().split||"seasons")==="seasons")return (p.m===12||p.m<=5)?"A":"B";return p.d%2?"A":"B"}
+ if((st().split||"seasons")==="seasons")return inWinterSpring(p.m,p.d)?"A":"B";return p.d%2?"A":"B"}
 function teamName(tm){const n=(st().teamNames||{})[tm];if(n)return n;const s=st().split||"seasons";
  if(L.lang==="es")return s==="seasons"?(tm==="A"?"Invierno y primavera":"Verano y otoño"):(tm==="A"?"Cumpleaños impares":"Cumpleaños pares");
  return s==="seasons"?(tm==="A"?"Winter & Spring":"Summer & Fall"):(tm==="A"?"Odd birthdays":"Even birthdays")}
@@ -781,7 +796,7 @@ function cdTick(){const el=$("#cd");if(!el)return;const cd=st().countdown;
  if(!cd||VIEW==="host"||VIEW==="album"||VIEW==="print"||cdDismiss===cd.at){return hideCd()}
  const left=cd.at-now();if(left>6200||left<-1900)return hideCd();
  if(!el.classList.contains("on"))el.classList.add("on");
- const g=GAMES.find(x=>x.id===cd.game);
+ const g=gameById(cd.game);
  if(left>0){const n=Math.max(1,Math.min(5,Math.ceil(left/1000)));if(cdLast!==n){cdLast=n;el.innerHTML=`<div class="cd-in"><div class="cd-top">${t("Get ready")}</div><div class="cd-n">${n}</div><div class="cd-g">${esc(gname(g))}</div></div>`;SND.tick();buzz(70)}}
  else if(cdLast!=="go"){cdLast="go";el.innerHTML=`<div class="cd-in"><div class="cd-rays"></div><div class="cd-go">${esc(gname(g))}</div><div class="cd-top">${t("Let's play!")}</div></div>`;SND.go();buzz([90,50,200]);confetti(120);
   if(VIEW==="guest"){L.ptab="live";renderSoon()}}}
@@ -818,7 +833,7 @@ function render(){
  if(keep){const el=keep.cell?app.querySelector(`[data-cell="${keep.cell}"]`):keep.id?document.getElementById(keep.id):null;
   if(el){el.focus({preventScroll:true});try{if(keep.ss!=null&&el.setSelectionRange)el.setSelectionRange(keep.ss,keep.se)}catch(e){}}}
  document.querySelectorAll("[data-timer]").forEach(el=>el.textContent=fmtLeft(+el.dataset.timer));
- drawQRs();
+ drawQRs();try{cgUpdate()}catch(e){console.warn(e)}
 }
 function bind(root){if(!root)return;root.querySelectorAll("[data-act]").forEach(el=>{const ev=el.tagName==="BUTTON"||el.tagName==="A"?"click":(el.type==="color"?"input":"change");
  el.addEventListener(ev,e=>{if(el.tagName==="A")e.preventDefault();const f=ACT[el.dataset.act];if(f)f(el,e);else console.warn("no action",el.dataset.act)})})}
@@ -865,20 +880,20 @@ function joinScreen(){
  return `<section class="card stack"><div class="eyebrow">${t("Welcome")}</div><h2>${t("Join the games")}</h2>
  <label class="stack tight"><span class="small">${t("Your name")}</span><input type="text" id="jName" maxlength="24" value="${esc(d.name)}" placeholder="${t("First name and last initial")}" autocomplete="off"></label>
  <div class="row"><label class="stack tight grow"><span class="small">${t("Birth month")}</span><select id="jMonth">${months.map((x,k)=>`<option value="${k+1}" ${k+1===d.m?"selected":""}>${x}</option>`).join("")}</select></label>
- <label class="stack tight"><span class="small">${t("Day")}</span><input type="number" id="jDay" min="1" max="31" value="${d.d}"></label></div>
+ <label class="stack tight"><span class="small">${t("Day")}</span><input type="number" id="jDay" min="1" max="${DAYS_IN[d.m-1]}" value="${fixDay(d.m,d.d)}"></label></div>
  <div class="stack tight"><span class="small">${t("Pick your picture")}</span><div class="avpick">${AVATARS.map(e=>`<button data-act="jAv" data-e="${e}" aria-pressed="${d.av&&d.av.e===e&&!d.av.img}">${e}</button>`).join("")}
-  <label class="avsel ${d.av&&d.av.img?"on":""}">${d.av&&d.av.img?`<img src="${d.av.img}" alt="">`:"📷"}<input type="file" accept="image/*" capture="user" data-act="jSelfie" aria-label="${t("Take a selfie")}"></label></div></div>
+  </div><div class="row">${d.av&&d.av.img?`<span class="avsel on"><img src="${d.av.img}" alt=""></span>`:""}<label class="btn upl">📷 ${d.av&&d.av.img?t("Retake selfie"):t("Take a selfie")}<input type="file" accept="image/*" capture="user" data-act="jSelfie" aria-label="${t("Take a selfie")}"></label>${d.av&&d.av.img?`<span class="small muted">${t("Using your selfie")}</span>`:`<span class="small muted">${t("or pick a picture above")}</span>`}</div></div>
  <label class="stack tight"><span class="small">${t("Pick a fun-fact question about you")}</span><select id="jQ" data-act="jQ">${FQ.map((q,k)=>`<option value="${k}" ${k===d.fq?"selected":""}>${esc(L.lang==="es"?q.es.q:q.q)}</option>`).join("")}</select></label>
  <div class="stack tight"><span class="small">${t("Your answer")}</span><div class="row">${opts.map((o,k)=>`<button class="btn sm ${k===d.fa?"gold":""}" data-act="jA" data-k="${k}">${esc(o)}</button>`).join("")}</div></div>
  <p class="small muted m0">${t("Other guests have to ask you this in person to unlock your secret word.")}</p>
  <button class="btn primary" data-act="join">${t("Join")}</button>${L.profiles.length?`<button class="btn" data-act="cancelJoin">${t("Back")}</button>`:""}</section>`}
 function draftFromForm(){const d=store.get("draft",{name:"",m:1,d:1,fq:0,fa:null,av:{e:AVATARS[0]}});const n=$("#jName"),m=$("#jMonth"),dd=$("#jDay");
- if(n)d.name=n.value;if(m)d.m=+m.value;if(dd)d.d=Math.min(31,Math.max(1,+dd.value||1));store.set("draft",d);return d}
+ if(n)d.name=n.value;if(m)d.m=+m.value;if(dd)d.d=+dd.value||1;d.d=fixDay(d.m,d.d);store.set("draft",d);return d}
 const rank=id=>ranked().indexOf(id)+1;
 
 function pHome(){
  if(st().ended)return pRecap();
- const tm=teamOf(L.me),g=GAMES.find(x=>x.id===st().live);const found=Object.values(D.mine.hunt||{}).filter(v=>v==="ok").length;
+ const tm=teamOf(L.me),g=st().live?gameById(st().live):null;const found=Object.values(D.mine.hunt||{}).filter(v=>v==="ok").length;
  const sw=L.profiles.length>1?`<div class="row">${L.profiles.filter(id=>D.players[id]).map(id=>`<button class="btn sm ${id===L.me?"gold":""}" data-act="switchP" data-id="${id}">${av(id,20)} ${esc(P(id).name)}</button>`).join("")}</div>`:"";
  const img=C().image?`<img class="ev-art" src="${C().image}" alt="">`:"";
  const nW=Object.keys(D.mine.wishes||{}).length,h=C().honorees;
@@ -901,8 +916,9 @@ function pRecap(){
 
 function pLive(){
  const live=st().live;if(!live)return `<div class="card muted">${t("No game is live right now. Your phone will switch when one starts.")}</div>`;
- const g=GAMES.find(x=>x.id===live);
- return `<div class="row between"><div><span class="eyebrow">${t("Live game")}</span><h2>${esc(gname(g))}</h2></div><span class="pill live"><span class="dot"></span>${t("Live")}</span></div>`+({split:gSplit,longword:gLong,hunt:pHunt,trivia:gTrivia,crossword:gCross,sup:gSup,bingo:gBingo}[live])()}
+ const g=gameById(live);const head=`<div class="row between"><div><span class="eyebrow">${t("Live game")}</span><h2>${esc(gname(g))}</h2></div><span class="pill live"><span class="dot"></span>${t("Live")}</span></div>`;
+ if(g&&g.custom)return head+`<div class="cgph" data-slot="p"></div>`;
+ return head+({split:gSplit,longword:gLong,hunt:pHunt,trivia:gTrivia,crossword:gCross,sup:gSup,bingo:gBingo}[live])()}
 
 function gSplit(){
  const tm=teamOf(L.me),p=P(L.me);
@@ -1017,6 +1033,8 @@ function pBoard(){const order=ranked();
  return `${teamBar()}<section class="card tscroll"><table><thead><tr><th>#</th><th>${t("Guest")}</th><th>${t("Team")}</th><th class="tr">${t("Pts")}</th></tr></thead><tbody>${order.map((i,k)=>`<tr ${i===L.me?'class="me"':""}><td class="num">${k+1}</td><td>${av(i,24)} ${esc(P(i).name)}${i===L.me?" "+t("(you)"):""}</td><td><span class="pill ${teamOf(i).toLowerCase()}">${teamOf(i)}</span></td><td class="num tr">${score(i)}</td></tr>`).join("")}</tbody></table></section>`}
 function pProfile(){const p=P(L.me),f=FQ[p.fq]||FQ[0];const bs=Object.keys(D.mine.badges||{}).filter(k=>BADGES[k]);
  return `<section class="card stack"><div class="row">${av(L.me,56)}<div><div class="eyebrow">${t("Your profile")}</div><h2>${esc(p.name)}</h2></div></div><p class="small m0">${t("Birthday:")} ${bday(p)} · ${esc(teamName(teamOf(L.me)))}</p><p class="small m0">${t("Your question:")} ${esc(L.lang==="es"?f.es.q:f.q)} <b>${esc((L.lang==="es"?f.es.o:f.o)[p.fa])}</b></p><p class="small m0">${t("Your secret word:")} <b>${p.word}</b></p><button class="btn as" data-act="settings">Aa · ${t("Settings")}</button></section>
+ <section class="card stack"><h3>${t("Your picture")}</h3><div class="avpick">${AVATARS.map(e=>`<button data-act="pAv" data-e="${e}" aria-pressed="${!!(p.av&&p.av.e===e&&!p.av.img)}">${e}</button>`).join("")}</div>
+ <div class="row">${p.av&&p.av.img?`<span class="avsel on"><img src="${p.av.img}" alt=""></span>`:""}<label class="btn upl">📷 ${p.av&&p.av.img?t("Retake selfie"):t("Take a selfie")}<input type="file" accept="image/*" capture="user" data-act="pSelfie" aria-label="${t("Take a selfie")}"></label></div></section>
  <section class="card stack"><h3>${t("Your badges")}</h3>${bs.length?`<div class="badges">${bs.map(k=>`<div class="bd"><span>${BADGES[k].i}</span><b>${esc(L.lang==="es"?BADGES[k].es:BADGES[k].n)}</b><small>${esc(L.lang==="es"?BADGES[k].des:BADGES[k].d)}</small></div>`).join("")}</div>`:`<p class="small muted m0">${t("No badges yet. Keep playing!")}</p>`}</section>
  <section class="card stack"><h3>${t("Sharing this phone?")}</h3><p class="small muted m0">${t("A friend without a smartphone can join here too. Each of you keeps your own points, and you can switch players from Home.")}</p><button class="btn" data-act="addFriend">${t("Add another player on this phone")}</button></section>`}
 
@@ -1024,21 +1042,22 @@ function pProfile(){const p=P(L.me),f=FQ[p.fq]||FQ[0];const bs=Object.keys(D.min
 function pinScreen(){return `<section class="card stack narrow"><div class="eyebrow">Moderators only</div><h2>Enter the moderator PIN</h2><p class="small muted m0">${esc(D.meta?D.meta.name:"")}</p><input type="password" id="pin" inputmode="numeric" autocomplete="off" data-draft="pin" value="${esc(dv("pin",""))}"><button class="btn primary" data-act="pin">Open the console</button><a class="small muted" href="${esc(eventURL(EV))}">I'm a guest</a></section>`}
 function moderator(){
  const tab=(k,l)=>`<button data-act="mtab" data-k="${k}" aria-pressed="${L.mtab===k}">${l}</button>`;
- const body=({live:mLive,teams:mTeams,scores:mScores,content:mContent,event:mEvent,memories:mMemories}[L.mtab]||mLive)();
+ const body=({live:mLive,teams:mTeams,scores:mScores,content:mContent,custom:mCustom,event:mEvent,memories:mMemories}[L.mtab]||mLive)();
  const pr=D.meta&&D.meta.practice?`<div class="banner soft"><span><b>Practice run</b> with pretend guests. Open a <a href="${esc(eventURL(EV))}" target="_blank" rel="noopener">guest view</a> or the <a href="${esc(eventURL(EV,"screen"))}" target="_blank" rel="noopener">big screen</a> to see what they see.</span><button class="btn sm" data-act="endPractice">End practice</button></div>`:"";
- return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("event","Event")}${tab("memories","Memories")}</nav><div class="stack mw0">${body}</div></div>`}
+ return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("custom","Custom games")}${tab("event","Event")}${tab("memories","Memories")}</nav><div class="stack mw0">${body}</div></div>`}
 
 /* ---- Live ---- */
 function mLive(){
  const live=st().live;
- const rows=enabledGames().map((g,k)=>`<div class="gamerow ${live===g.id?"on":""}"><span class="gnum">${k+1}</span><div><b>${g.name}</b><div class="small muted">${g.note}</div></div>${live===g.id?`<button class="btn sm" data-act="endGame">End</button>`:`<button class="btn sm primary" data-act="goLive" data-id="${g.id}">Go live</button>`}</div>`).join("");
+ const cgs=Object.keys(cgAll()).sort((a,b)=>(cgAll()[a].t||0)-(cgAll()[b].t||0)).map(id=>({id:"c:"+id,name:cgAll()[id].name,note:"Custom game"}));
+ const rows=enabledGames().concat(cgs).map((g,k)=>`<div class="gamerow ${live===g.id?"on":""}"><span class="gnum">${k+1}</span><div><b>${g.name}</b><div class="small muted">${g.note}</div></div>${live===g.id?`<button class="btn sm" data-act="endGame">End</button>`:`<button class="btn sm primary" data-act="goLive" data-id="${g.id}">Go live</button>`}</div>`).join("");
  return `<section class="card stack"><div class="row between"><h2>Tonight's games</h2><span class="small muted">${ids().length} guests joined · going live runs a 5-second countdown on every phone</span></div><div class="gamelist">${rows}</div></section>${tools()}${reviewQueue()}
  <section class="card stack"><h3>Send an announcement</h3><div class="row"><input type="text" id="annText" class="grow" data-draft="ann" value="${esc(dv("ann",""))}" placeholder="Bingo starts in 5 minutes!"><button class="btn primary" data-act="announce">Send to every phone</button></div></section>`}
 function paceBar(done,total,since,label){const pct=total?Math.round(100*done/total):0;const secs=since?Math.round((now()-since)/1000):0;
  let nudge="";if(total&&pct>=80)nudge=`<div class="nudge">Most guests have ${label}. Move on when you're ready.</div>`;else if(since&&secs>75)nudge=`<div class="nudge">It's been over a minute. Consider moving on.</div>`;
  return `<div class="stack tight"><div class="row between small"><span><b class="num">${done}</b> of ${total} ${label}</span><span class="num muted">${pct}%${since?` · ${Math.floor(secs/60)}:${String(secs%60).padStart(2,"0")}`:""}</span></div><div class="bar"><i style="width:${pct}%"></i></div>${nudge}</div>`}
 function tools(){
- const id=st().live;
+ const id=st().live;if(liveCg())return cgLiveTools(liveCg());
  if(id==="bingo"){const called=st().called||[],last=called[called.length-1],round=st().bingoRound||1;
   let board='<div class="called">';for(let n=1;n<=75;n++)board+=`<span class="${called.includes(n)?"on":""}">${n}</span>`;board+="</div>";
   const cl=(D.claims||{})[round]||{};const pend=Object.keys(cl).filter(p=>!cl[p].ok).length;
@@ -1074,7 +1093,8 @@ function mTeams(){
   <div class="stack tight"><span class="small">Team name</span><div class="row"><input type="text" class="grow" data-draft="tn${tm}" value="${esc(dv("tn"+tm,(st().teamNames||{})[tm]||""))}" placeholder="${esc(teamName(tm))}"><button class="btn sm primary" data-act="setTeamName" data-t="${tm}">Set</button></div>
   ${sl.length?`<div class="row small">${sl.map(s=>`<button class="btn xs" data-act="useSugg" data-t="${tm}" data-k="${s.k}">${esc(s.name)} · ${s.v}</button>`).join("")}</div>`:'<span class="small muted">Guest suggestions show up here during Team Splitter.</span>'}</div>
   <div class="stack tight">${m.map(i=>`<div class="row between small"><span>${av(i,22)} ${esc(P(i).name)} <span class="muted">${MON[P(i).m-1]} ${P(i).d}</span>${podOf(i)?` <span class="muted">· pod ${podOf(i)}</span>`:""}${(st().override||{})[i]?' <span class="pill warn">moved</span>':""}${P(i).bot?' <span class="pill">bot</span>':""}</span><span class="row"><button class="btn sm" data-act="move" data-id="${i}">Move to ${tm==="A"?"B":"A"}</button><button class="btn sm" data-act="kick" data-id="${i}">Remove</button></span></div>`).join("")||'<span class="small muted">Nobody yet</span>'}</div></section>`};
- return `<section class="card stack"><h2>How should the room split?</h2><div class="seg" role="group" aria-label="Team split"><button data-act="split" data-v="seasons" aria-pressed="${(st().split||"seasons")==="seasons"}">Seasons</button><button data-act="split" data-v="oddeven" aria-pressed="${st().split==="oddeven"}">Odd &amp; even birthdays</button></div><p class="small muted m0">${(st().split||"seasons")==="seasons"?"Winter and spring birthdays form one team, summer and fall the other.":"Odd days of the month form one team, even days the other."} Once the first game after the split starts, latecomers join the smaller team.</p>${st().locked?'<span class="pill warn as">Teams are locked in</span>':""}</section><div class="grid2">${col("A")}${col("B")}</div>`}
+ return `<section class="card stack"><h2>How should the room split?</h2><div class="seg" role="group" aria-label="Team split"><button data-act="split" data-v="seasons" aria-pressed="${(st().split||"seasons")==="seasons"}">Seasons</button><button data-act="split" data-v="oddeven" aria-pressed="${st().split==="oddeven"}">Odd &amp; even birthdays</button></div>${(st().split||"seasons")==="seasons"?`<div class="row small"><span>Seasons go by</span><div class="seg" role="group" aria-label="Season dates"><button data-act="seasonMode" data-v="month" aria-pressed="${(st().seasonMode||"month")==="month"}">Month (Dec–May)</button><button data-act="seasonMode" data-v="dates" aria-pressed="${st().seasonMode==="dates"}">Start dates (Dec 21–Jun 20)</button></div></div>`:""}
+ <p class="small muted m0">${(st().split||"seasons")==="seasons"?((st().seasonMode||"month")==="dates"?"Birthdays from December 21 through June 20 (winter and spring) form one team. June 21 through December 20 (summer and fall) form the other.":"Birthdays in December through May (winter and spring) form one team. June through November (summer and fall) form the other."):"Odd days of the month (1st, 3rd, 5th…) form one team, even days the other."} Once the first game after the split starts, latecomers join the smaller team.</p>${st().locked?'<span class="pill warn as">Teams are locked in</span>':""}</section><div class="grid2">${col("A")}${col("B")}</div>`}
 
 /* ---- Scores ---- */
 function mScores(){const order=ranked(),A=D.team.A||0,B=D.team.B||0,tie=C().tie||{},tb=st().tiebreak;
@@ -1192,11 +1212,12 @@ function hSettings(){return `<section class="card stack"><h2>Host PIN</h2><p cla
 
 /* ================= BIG SCREEN ================= */
 function bigscreen(){
- const s=st(),order=ranked().slice(0,10),g=GAMES.find(x=>x.id===s.live);let stage;
+ const s=st(),order=ranked().slice(0,10),g=s.live?gameById(s.live):null;let stage;
  const opts=SUPOPT();
  if(s.showWinner||s.ended){const A=D.team.A||0,B=D.team.B||0,w=A===B?null:(A>B?"A":"B");stage=`<div class="eyebrow">Tonight's champions</div><div class="winner">${w?esc(teamName(w)):"It's a tie!"}</div><p class="muted">${w?`${D.team[w]} points`:"Time for the tiebreaker question."}</p>`}
  else if(s.tiebreak){const tie=C().tie||{};stage=`<div class="eyebrow">Tiebreaker</div><h2 class="big">${esc(tie.q||"")}</h2><p class="muted">Each team agrees on one number. Closest guess wins.</p>${s.tiebreak.result?`<div class="winner sm">${esc(s.tiebreak.result)}</div>`:""}`}
  else if(!g){const al=D.album||{},ks=Object.keys(al).slice(-8).reverse();stage=`${C().image?`<img class="ev-art big" src="${C().image}" alt="">`:""}<div class="winner">Welcome!</div><p class="muted">Scan to join the games</p><div class="qrbox asc" data-qr="${esc(eventURL(EV))}" data-size="190"></div>${ks.length?`<div class="strip">${ks.map(k=>`<img src="${al[k].thumb}" alt="">`).join("")}</div>`:""}`}
+ else if(g&&g.custom)stage=`<div class="cgph" data-slot="s"></div>`;
  else if(s.live==="bingo"){const c=s.called||[],last=c[c.length-1];stage=`<div class="eyebrow">Bingo · last call</div><div class="huge pop" >${last?letter(last)+"-"+last:"Get ready"}</div><p class="muted">${c.slice(-6,-1).reverse().map(n=>letter(n)+"-"+n).join(" · ")}</p>`}
  else if(s.live==="trivia"){const list=TRV(),qi=Math.min(s.tvQ||0,list.length-1),it=list[qi]||{o:[],q:"",a:0};const shown=s.tvPhase==="done";
   stage=`<div class="eyebrow">Trivia · question ${qi+1} of ${list.length}</div><h2 class="big">${esc(it.q)}</h2><div class="grid2 tl">${it.o.map((x,k)=>`<div class="card ${shown&&k===it.a?"choice right":""}"><b class="gnum il">${"ABCD"[k]}</b> ${esc(x)}</div>`).join("")}</div>${s.tvPhase==="revote"?`<p class="banner jc">Tied pods are revoting · <span class="num" data-timer="${s.tvRevoteEnd}">${fmtLeft(s.tvRevoteEnd)}</span></p>`:""}`}
@@ -1222,6 +1243,264 @@ function printView(){const c=C(),url=eventURL(EV),sel=L.printSel;const w=D.wishe
  ${sel.hints&&hunt.length?`<div class="sheetp"><h2>Scavenger Hunt hints</h2><div class="hintgrid">${hunt.map((x,k)=>`<div class="hcard"><div class="eyebrow">Mystery item ${k+1}</div><p>${esc(x.h)}</p>${x.es&&x.es.h?`<p class="small muted">${esc(x.es.h)}</p>`:""}</div>`).join("")}</div></div>`:""}
  ${sel.key?`<div class="sheetp"><h2>Host answer key</h2><h3>Trivia</h3><ol class="keylist">${list.map(x=>`<li>${esc(x.q)} <b>${"ABCD"[x.a]}. ${esc(x.o[x.a]||"")}</b></li>`).join("")}</ol><h3>Scavenger Hunt</h3><ol class="keylist">${hunt.map(x=>`<li>${esc(x.h)} <b>${esc(x.n)}</b></li>`).join("")}</ol><h3>Tiebreaker</h3><p>${esc((c.tie||{}).q||"")} <b>${esc((c.tie||{}).a)}</b></p></div>`:""}
  ${sel.wishes?`<div class="sheetp"><div class="tc"><div class="eyebrow">${esc(c.tagline||"")}</div><div class="winner">Wishes for ${esc(c.honorees||"you")}</div></div><div class="wishgrid">${Object.keys(w).map(k=>`<div class="wish"><p class="m0">${esc(w[k].text)}</p><p class="small muted m0">${esc(w[k].name||"")}</p></div>`).join("")||'<p class="muted">No wishes yet.</p>'}</div></div>`:""}`}
+
+/* ================= CUSTOM GAMES (AI-written, run in a sealed frame) ================= */
+const CG={frames:{},session:Math.random().toString(36).slice(2,10),stateRef:null,stateGid:null};
+const CGR={gid:null,ref:null,queue:{},busy:false,ready:false,setupAsked:false,lastBot:0};
+const cgAll=()=>(C().custom)||{};
+const cgGame=gid=>cgAll()[gid]||null;
+const liveCg=()=>{const l=st().live;return l&&String(l).startsWith("c:")?l.slice(2):null};
+function gameById(id){if(id&&String(id).startsWith("c:")){const g=cgGame(id.slice(2));const n=g?g.name:"Custom game";return {id,name:n,es:n,note:g&&g.desc?g.desc:"Custom game",custom:true}}return GAMES.find(x=>x.id===id)}
+function themeVars(){const cs=getComputedStyle(document.documentElement),o={};["--rose","--flame","--gold","--violet","--leaf","--sky","--ink","--muted","--card","--ground-2","--line"].forEach(k=>{const v=cs.getPropertyValue(k).trim();if(v)o[k]=v});o["--fs"]=L.large?"17.5px":"15px";return o}
+function cgCtx(me,role,players){return {players:players||ids().map(i=>({id:i,name:P(i).name,team:teamOf(i),teamName:teamName(teamOf(i)),avatar:(P(i).av||{}).e||"",bot:!!P(i).bot})),teams:{A:teamName("A"),B:teamName("B")},me:me||null,role,now:now()}}
+
+class CGFrame{
+ constructor(slot,role,code){this.slot=slot;this.role=role;this.code=code;this.ready=false;this.calls={};this.waiting=[];this.h=140;this.info={};this.last=null;
+  const box=document.createElement("div");box.className="cgdock";box.style.display="none";document.body.appendChild(box);this.box=box;
+  const f=document.createElement("iframe");f.setAttribute("sandbox","allow-scripts");f.setAttribute("title","Game");f.setAttribute("allow","");f.srcdoc=CG_SRCDOC;box.appendChild(f);this.f=f}
+ post(m){try{this.f.contentWindow&&this.f.contentWindow.postMessage(m,"*")}catch(e){}}
+ onMsg(m){
+  if(m.type==="boot"){this.post({type:"load",code:this.code,role:this.role,vars:themeVars(),offset:L.offset})}
+  else if(m.type==="ready"){this.ready=true;this.info=m;this.waiting.splice(0).forEach(go=>go());if(this.last)this.post(this.last);this.onReady&&this.onReady(m)}
+  else if(m.type==="height"){this.h=Math.max(60,m.h);syncFrames()}
+  else if(m.type==="act"){this.onAct&&this.onAct(m.action)}
+  else if(m.type==="error"){this.onError?this.onError(m):cgReportError(m)}
+  else if(m.type==="result"){const c=this.calls[m.id];if(c){clearTimeout(c.t);delete this.calls[m.id];c.res(m)}}
+  else if(m.type==="media"){const k=String(m.key||"").replace(/[^A-Za-z0-9_-]/g,"");if(!k)return;(this.mediaSrc?Promise.resolve(this.mediaSrc(k)):ER("cgmedia/"+k).once("value").then(s=>s.val())).then(src=>{if(src)this.post({type:"media",key:k,src})})}}
+ render(state,ctx){this.last={type:"render",state:state||{},ctx,offset:L.offset};if(this.ready)this.post(this.last)}
+ call(fn,payload){return new Promise((res,rej)=>{const id=Math.random().toString(36).slice(2);const go=()=>{this.calls[id]={res,t:setTimeout(()=>{delete this.calls[id];rej(new Error("The game took too long to answer. It may be stuck in a loop."))},fn==="check"?7500:5000)};this.post(Object.assign({type:"call",id,fn},payload))};this.ready?go():this.waiting.push(go)})}
+ destroy(){Object.values(this.calls).forEach(c=>clearTimeout(c.t));this.box.remove();if(CG.frames[this.slot]===this)delete CG.frames[this.slot]}}
+window.addEventListener("message",e=>{const m=e.data;if(!m||!m.__cg)return;const fr=Object.values(CG.frames).find(x=>x.f.contentWindow===e.source);if(fr)fr.onMsg(m)});
+function getFrame(slot,role,code){let f=CG.frames[slot];if(f&&f.code===code&&f.role===role)return f;if(f)f.destroy();f=new CGFrame(slot,role,code);CG.frames[slot]=f;return f}
+function dropFrame(slot){const f=CG.frames[slot];if(f)f.destroy()}
+/* frames float over placeholders, so re-drawing the page never reloads a running game */
+function syncFrames(){Object.values(CG.frames).forEach(fr=>{const ph=document.querySelector(`.cgph[data-slot="${fr.slot}"]`);
+ if(!ph||!ph.offsetParent&&ph.getClientRects().length===0){fr.box.style.display="none";return}
+ ph.style.height=fr.h+"px";const r=ph.getBoundingClientRect();
+ Object.assign(fr.box.style,{display:"block",left:(r.left+window.scrollX)+"px",top:(r.top+window.scrollY)+"px",width:r.width+"px",height:fr.h+"px"})})}
+setInterval(syncFrames,300);window.addEventListener("resize",syncFrames);
+
+/* ---------- live game wiring (called after every render) ---------- */
+function cgLiveState(){return CG.liveState||null}
+function cgUpdate(){
+ const gid=liveCg(),g=gid?cgGame(gid):null;
+ // subscribe to the shared state
+ if(gid!==CG.stateGid){if(CG.stateRef)CG.stateRef.off();CG.stateRef=null;CG.liveState=null;CG.stateGid=gid;
+  if(gid&&db){CG.stateRef=ER("cg/"+gid+"/state");CG.stateRef.on("value",s=>{const v=s.val();try{CG.liveState=v?JSON.parse(v):null}catch(e){CG.liveState=null}feedFrames();if(!v)cgEnsureSetup()})}}
+ const want={};
+ if(g&&EV&&L.loaded){
+  if(VIEW==="guest"&&L.me&&D.players[L.me])want.p=["player",g.code];
+  if(VIEW==="screen")want.s=["screen",g.code];
+  if(VIEW==="moderator"&&L.modOK)want.h=["host",g.code]}
+ ["p","s","h"].forEach(slot=>{if(want[slot]){const f=getFrame(slot,want[slot][0],want[slot][1]);
+   if(slot==="p")f.onAct=a=>cgPushAction(gid,a,L.me);if(slot==="h"){f.onAct=a=>cgPushAction(gid,a,"host");f.onReady=()=>{CGR.ready=true;cgEnsureSetup();cgPump()}}}
+  else dropFrame(slot)});
+ cgRunner(gid);feedFrames();syncFrames()}
+function feedFrames(){const gid=liveCg();if(!gid)return;const s=CG.liveState;if(!s)return;
+ const pl=cgCtx(null,"x").players;
+ if(CG.frames.p)CG.frames.p.render(s,cgCtx(L.me,"player",pl));if(CG.frames.s)CG.frames.s.render(s,cgCtx(null,"screen",pl));if(CG.frames.h)CG.frames.h.render(s,cgCtx(null,"host",pl))}
+async function cgPushAction(gid,a,from){if(!db||!a||!a.type)return;let value=a.value;
+ if(a.photo&&typeof value==="string"&&value.startsWith("data:")){const k=ER("cgmedia").push().key;await ER("cgmedia/"+k).set(value);value=k}
+ const who=from==="host"?{from:"host",name:"Host",team:null}:{from,name:P(from).name,team:teamOf(from)};
+ ER(`cg/${gid}/actions`).push(Object.assign({type:String(a.type).slice(0,60),value:value==null?null:value,form:a.form||{},at:SERVER_TS()},who));buzz(20)}
+/* the console that started the game runs it; another moderator can take over */
+const amRunner=gid=>{const r=st().cgRun||{};return !!gid&&VIEW==="moderator"&&L.modOK&&r.id===gid&&r.runner===CG.session};
+function cgRunner(gid){const mine=amRunner(gid);
+ if(mine&&CGR.gid!==gid){if(CGR.ref)CGR.ref.off();CGR.gid=gid;CGR.queue={};CGR.setupAsked=false;CGR.ref=ER(`cg/${gid}/actions`);CGR.ref.on("value",s=>{CGR.queue=s.val()||{};cgPump()})}
+ if(!mine&&CGR.gid){if(CGR.ref)CGR.ref.off();CGR.ref=null;CGR.gid=null}}
+async function cgEnsureSetup(){const gid=CGR.gid;const fr=CG.frames.h;if(!gid||!fr||!fr.ready||CG.liveState||CGR.setupAsked||CG.stateGid!==gid)return;
+ const snap=await ER(`cg/${gid}/state`).once("value");if(snap.val()){return}CGR.setupAsked=true;
+ try{const r=await fr.call("setup",{state:{},ctx:cgCtx(null,"host")});if(!r.ok)return cgReportError({where:r.where,message:r.error,gid});await cgCommit(gid,r,true)}catch(e){cgReportError({where:"starting the game",message:e.message,gid})}}
+async function cgCommit(gid,r,force){if(!r.ok){cgReportError({where:r.where,message:r.error,gid});return}
+ if(r.changed||force){CG.liveState=r.state;await ER(`cg/${gid}/state`).set(JSON.stringify(r.state));feedFrames()}
+ (r.effects||[]).forEach(fx=>{if(fx.t==="award"&&D.players[fx.id])award([fx.id],fx.pts,teamOf(fx.id),fx.pts);else if(fx.t==="team")ER("team/"+fx.team).transaction(v=>(v||0)+fx.pts);else if(fx.t==="celebrate")setState({celebrate:{text:fx.text,t:now()}})})}
+async function cgPump(){const gid=CGR.gid,fr=CG.frames.h;if(CGR.busy||!gid||!fr||!fr.ready||!CG.liveState)return;const keys=Object.keys(CGR.queue||{}).sort();if(!keys.length)return;
+ CGR.busy=true;const k=keys[0],a=CGR.queue[k];delete CGR.queue[k];
+ try{const r=await fr.call(a.from==="host"?"hostAction":"action",{state:CG.liveState,action:a,ctx:cgCtx(null,"host")});await cgCommit(gid,r)}catch(e){cgReportError({where:"handling a tap",message:e.message,gid})}
+ try{await ER(`cg/${gid}/actions/${k}`).remove()}catch(e){}CGR.busy=false;if(Object.keys(CGR.queue||{}).length)setTimeout(cgPump,0)}
+setInterval(async()=>{const gid=CGR.gid,fr=CG.frames.h;if(!gid||!fr||!fr.ready||!CG.liveState||CGR.busy)return;
+ if(st().countdown&&now()<st().countdown.at)return;
+ if(fr.info.hasTick){CGR.busy=true;try{const r=await fr.call("tick",{state:CG.liveState,ctx:cgCtx(null,"host")});await cgCommit(gid,r)}catch(e){cgReportError({where:"the timer",message:e.message,gid})}CGR.busy=false;cgPump()}
+ if(D.meta&&D.meta.practice&&Date.now()-CGR.lastBot>1100){CGR.lastBot=Date.now();const bots=ids().filter(i=>P(i).bot);if(bots.length&&Math.random()<.7){const b=bots[rnd(bots.length)];
+  try{const r=await fr.call("bot",{state:CG.liveState,botId:b,ctx:cgCtx(b,"player")});if(r.action&&r.action.type)cgPushAction(gid,r.action,b)}catch(e){}}}},1000);
+function cgReportError(m){L.cgErr={where:m.where||"",message:m.message||"Unknown problem",gid:m.gid||liveCg(),t:Date.now()};if(VIEW==="moderator")renderSoon()}
+
+/* ---------- AI request for writing or fixing a game ---------- */
+const CG_API=`HOW MY GAME ENGINE WORKS
+- Your code must call defineGame({...}) exactly once. Plain JavaScript only: no imports, no network requests, no setTimeout or setInterval, no localStorage, no alert. Helper functions outside defineGame are fine.
+- The game has ONE shared state: a plain JSON object (objects, arrays, strings, numbers, booleans, no functions or Dates). Only the host's device changes it, through setup, onAction, onHostAction and onTick. Every phone, the host controls and the TV then redraw from it.
+- Render functions return an HTML string and must never change state or award points.
+
+defineGame({
+  title: "Short game name",
+  setup(ctx) { return { /* starting state */ }; },
+  onAction(state, action, ctx) { /* a guest tapped something */ return state; },
+  onHostAction(state, action, ctx) { /* the host tapped something on the host controls */ return state; },
+  onTick(state, ctx) { /* optional: runs once a second on the host's device, use it to end timed rounds */ return state; },
+  renderPlayer(state, ctx) { return "..."; },   // each guest's phone. ctx.me is that guest's id
+  renderHost(state, ctx) { return "..."; },     // the host's controls (start rounds, reveal answers, next round...)
+  renderScreen(state, ctx) { return "..."; },   // the big TV everyone watches
+  botAction(state, botId, ctx) { return { type: "...", value: ..., form: {...} } or null; }  // optional: what a pretend guest does during practice runs
+});
+
+action = { type, value, form, from, name, team }
+  type  = the tapped element's data-action
+  value = its data-value (number-looking values arrive as numbers), or a photo id for photo actions
+  form  = values of all elements with a name="" inside the closest element that has data-form
+  from  = the guest's id ("host" for host actions); name and team ("A" or "B") of that guest
+
+ctx gives you:
+  ctx.players    array of { id, name, team ("A"/"B"), teamName, avatar (an emoji) }; guests can join at any time
+  ctx.me         the guest's id on a phone; null on the host controls and the TV
+  ctx.myTeam, ctx.teams = { A: "team name", B: "team name" }, ctx.player(id), ctx.name(id), ctx.playersOn("A")
+  ctx.now        current time in ms, the same clock on every device
+  ctx.random(), ctx.randInt(n), ctx.shuffle(array), ctx.pick(array)
+  ctx.esc(text)  ALWAYS use this on names and anything guests typed before putting it in HTML
+  ctx.award(guestId, points)       points to that guest and to their team (only in setup/onAction/onHostAction/onTick)
+  ctx.awardTeam("A" or "B", points) team points only
+  ctx.celebrate("Short message")   confetti and a big message on the TV
+  ctx.formatTime(ms)               "1:05"
+
+HTML building blocks
+  Button:  <button class="btn primary" data-action="vote" data-value="2">Vote</button>
+  Typing:  <div data-form><input name="guess" type="number" placeholder="Your guess"><button class="btn primary" data-action="guess">Send</button></div>
+           (Enter also sends; the boxes clear after sending; typed text survives redraws)
+  Photo:   <label class="btn primary">Take a photo<input type="file" accept="image/*" data-photo="photo"></label>
+           sends an action with type "photo" and value = a photo id. Show any photo id with <img data-media="PHOTO_ID">. Store only ids in state.
+  Timer:   <span class="timer" data-countdown="\${state.endsAt}" data-done="Time's up!"></span>  (counts down live; end the round in onTick)
+  Animate: add data-anim-key="something-unique" to make an element pop in the first time it appears.
+  Classes: card, stack, row, grid2, center, title (fancy script headline), big (huge word or number), muted, small, btn, btn primary, btn gold,
+           choices + choice (big tappable answer buttons; add selected, right or wrong), pill, pill a, pill b (team colors), avatar, list, timer.
+           Inline styles are fine. Theme colors are CSS variables: --rose --flame --gold --violet --leaf --ink --muted.
+
+Rules for a game that works on the night
+  - Check every action in onAction: right phase, guest hasn't already answered, values make sense. Ignore anything else.
+  - Every phase must show something useful on all three views, including guests who joined late and the host before the game starts.
+  - Keep state small (well under 100 KB). Never put photos in state.
+  - Guests can't see the host controls, so the host must be able to move the game forward from renderHost (start, reveal, next, finish).
+  - Show a clear final result and award points with ctx.award or ctx.awardTeam.`;
+const CG_EXAMPLE=`defineGame({
+  title: "Guess the Price",
+  setup(ctx) {
+    return { items: [{ name: "Diaper Genie", price: 45 }, { name: "Box of 100 wipes", price: 6 }, { name: "Baby monitor", price: 89 }],
+             round: 0, phase: "waiting", guesses: {}, endsAt: 0, winner: null };
+  },
+  onHostAction(state, a, ctx) {
+    if (a.type === "open" && state.phase === "waiting") { state.phase = "guessing"; state.guesses = {}; state.endsAt = ctx.now + 45000; }
+    if (a.type === "reveal" && state.phase === "guessing") reveal(state, ctx);
+    if (a.type === "next" && state.phase === "reveal" && state.round < state.items.length - 1) { state.round++; state.phase = "waiting"; state.winner = null; }
+    return state;
+  },
+  onAction(state, a, ctx) {
+    const g = Number(a.form.guess);
+    if (a.type === "guess" && state.phase === "guessing" && !(a.from in state.guesses) && g > 0) state.guesses[a.from] = g;
+    return state;
+  },
+  onTick(state, ctx) { if (state.phase === "guessing" && ctx.now > state.endsAt) reveal(state, ctx); return state; },
+  renderPlayer(state, ctx) {
+    const item = state.items[state.round], mine = state.guesses[ctx.me];
+    if (state.phase === "waiting") return \`<div class="card center"><p class="muted">Item \${state.round + 1} of \${state.items.length}</p><h2>Get ready to guess!</h2></div>\`;
+    if (state.phase === "guessing") return mine ? \`<div class="card center"><h2>You guessed $\${mine}</h2><p class="muted">Waiting for the reveal…</p></div>\`
+      : \`<div class="card"><h2>How much is the \${ctx.esc(item.name)}?</h2><span class="timer" data-countdown="\${state.endsAt}" data-done="Time's up"></span>
+         <div data-form class="row"><input name="guess" type="number" min="1" placeholder="Price in dollars"><button class="btn primary" data-action="guess">Guess</button></div></div>\`;
+    return \`<div class="card center"><p class="muted">\${ctx.esc(item.name)}</p><div class="big" data-anim-key="price\${state.round}">$\${item.price}</div>
+      <p>\${state.winner ? ctx.esc(ctx.name(state.winner)) + " was closest!" : "No guesses this round."}</p></div>\`;
+  },
+  renderHost(state, ctx) {
+    const n = Object.keys(state.guesses).length;
+    return \`<div class="card"><h3>Item \${state.round + 1}: \${ctx.esc(state.items[state.round].name)} ($\${state.items[state.round].price})</h3><p class="muted">\${n} guesses in</p><div class="row">
+      \${state.phase === "waiting" ? '<button class="btn primary" data-action="open">Open guessing</button>' : ""}
+      \${state.phase === "guessing" ? '<button class="btn primary" data-action="reveal">Reveal price</button>' : ""}
+      \${state.phase === "reveal" && state.round < state.items.length - 1 ? '<button class="btn primary" data-action="next">Next item</button>' : ""}</div></div>\`;
+  },
+  renderScreen(state, ctx) {
+    const item = state.items[state.round];
+    if (state.phase === "reveal") return \`<div class="center stack"><div class="title">\${ctx.esc(item.name)}</div><div class="big" data-anim-key="s\${state.round}">$\${item.price}</div><h2>\${state.winner ? ctx.esc(ctx.name(state.winner)) + " wins 5 points!" : ""}</h2></div>\`;
+    return \`<div class="center stack"><div class="title">Guess the Price</div><h2>\${state.phase === "guessing" ? ctx.esc(item.name) : "Next item coming up"}</h2>\${state.phase === "guessing" ? \`<span class="timer" data-countdown="\${state.endsAt}"></span>\` : ""}</div>\`;
+  },
+  botAction(state, botId, ctx) {
+    return state.phase === "guessing" && !(botId in state.guesses) ? { type: "guess", form: { guess: String(1 + ctx.randInt(100)) } } : null;
+  }
+});
+function reveal(state, ctx) {
+  const price = state.items[state.round].price;
+  let best = null;
+  for (const id in state.guesses) { const d = Math.abs(state.guesses[id] - price); if (!best || d < best.d) best = { id, d }; }
+  state.phase = "reveal"; state.winner = best ? best.id : null;
+  if (best) { ctx.award(best.id, 5); ctx.celebrate(ctx.name(best.id) + " was closest!"); }
+}`;
+function cgPromptNew(desc){const c=C();const theme=((c.themeDesc||c.title||"a party")+(c.honorees?` honoring ${c.honorees}`:"")).replace(/[.\s]+$/,"");
+ return `I'm hosting ${theme}. Guests play party games on their phones through my web app, with a host control panel and a big TV screen. Please write a brand-new game for it:\n\n${desc.trim()}\n\nThe app splits guests into two teams, A and B, for the whole night. Make the game fun for a room of about ${Math.max(10,ids().filter(i=>!P(i).bot).length||60)} people of all ages, and give it a clear ending with points.\n\n${CG_API}\n\nHere is a complete example game that follows these rules:\n\`\`\`js\n${CG_EXAMPLE}\n\`\`\`\n\nReply with only the complete code for the new game in one \`\`\`js code block.`}
+function cgPromptEdit(g,change,err){return `I have a custom party game for my web app's game engine. ${err?`It hit this problem while ${err.where}: "${err.message}". Please fix it`:"Please change it"}${change&&change.trim()?` as follows:\n\n${change.trim()}`:"."}\n\nKeep everything else working. ${CG_API}\n\nHere is the current code:\n\`\`\`js\n${g.code}\n\`\`\`\n\nReply with only the complete updated code in one \`\`\`js code block.`}
+function cgExtractCode(text){const s=String(text||"");const m=s.match(/```(?:js|javascript)?\s*\n([\s\S]*?)```/i);return (m?m[1]:s).trim()}
+
+/* ---------- checking code before it is saved ---------- */
+function cgCheck(code){return new Promise(res=>{const slot="chk"+Math.random().toString(36).slice(2,6);const f=getFrame(slot,"host",code);let done=false;
+ const finish=r=>{if(done)return;done=true;clearTimeout(to);f.destroy();res(r)};const to=setTimeout(()=>finish({ok:false,message:"The code didn't finish within 8 seconds. It may be stuck in a loop."}),8000);
+ f.onError=m=>finish({ok:false,message:`${m.message} (while ${m.where})`});
+ f.onReady=async info=>{try{const pl=[{id:"t1",name:"Ana",team:"A",teamName:"Team A",avatar:"🐣"},{id:"t2",name:"Ben",team:"B",teamName:"Team B",avatar:"🦉"}];
+  const pl3=pl.concat([{id:"t3",name:"Cleo",team:"A",teamName:"Team A",avatar:"🌸"},{id:"t4",name:"Dev",team:"B",teamName:"Team B",avatar:"🐝"}]);
+  const r=await f.call("check",{state:{},ctx:{players:pl3,teams:{A:"Team A",B:"Team B"},me:null,role:"host",now:now()}});if(!r.ok)return finish({ok:false,message:r.error});
+  finish({ok:true,title:info.title})}catch(e){finish({ok:false,message:e.message})}}})}
+
+/* ---------- test bench: phone, host and TV side by side, with pretend guests ---------- */
+const TEST_PLAYERS=[{id:"you",name:"Jamie (you)",team:"A"},{id:"tb1",name:"Aunt May",team:"A"},{id:"tb2",name:"Uncle Ray",team:"B"},{id:"tb3",name:"Kayla",team:"B"},{id:"tb4",name:"Omar",team:"A"},{id:"tb5",name:"Grandma Lou",team:"B"}].map((p,i)=>Object.assign(p,{teamName:p.team==="A"?"Team A":"Team B",avatar:AVATARS[i]}));
+const T={on:false};
+function testCtx(me,role){return {players:TEST_PLAYERS,teams:{A:"Team A",B:"Team B"},me:me||null,role,now:now()}}
+function testStart(gid){const g=cgGame(gid);if(!g)return;testStop();Object.assign(T,{on:true,gid,code:g.code,state:null,log:[],q:[],busy:false,bots:false,media:{}});
+ const h=getFrame("th","host",g.code),p=getFrame("tp","player",g.code),s=getFrame("ts","screen",g.code);
+ [h,p,s].forEach(f=>{f.mediaSrc=k=>T.media[k];f.onError=m=>testLog(`Problem while ${m.where}: ${m.message}`,true)});
+ p.onAct=a=>testQueue(a,"you");h.onAct=a=>testQueue(a,"host");h.onReady=()=>testReset()}
+function testStop(){["th","tp","ts"].forEach(dropFrame);T.on=false;clearInterval(T.iv)}
+async function testReset(){const h=CG.frames.th;if(!h)return;const r=await h.call("setup",{state:{},ctx:testCtx(null,"host")}).catch(e=>({ok:false,error:e.message,where:"starting"}));
+ if(!r.ok){testLog(`Problem while ${r.where}: ${r.error}`,true);return}T.state=r.state;T.log=[];testLog("Game started");testDraw();clearInterval(T.iv);
+ T.iv=setInterval(async()=>{if(!T.on||T.busy)return;const h2=CG.frames.th;if(!h2)return;
+  if(h2.info.hasTick){T.busy=true;const r2=await h2.call("tick",{state:T.state,ctx:testCtx(null,"host")}).catch(e=>({ok:false,error:e.message,where:"the timer"}));T.busy=false;testApply(r2)}
+  if(T.bots&&Math.random()<.6){const b=TEST_PLAYERS[1+rnd(5)];const r3=await h2.call("bot",{state:T.state,botId:b.id,ctx:testCtx(b.id,"player")}).catch(()=>null);if(r3&&r3.action&&r3.action.type)testQueue(r3.action,b.id)}},1000)}
+function testQueue(a,from){if(a.photo&&typeof a.value==="string"){const k="m"+Math.random().toString(36).slice(2,8);T.media[k]=a.value;a=Object.assign({},a,{value:k})}
+ const p=TEST_PLAYERS.find(x=>x.id===from);T.q.push(Object.assign({},a,{from,name:p?p.name:"Host",team:p?p.team:null}));testPump()}
+async function testPump(){if(T.busy||!T.q.length)return;T.busy=true;const a=T.q.shift();const h=CG.frames.th;
+ const r=await h.call(a.from==="host"?"hostAction":"action",{state:T.state,action:a,ctx:testCtx(null,"host")}).catch(e=>({ok:false,error:e.message,where:"handling a tap"}));T.busy=false;testApply(r,a);testPump()}
+function testApply(r,a){if(!r)return;if(!r.ok){testLog(`Problem while ${r.where}: ${r.error}`,true);return}
+ (r.effects||[]).forEach(fx=>testLog(fx.t==="award"?`${(TEST_PLAYERS.find(p=>p.id===fx.id)||{name:fx.id}).name} +${fx.pts} points`:fx.t==="team"?`Team ${fx.team} +${fx.pts} points`:`TV celebrates: ${fx.text}`));
+ if(a&&a.from!=="you"&&a.from!=="host"&&!r.changed){}else if(a)testLog(`${a.name} tapped "${a.type}"`);
+ if(r.changed){T.state=r.state;testDraw()}}
+function testDraw(){if(!T.state)return;const h=CG.frames.th,p=CG.frames.tp,s=CG.frames.ts;h&&h.render(T.state,testCtx(null,"host"));p&&p.render(T.state,testCtx("you","player"));s&&s.render(T.state,testCtx(null,"screen"));if(VIEW==="moderator"&&L.mtab==="custom")renderSoon()}
+function testLog(msg,bad){T.log=T.log||[];T.log.unshift({msg,bad,t:Date.now()});T.log=T.log.slice(0,30);if(bad)T.lastErr={where:"testing",message:msg};renderSoon()}
+
+/* ---------- moderator tab ---------- */
+function mCustom(){const all=cgAll();const keys=Object.keys(all).sort((a,b)=>(all[a].t||0)-(all[b].t||0));const mode=L.cgMode||{};
+ const list=keys.length?keys.map(id=>{const g=all[id];const m=mode.id===id?mode.m:null;
+  return `<div class="gamerow evrow"><span class="gnum">★</span><div class="mw0"><b>${esc(g.name)}</b><div class="small muted">${esc(g.desc||"")}</div></div>
+  <div class="row">${L.confirm==="cgdel:"+id?`<span class="small">Delete this game?</span><button class="btn sm gold" data-act="cgDel" data-id="${id}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:
+  `<button class="btn sm primary" data-act="cgTest" data-id="${id}">${T.on&&T.gid===id?"Testing below":"Test it"}</button><button class="btn sm" data-act="cgMode" data-id="${id}" data-m="edit">Change with AI</button><button class="btn sm" data-act="cgMode" data-id="${id}" data-m="code">Code</button><button class="btn sm" data-act="cgAskDel" data-id="${id}">Delete</button>`}</div>
+  ${m==="edit"?cgEditPanel(id,g):""}${m==="code"?`<div class="stack evfull"><textarea data-draft="cgc_${id}" rows="14" spellcheck="false" class="code">${esc(dv("cgc_"+id,g.code))}</textarea><div class="row"><button class="btn primary" data-act="cgSaveCode" data-id="${id}">${L.cgChecking?"Checking…":"Check and save"}</button><button class="btn" data-act="cgMode" data-id="" data-m="">Close</button></div></div>`:""}</div>`}).join(""):`<p class="small muted m0">No custom games yet. Describe one below.</p>`;
+ const desc=dv("cg_desc","");const pasted=dv("cg_paste","");
+ return `<section class="card stack"><div class="row between"><h2>Custom games</h2><span class="small muted">Saved games show up in the Live tab, ready to go live.</span></div>${list}</section>
+ ${T.on?testBench():""}
+ <section class="card stack"><h2>Create a new game</h2><ol class="steps">
+ <li>Describe the game in your own words: how it's played, who plays (everyone, teams or pairs), what shows on phones and the TV, and how points work.<textarea data-draft="cg_desc" rows="5" placeholder="Example: Baby photo guess. Before the party I'll describe 8 guests' baby photos. Each round the TV shows a clue, guests pick which guest it is from a list, and everyone who's right gets 2 points. The fastest right answer gets 1 bonus point.">${esc(desc)}</textarea></li>
+ <li>Copy this request and paste it into Claude.<textarea id="cgPrompt" rows="5" readonly>${esc(desc.trim()?cgPromptNew(desc):"Describe your game first, and the request appears here.")}</textarea><div class="row"><button class="btn primary" data-act="copyEl" data-el="cgPrompt" ${desc.trim()?"":"disabled"}>Copy request</button><a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a></div></li>
+ <li>Paste Claude's answer here. The whole reply is fine.<textarea data-draft="cg_paste" rows="7" spellcheck="false" class="code" placeholder="Paste the code…">${esc(pasted)}</textarea>
+ <div class="row"><button class="btn primary" data-act="cgSaveNew" ${pasted.trim()?"":"disabled"}>${L.cgChecking?"Checking…":"Check and save"}</button></div>${L.cgCheckMsg?`<div class="nudge">${esc(L.cgCheckMsg)}</div>`:""}</li></ol>
+ <p class="small muted m0">Every new game opens in the test bench first. After that, try it in a practice run with pretend guests before the party.</p></section>`}
+function cgEditPanel(id,g){const ch=dv("cge_"+id,"");const err=L.cgErr&&L.cgErr.gid===id?L.cgErr:(T.on&&T.gid===id&&T.lastErr?T.lastErr:null);
+ return `<div class="stack evfull"><ol class="steps"><li>Say what to change${err?`, or leave it blank to fix the last problem: <span class="bad">${esc(err.message)}</span>`:""}.<textarea data-draft="cge_${id}" rows="3" placeholder="Example: make each round 30 seconds and give the winner 10 points">${esc(ch)}</textarea></li>
+ <li>Copy this request into Claude.<textarea id="cgEditPrompt" rows="4" readonly>${esc(cgPromptEdit(g,ch,!ch.trim()&&err?err:null))}</textarea><div class="row"><button class="btn primary" data-act="copyEl" data-el="cgEditPrompt">Copy request</button><a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a></div></li>
+ <li>Paste the new code.<textarea data-draft="cgp_${id}" rows="6" spellcheck="false" class="code">${esc(dv("cgp_"+id,""))}</textarea><div class="row"><button class="btn primary" data-act="cgSaveEdit" data-id="${id}">${L.cgChecking?"Checking…":"Check and save"}</button><button class="btn" data-act="cgMode" data-id="" data-m="">Cancel</button></div></li></ol></div>`}
+function testBench(){const g=cgGame(T.gid)||{name:"Game"};
+ return `<section class="card stack"><div class="row between"><h2>Test bench · ${esc(g.name)}</h2><div class="row"><button class="btn sm ${T.bots?"gold":""}" data-act="cgBots">${T.bots?"Stop pretend guests":"Let pretend guests play"}</button><button class="btn sm" data-act="cgReset">Start over</button><button class="btn sm" data-act="cgTestClose">Close</button></div></div>
+ <p class="small muted m0">Play as "Jamie (you)" on the phone, run it from the host controls, and watch the TV. Nothing here touches real scores.</p>
+ <div class="bench"><div class="stack tight"><span class="eyebrow">Guest phone</span><div class="cgph benchph phonew" data-slot="tp"></div></div><div class="stack tight"><span class="eyebrow">Host controls</span><div class="cgph benchph" data-slot="th"></div></div><div class="stack tight"><span class="eyebrow">Big screen</span><div class="cgph benchph tvw" data-slot="ts"></div></div></div>
+ <div class="stack tight"><span class="eyebrow">What happened</span>${(T.log||[]).slice(0,10).map(x=>`<span class="small ${x.bad?"bad":"muted"}">${esc(x.msg)}</span>`).join("")||'<span class="small muted">Nothing yet.</span>'}${T.lastErr?`<button class="btn sm as" data-act="cgMode" data-id="${T.gid}" data-m="edit">Fix it with AI</button>`:""}</div></section>`}
+function cgLiveTools(gid){const g=cgGame(gid);const r=st().cgRun||{};const mine=amRunner(gid);const q=Object.keys(CGR.queue||{}).length;const err=L.cgErr&&L.cgErr.gid===gid?L.cgErr:null;
+ return `<section class="card stack"><div class="row between"><h3>${esc(g?g.name:"Custom game")}</h3><span class="pill ${mine?"ok":"warn"}">${mine?"Running from this device":"Running from another device"}</span></div>
+ ${err?`<div class="nudge">This game hit a problem while ${esc(err.where)}: ${esc(err.message)} <button class="btn xs" data-act="cgFix" data-id="${gid}">Fix it with AI</button></div>`:""}
+ ${mine?(q>3?`<div class="nudge">${q} taps are waiting. Keep this screen open so the game keeps moving.</div>`:`<p class="small muted m0">Keep this screen open while the game runs. It handles every guest's tap.</p>`):`<button class="btn sm as" data-act="cgTakeOver">Run it from this device</button>`}
+ <div class="cgph" data-slot="h"></div>
+ <div class="row"><button class="btn sm" data-act="cgRestart">Start this game over</button></div></section>`}
+
+DEFAULT_CONTENT.custom={sample:{name:"Guess the Price",desc:"Sample custom game: guests guess what baby items cost, closest guess wins.",code:CG_EXAMPLE,t:1}};
 
 /* ================= ACTIONS & GAME LOGIC ================= */
 const setState=patch=>db&&ER("state").update(patch);
@@ -1291,7 +1570,8 @@ const ACT={
   if(id!=="split"&&!st().locked)patch.locked=true;
   if(id==="trivia"){if(!st().pods)patch.pods=makePods();patch.tvAt=tm+5600}
   if(id==="sup"){patch.supAt=tm+5600;if(!(st().supPair||[]).filter(Boolean).length){const a=ids();if(a.length>1){const x=a[rnd(a.length)];let y=x;while(y===x)y=a[rnd(a.length)];patch.supPair=[x,y]}}}
-  setState(patch);toast(GAMES.find(g=>g.id===id).name+" is counting down on every phone")},
+  if(String(id).startsWith("c:")){patch.cgRun={id:id.slice(2),runner:CG.session};L.cgErr=null}
+  setState(patch);toast(gameById(id).name+" is counting down on every phone")},
  endGame:()=>setState({live:null,countdown:null}),
  announce:()=>{const tx=(dv("ann","")).trim();if(!tx)return toast("Type a message first");setState({announce:{text:tx,t:now()}});L.drafts.ann="";toast("Sent to every phone");render()},
  tvClose:()=>resolveTrivia(false),tvFinish:()=>resolveTrivia(true),
@@ -1308,6 +1588,7 @@ const ACT={
  pOk:el=>ER("photos/"+el.dataset.key+"/checked").set(true),
  pNo:el=>{const x=D.photos[el.dataset.key];if(!x)return;ER("photos/"+el.dataset.key).update({checked:true,removed:true,img:null});ER(`hunt/${x.who}/${x.k}`).set("removed");award([x.who],-pv("hunt"),teamOf(x.who),-pv("hunt"));toast("Photo removed and points taken back")},
  split:el=>setState({split:el.dataset.v,override:null,pods:null}),
+ seasonMode:el=>setState({seasonMode:el.dataset.v,pods:null}),
  move:el=>{const i=el.dataset.id;ER("state/override/"+i).set(teamOf(i)==="A"?"B":"A")},
  kick:el=>{const i=el.dataset.id;ER("players/"+i).remove();ER("scores/"+i).remove();toast("Removed. Their points no longer count on the leaderboard.")},
  setTeamName:el=>{const tm=el.dataset.t,n=(dv("tn"+tm,"")).trim().slice(0,28);ER("state/teamNames/"+tm).set(n||null);toast(n?"Team name set":"Team name cleared")},
@@ -1357,6 +1638,29 @@ const ACT={
   const cs=c.colors||{};const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wishes for ${esc(c.honorees||"you")}</title><link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Figtree:wght@400;600&display=swap" rel="stylesheet"><style>body{font-family:Figtree,system-ui,sans-serif;background:#fbf6fd;color:#33163f;margin:0;padding:32px 16px}main{max-width:820px;margin:0 auto}h1{font-family:"Great Vibes",cursive;font-weight:400;font-size:3.4rem;text-align:center;margin:0;color:${cs.rose||"#e8338f"}}.sub{text-align:center;color:${cs.violet||"#7b3fb8"};letter-spacing:.12em;text-transform:uppercase;font-size:.8rem}.grid{columns:2 260px;gap:16px;margin-top:28px}.w{break-inside:avoid;background:#fff;border:1px solid #e4d4ef;border-radius:14px;padding:16px;margin:0 0 16px}.w p{margin:0 0 8px;font-size:1.05rem;line-height:1.5}.w span{color:${cs.leaf||"#2f8a4c"};font-weight:600}</style></head><body><main><h1>Wishes for ${esc(c.honorees||"you")}</h1><p class="sub">${esc(c.tagline||"")}</p><div class="grid">${items}</div></main></body></html>`;
   download("wishes-keepsake.html",new Blob([html],{type:"text/html"}))},
  delWish:el=>ER("wishes/"+el.dataset.key).remove(),
+
+ /* ---- custom games ---- */
+ copyEl:el=>{const x=document.getElementById(el.dataset.el);copyText(x?x.value:"",x)},
+ pAv:el=>{ER(`players/${L.me}/av`).set({e:el.dataset.e});toast(t("Picture updated"))},
+ pSelfie:el=>{const f=el.files[0];if(!f)return;squareImage(f,120,img=>{ER(`players/${L.me}/av`).set({img});toast(t("Picture updated"))})},
+ cgTest:el=>{testStart(el.dataset.id);render();setTimeout(()=>{const b=document.querySelector(".bench");b&&b.scrollIntoView({behavior:"smooth",block:"start"})},150)},
+ cgTestClose:()=>{testStop();render()},
+ cgBots:()=>{T.bots=!T.bots;render()},
+ cgReset:()=>testReset(),
+ cgMode:el=>{const id=el.dataset.id,m=el.dataset.m;L.cgMode=id&&m?{id,m}:{};if(m==="code")L.drafts["cgc_"+id]=(cgGame(id)||{}).code||"";render()},
+ cgAskDel:el=>{L.confirm="cgdel:"+el.dataset.id;render()},
+ cgDel:el=>{const id=el.dataset.id;if(T.on&&T.gid===id)testStop();ER("content/custom/"+id).remove();L.confirm=null;toast("Game deleted")},
+ cgSaveNew:async()=>{const code=cgExtractCode(dv("cg_paste",""));if(!code)return;L.cgChecking=true;L.cgCheckMsg="";render();const r=await cgCheck(code);L.cgChecking=false;
+  if(!r.ok){L.cgCheckMsg="This code doesn't work yet: "+r.message+" Ask Claude to fix it, then paste the new version.";render();return}
+  const id="g"+Date.now().toString(36);const desc=(dv("cg_desc","")).trim().split(/\n/)[0].slice(0,140);
+  await ER("content/custom/"+id).set({name:(r.title||"Custom game").slice(0,40),desc,code,t:Date.now()});L.drafts.cg_paste="";L.drafts.cg_desc="";L.cgCheckMsg="";toast("Saved. Try it in the test bench.");testStart(id);render()},
+ cgSaveCode:async el=>{const id=el.dataset.id;const code=cgExtractCode(dv("cgc_"+id,""));L.cgChecking=true;render();const r=await cgCheck(code);L.cgChecking=false;
+  if(!r.ok){toast("Not saved. "+r.message);render();return}await ER("content/custom/"+id).update({code,name:(r.title||cgGame(id).name).slice(0,40)});L.cgMode={};toast("Saved");if(T.on&&T.gid===id)testStart(id);render()},
+ cgSaveEdit:async el=>{const id=el.dataset.id;const code=cgExtractCode(dv("cgp_"+id,""));if(!code)return toast("Paste the new code first");L.cgChecking=true;render();const r=await cgCheck(code);L.cgChecking=false;
+  if(!r.ok){toast("Not saved. "+r.message);render();return}await ER("content/custom/"+id).update({code,name:(r.title||cgGame(id).name).slice(0,40)});L.drafts["cgp_"+id]="";L.drafts["cge_"+id]="";L.cgMode={};if(L.cgErr&&L.cgErr.gid===id)L.cgErr=null;T.lastErr=null;toast("Updated. Testing the new version.");testStart(id);render()},
+ cgFix:el=>{L.mtab="custom";L.cgMode={id:el.dataset.id,m:"edit"};render()},
+ cgTakeOver:()=>{const gid=liveCg();if(gid)setState({cgRun:{id:gid,runner:CG.session}})},
+ cgRestart:async()=>{const gid=liveCg();if(!gid)return;CG.liveState=null;CGR.setupAsked=false;await ER("cg/"+gid).remove();setState({cgRun:{id:gid,runner:CG.session}});toast("Starting the game over")},
 
  /* ---- host ---- */
  hostPin:async()=>{const h=await hashPin(dv("hpin",""));if(h===L.masterHash){store.set("host",h);L.hostOK=true;L.drafts.hpin="";render()}else toast("That PIN isn't right")},
