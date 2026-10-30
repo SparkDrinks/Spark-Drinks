@@ -527,6 +527,60 @@ html.noglow body{background-image:none}
 .rvprev .rv-cardin .rv-big{font-size:60px}.rvprev .rv-cardin .rv-cald{font-size:40px}
 
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+/* ===== Tonight tab ===== */
+.pill.gold{background:linear-gradient(135deg,#f3d36b,var(--gold));color:#3a2600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips .pill{background:var(--ground-2);color:var(--ink);font-weight:600;padding:5px 6px 5px 11px}
+.chips .pill.gold{background:linear-gradient(135deg,#f3d36b,var(--gold));color:#3a2600}
+.pill .x{border:0;background:none;width:22px;height:22px;border-radius:50%;font-size:1rem;line-height:1;color:var(--muted);display:grid;place-items:center}
+.pill .x:hover{background:color-mix(in srgb,var(--rose) 14%,transparent);color:var(--rose)}
+.gnum.rostime{width:auto;min-width:62px;font-size:.82rem;font-family:var(--f-body);font-weight:700;color:var(--violet);white-space:nowrap}
+.tv.one{grid-template-columns:1fr}
+.rafstage{min-height:70vh}
+.rafreel{font-family:var(--f-caps);font-size:clamp(2.6rem,8vw,5rem);line-height:1.1;color:var(--rose);min-height:1.2em}
+.gilt-text{background:linear-gradient(100deg,#9c6b00,var(--gold) 30%,#f6dc83 50%,var(--gold) 70%,#9c6b00);-webkit-background-clip:text;background-clip:text;color:transparent}
+details>summary{cursor:pointer;color:var(--violet)}
+
+/* ===== Polish pass: vivid color, a few gold accents, calmer screens ===== */
+/* gold hairline on the key card of a screen */
+.gilt{border:1px solid color-mix(in srgb,var(--gold) 70%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--gold) 22%,transparent),0 8px 26px color-mix(in srgb,var(--rose) 12%,transparent)}
+/* fine gold divider under the event title */
+header.top .brand::after{content:"";display:block;width:88px;height:1px;margin-top:9px;background:linear-gradient(90deg,var(--gold),color-mix(in srgb,var(--gold) 0%,transparent))}
+/* richer background on the guest side */
+body:has(.phone){background-image:radial-gradient(900px 440px at 50% -170px,color-mix(in srgb,var(--rose) 38%,transparent),transparent 70%),
+  radial-gradient(650px 520px at -12% 34%,color-mix(in srgb,var(--violet) 32%,transparent),transparent 70%),
+  radial-gradient(700px 520px at 112% 68%,color-mix(in srgb,var(--flame) 30%,transparent),transparent 70%),
+  radial-gradient(900px 560px at 40% 116%,color-mix(in srgb,var(--leaf) 38%,transparent),transparent 70%)}
+/* guest cards: crisp white, with a touch of the theme color in the edge and shadow */
+.phone .card{background:var(--card);border-color:color-mix(in srgb,var(--rose) 20%,var(--line));box-shadow:0 1px 2px color-mix(in srgb,var(--violet) 10%,transparent),0 10px 28px color-mix(in srgb,var(--rose) 13%,transparent)}
+.phone>.card:not(.card~.card){border-color:color-mix(in srgb,var(--gold) 70%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--gold) 20%,transparent),0 12px 30px color-mix(in srgb,var(--rose) 16%,transparent)}
+.phone .eyebrow{color:#a8740a}
+/* bottom tabs: vivid active state with a gold underline */
+.tabs button{transition:color .18s,background .18s}
+.tabs button[aria-pressed="true"]{background:color-mix(in srgb,var(--rose) 13%,var(--card));color:var(--rose);box-shadow:inset 0 -2px 0 var(--gold)}
+.side button[aria-pressed="true"]{color:var(--rose)}
+/* buttons: fuller color, soft glow, a little press */
+.btn{transition:transform .12s ease,box-shadow .18s ease,border-color .18s}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.primary{box-shadow:0 6px 16px color-mix(in srgb,var(--btn1,var(--rose)) 34%,transparent);text-shadow:0 1px 1px rgba(0,0,0,.12)}
+.btn.gold{background:linear-gradient(135deg,#f3d36b,var(--gold) 55%,#c98f12);box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 34%,transparent)}
+.phone .btn{min-height:44px}
+.phone .btn.sm{min-height:34px}
+.pill.live{background:linear-gradient(135deg,var(--rose),var(--flame))}
+.pill.a{background:color-mix(in srgb,var(--sky) 22%,transparent)}
+.pill.b{background:color-mix(in srgb,var(--flame) 24%,transparent)}
+/* winner moments in gold */
+.winner{filter:drop-shadow(0 2px 10px color-mix(in srgb,var(--gold) 35%,transparent))}
+/* calmer checklist: only the next step shows its explanation */
+.cklist li:not(.next) .db{display:none}
+.cklist li.next{border:1px solid color-mix(in srgb,var(--gold) 70%,transparent);background:color-mix(in srgb,var(--gold) 12%,var(--card))}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}.btn:active:not(:disabled){transform:none}}
+/* ===== weak signal pill ===== */
+#net{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:#2a1530;color:#fff;font-size:.8rem;font-weight:600;padding:7px 14px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;gap:8px;align-items:center;max-width:calc(100vw - 32px)}
+#net[hidden]{display:none}
+#net i{width:8px;height:8px;border-radius:50%;background:var(--gold);flex:none;animation:netp 1.2s ease-in-out infinite}
+#net.off i{background:#ff8a80}
+@keyframes netp{50%{opacity:.35}}
 </style>
 </head><body>
 <div class="wrap">
@@ -1043,7 +1097,7 @@ function headerView(){
  const showAa=VIEW==="guest"||VIEW==="album"||VIEW==="keepsake";
  return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span><button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
 function loadingView(){return `<div class="card muted">${t("Loading…")}</div>`}
-const status=()=>L.connected||!db?"":`<div class="banner soft"><span>${t("Reconnecting…")}</span></div>`;
+const status=()=>L.connected||!db||!L.everConnected||VIEW==="guest"?"":`<div class="banner soft"><span>Weak signal. Changes are saved on this device and send when the signal is back.</span></div>`;
 function landing(notFound){return `<section class="card stack narrow"><div class="eyebrow">${t("Welcome")}</div><h2>${t("Enter your event code")}</h2>${notFound?`<p class="small" style="color:var(--bad);margin:0">${t("We couldn't find that event. Check the code and try again.")}</p>`:""}
  <input type="text" id="evCode" data-draft="evCode" value="${esc(dv("evCode",""))}" autocapitalize="characters" autocomplete="off" aria-label="${t("Event code")}" placeholder="${t("Event code")}"><button class="btn primary" data-act="goCode">${t("Go")}</button><a class="small muted" href="${esc(baseURL())}#host">Host sign in</a></section>`}
 function settingsSheet(){const row=(k,label,on)=>`<button class="toggle" data-act="setToggle" data-k="${k}" aria-pressed="${!!on}"><span>${label}</span><i></i></button>`;
@@ -2398,7 +2452,7 @@ function modSession(){const s=store.get("mod_"+EV,null);if(!s)return null;return
 function checkAuth(){const m=L.masterHash;const hs=store.get("host",null);L.hostOK=!!m&&(hs===m||!!hs&&hs.h===m);
  if(EV&&D.meta){const s=modSession();const mods=D.mods||{};let ok=false,admin=false,name="";
   if(s&&s.h){if(s.h===m){ok=admin=true;name="Administrator"}else if(s.id&&mods[s.id]&&mods[s.id].pinHash===s.h){ok=true;name=mods[s.id].name}else if(D.meta.pinHash&&s.h===D.meta.pinHash&&!s.id){ok=true;name="Moderator"}}
-  if(L.modOK&&!ok&&VIEW==="moderator")L.kicked=true;L.modOK=ok;L.isAdmin=admin;L.modName=name}}
+  if(L.modOK&&!ok&&VIEW==="moderator")L.kicked=true;L.modOK=ok;L.isAdmin=admin;L.modName=name;L.modId=ok&&s&&s.id||null}}
 function pinScreen(){return `<section class="card stack narrow"><div class="eyebrow">Moderators only</div><h2>Enter your PIN</h2><p class="small muted m0">${esc(D.meta?D.meta.name:"")}</p>${L.kicked?'<div class="nudge">Your moderator access for this event was removed by the administrator.</div>':""}
  <input type="password" id="pin" inputmode="numeric" autocomplete="off" data-draft="pin" value="${esc(dv("pin",""))}"><button class="btn primary" data-act="pin">Open the console</button><p class="small muted m0">Use your personal moderator PIN. The administrator signs in with the host PIN.</p><a class="small muted" href="${esc(eventURL(EV))}">I'm a guest</a></section>`}
 Object.assign(ACT,{
@@ -3027,6 +3081,154 @@ cleanupEvent=async function(code,days){let n=await _cleanup0(code,days);if(!db||
 
 /* ---------- boot ---------- */
 function loadDict(){fetch("https://cdn.jsdelivr.net/npm/an-array-of-english-words@2.0.0/index.json").then(r=>r.json()).then(a=>{L.dict=new Set(a.map(w=>w.toUpperCase()))}).catch(()=>{L.dict=false})}
+/* ================= TONIGHT TAB: run of show, diaper raffle, gift log ================= */
+D.raf={};D.rafWins={};D.gifts={};D.rosDone={};
+const normName=s=>String(s||"").trim().toLowerCase().replace(/\s+/g," ");
+const _subTonight=subscribeEvent;
+subscribeEvent=function(){_subTonight();
+ if(VIEW==="moderator"||VIEW==="screen"){ER("raffle").on("value",s=>{D.raf=s.val()||{};renderSoon()});ER("rafWins").on("value",s=>{D.rafWins=s.val()||{};renderSoon()})}
+ if(VIEW==="moderator"){ER("gifts").on("value",s=>{D.gifts=s.val()||{};renderSoon()});ER("rosDone").on("value",s=>{D.rosDone=s.val()||{};renderSoon()})}};
+const guestNames=()=>ids().filter(i=>!P(i).bot).map(i=>P(i).name).filter(Boolean);
+const nameList=id=>`<datalist id="${id}">${[...new Set(guestNames())].sort().map(n=>`<option value="${esc(n)}"></option>`).join("")}</datalist>`;
+const helperName=id=>id&&(D.mods||{})[id]?D.mods[id].name:"Everyone";
+
+/* ---- run of show ---- */
+const ROS_DEFAULT=[["15:00","Doors open","Greet guests. Check diaper packs and add them to the raffle."],["15:15","Team Splitter and Long Word Wins","Icebreakers. Start them from the Live tab."],["15:30","Open the Scavenger Hunt","It runs in the background all night."],
+ ["15:45","Trivia",""],["16:15","Dinner is served","Show the Dinner moment on the big screen."],["16:45","Gift opening","Log each gift on the Tonight tab for the thank-you notes."],["17:15","Crossword and Superlatives",""],
+ ["17:40","The reveal",""],["17:50","Diaper raffle draw","Draw the winner on the big screen."],["18:00","Bingo, then crown the winners",""],["18:30","Farewell and cleanup","Collect decorations and the gift list."]];
+const rosItems=()=>{const r=C().ros||{};return Object.keys(r).map(k=>Object.assign({k},r[k])).sort((a,b)=>(a.time||"").localeCompare(b.time||"")||(a.t||0)-(b.t||0))};
+const fmtTime=t=>{if(!t)return "";const [h,m]=t.split(":").map(Number);if(isNaN(h))return t;return `${(h%12)||12}:${String(m||0).padStart(2,"0")} ${h<12?"AM":"PM"}`};
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
+function rosIsToday(){const d=C().date;return !!d&&d===todayISO()}
+function rosLate(x){if(!x.time||(D.rosDone||{})[x.k]||!rosIsToday())return false;const [h,m]=x.time.split(":").map(Number);const n=new Date();return n.getHours()*60+n.getMinutes()>h*60+m+10}
+const rosMine=x=>!x.who||x.who===L.modId;
+function rosRow(x,i,next){const done=(D.rosDone||{})[x.k],late=rosLate(x),ed=L.rosEdit===x.k;
+ if(ed)return `<div class="gamerow evrow on stack"><div class="grid2 g8"><label class="stack tight"><span class="small">Time</span><input type="time" data-draft="re_time" value="${esc(dv("re_time",x.time||""))}"></label>
+  <label class="stack tight"><span class="small">Who</span><select data-draft="re_who">${rosWhoOpts(dv("re_who",x.who||""))}</select></label>
+  <label class="stack tight"><span class="small">What</span><input type="text" data-draft="re_title" value="${esc(dv("re_title",x.title||""))}"></label>
+  <label class="stack tight"><span class="small">Note (optional)</span><input type="text" data-draft="re_note" value="${esc(dv("re_note",x.note||""))}"></label></div>
+  <div class="row"><button class="btn sm primary" data-act="rosSave" data-k="${x.k}">Save</button><button class="btn sm" data-act="rosCancel">Cancel</button><button class="btn sm" data-act="rosDel" data-k="${x.k}">Delete</button></div></div>`;
+ return `<div class="gamerow evrow ${done?"dim":""} ${next?"on":""}"><span class="gnum rostime">${esc(fmtTime(x.time))||"·"}</span><div class="mw0"><b>${esc(x.title||"")}</b> ${done?`<span class="pill ok">✓ Done</span>`:late?'<span class="pill warn">Running late</span>':next?'<span class="pill live">Up next</span>':""}
+  <div class="small muted">${esc(helperName(x.who))}${x.note?" · "+esc(x.note):""}${done?` · checked off by ${esc(done.by||"a helper")}`:""}</div></div>
+  <div class="row"><button class="btn sm ${done?"":"primary"}" data-act="rosDone" data-k="${x.k}">${done?"Undo":"Done"}</button><button class="btn sm" data-act="rosEditOpen" data-k="${x.k}" aria-label="Edit ${esc(x.title||"")}">Edit</button></div></div>`}
+function rosWhoOpts(sel){const m=D.mods||{};return `<option value="">Everyone</option>${Object.keys(m).map(id=>`<option value="${id}" ${sel===id?"selected":""}>${esc(m[id].name)}</option>`).join("")}`}
+function rosSection(){const items=rosItems(),nextI=items.findIndex(x=>!(D.rosDone||{})[x.k]);const done=items.filter(x=>(D.rosDone||{})[x.k]).length;
+ const mine=L.modId?items.filter(x=>x.who===L.modId&&!(D.rosDone||{})[x.k]):[];
+ return `<section class="card stack gilt"><div class="row between"><h2>Run of show</h2>${items.length?`<span class="pill">${done} of ${items.length} done</span>`:""}</div>
+ ${mine.length?`<div class="nudge"><b>Your jobs:</b> ${mine.map(x=>`${esc(fmtTime(x.time))} ${esc(x.title)}`).join(" · ")}</div>`:""}
+ ${items.length?`<div class="stack tight">${items.map((x,i)=>rosRow(x,i,i===nextI)).join("")}</div>`:`<p class="small muted m0">Plan the evening hour by hour and give each job to a helper. Start from the suggested plan and change anything.</p><button class="btn primary as" data-act="rosStarter">Use the suggested plan</button>`}
+ <details class="stack"><summary class="small"><b>Add a step</b></summary><div class="grid2 g8"><label class="stack tight"><span class="small">Time</span><input type="time" data-draft="rn_time" value="${esc(dv("rn_time",""))}"></label>
+  <label class="stack tight"><span class="small">Who</span><select data-draft="rn_who">${rosWhoOpts(dv("rn_who",""))}</select></label>
+  <label class="stack tight"><span class="small">What</span><input type="text" data-draft="rn_title" value="${esc(dv("rn_title",""))}" placeholder="Cut the cake"></label>
+  <label class="stack tight"><span class="small">Note (optional)</span><input type="text" data-draft="rn_note" value="${esc(dv("rn_note",""))}"></label></div><button class="btn sm primary as" data-act="rosAdd">Add step</button></details>
+ ${Object.keys(D.mods||{}).length?"":`<p class="small muted m0">Add helpers on the Event tab, then assign them steps here. Each helper sees their own jobs when they sign in.</p>`}</section>`}
+
+/* ---- diaper raffle ---- */
+const rafMin=()=>+(C().raffleMin||70);
+const rafList=()=>Object.keys(D.raf||{}).map(k=>Object.assign({k},D.raf[k])).sort((a,b)=>(a.t||0)-(b.t||0));
+const rafWon=()=>Object.keys(D.rafWins||{}).map(k=>D.rafWins[k]).sort((a,b)=>(a.t||0)-(b.t||0));
+function rafSection(){const list=rafList(),won=rafWon(),wonSet=new Set(won.map(w=>normName(w.name))),left=list.filter(x=>!wonSet.has(normName(x.name))).length;const r=st().raffle,onTv=r&&typeof r==="object"&&r.show;
+ return `<section class="card stack gilt"><div class="row between"><h2>Diaper raffle</h2><span class="pill gold">${list.length} entered</span></div>
+ <p class="small muted m0">Only guests who bring a pack of <b>${rafMin()} or more</b> diapers. One entry each, however many packs.</p>
+ <div class="row"><input type="text" class="grow" list="rafNames" data-draft="raf_name" value="${esc(dv("raf_name",""))}" placeholder="Guest's name" aria-label="Guest's name" autocomplete="off">${nameList("rafNames")}<button class="btn primary" data-act="rafAdd">Add to raffle</button></div>
+ <label class="row small"><input type="checkbox" data-draft="raf_log" ${dv("raf_log","1")==="1"?"checked":""}> Also add the diapers to the gift log</label>
+ ${list.length?`<div class="chips">${list.map(x=>`<span class="pill ${wonSet.has(normName(x.name))?"gold":""}">${wonSet.has(normName(x.name))?"🏆 ":""}${esc(x.name)} <button class="x" data-act="rafDel" data-k="${x.k}" aria-label="Remove ${esc(x.name)}">×</button></span>`).join("")}</div>`:'<p class="small muted m0">No entries yet.</p>'}
+ <div class="row">${onTv?`<button class="btn" data-act="rafHide">Take it off the big screen</button>`:`<button class="btn gold" data-act="rafDraw" ${left?"":"disabled"}>${won.length?"Draw another winner":"Draw the winner on the big screen"}</button>`}</div>
+ ${won.length?`<p class="m0">Winner${won.length>1?"s":""}: ${won.map(w=>`<b>${esc(w.name)}</b>`).join(", ")}</p>`:""}
+ <details><summary class="small">Pack size</summary><div class="row"><span class="small">Smallest pack that counts</span><input type="number" min="1" data-draft="raf_min" value="${esc(dv("raf_min",rafMin()))}" style="width:6em"><button class="btn sm" data-act="rafMinSave">Save</button></div></details></section>`}
+const RAF_MS=5200;
+function rafStage(r){const names=r.names&&r.names.length?r.names:[r.winner];const done=now()-r.t>RAF_MS;
+ if(!done)setTimeout(()=>renderSoon(),Math.max(50,RAF_MS-(now()-r.t)+60));
+ return `<div class="eyebrow">Diaper raffle</div>${done?`<div class="winner gilt-text pop">${esc(r.winner)}</div><p class="muted">Congratulations! Thank you to everyone who brought diapers.</p>`:`<div class="rafreel" id="rafReel">${esc(names[0])}</div><p class="muted">${names.length} guest${names.length===1?"":"s"} in the draw</p>`}`}
+const _bsTonight=bigscreen;
+bigscreen=function(){const r=st().raffle;if(r&&typeof r==="object"&&r.show)return `<div class="tv one"><section class="stage rafstage">${rafStage(r)}</section></div>`;return _bsTonight()};
+if(VIEW==="screen")setInterval(()=>{const r=st().raffle;if(!r||typeof r!=="object"||!r.show)return;const el=$("#rafReel"),el2=document.querySelector(".rafstage .winner");
+ if(el){const names=r.names&&r.names.length?r.names:[r.winner];const p=(now()-r.t)/RAF_MS,step=Math.floor(Math.pow(Math.min(p,1),.55)*names.length*6);el.textContent=names[step%names.length]}
+ if(el2&&L.rafCel!==r.t){L.rafCel=r.t;confetti(200);try{SND.win()}catch(e){}}},80);
+
+/* ---- gift log ---- */
+const giftList=()=>Object.keys(D.gifts||{}).map(k=>Object.assign({k},D.gifts[k])).sort((a,b)=>(a.t||0)-(b.t||0));
+function giftSection(){const g=giftList(),thanked=g.filter(x=>x.thanked).length;const hon=C().honorees||"the guests of honor";
+ return `<section class="card stack"><div class="row between"><h2>Gift log</h2><span class="pill">${g.length} gift${g.length===1?"":"s"}</span></div>
+ <p class="small muted m0">Jot down each gift as it's opened. ${esc(hon)} gets a tidy list for the thank-you notes.</p>
+ <div class="grid2 g8"><label class="stack tight"><span class="small">From</span><input type="text" list="giftNames" data-draft="gf_from" value="${esc(dv("gf_from",""))}" placeholder="Guest's name" autocomplete="off">${nameList("giftNames")}</label>
+ <label class="stack tight"><span class="small">Gift</span><input type="text" data-draft="gf_gift" value="${esc(dv("gf_gift",""))}" placeholder="Stroller, books, a quilt…"></label></div>
+ <button class="btn primary as" data-act="gfAdd">Add gift</button>
+ ${g.length?`<div class="stack tight">${g.map(x=>`<div class="gamerow evrow ${x.thanked?"dim":""}"><span class="gnum">🎁</span><div class="mw0"><b>${esc(x.from)}</b><div class="small muted">${esc(x.gift)}</div></div><div class="row"><label class="row small"><input type="checkbox" data-act="gfThank" data-k="${x.k}" ${x.thanked?"checked":""}> Thanked</label><button class="btn sm" data-act="gfDel" data-k="${x.k}" aria-label="Remove gift from ${esc(x.from)}">Remove</button></div></div>`).join("")}</div>
+  <div class="row"><button class="btn sm" data-act="gfCopy">Copy the list</button><button class="btn sm" data-act="gfCsv">Download for thank-you notes</button><span class="small muted">${thanked} of ${g.length} thanked</span></div>`:'<p class="small muted m0">No gifts logged yet.</p>'}</section>`}
+const giftText=()=>giftList().map(x=>`${x.from}: ${x.gift}`).join("\n");
+const csvCell=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
+
+function mTonight(){return rosSection()+rafSection()+giftSection()}
+
+Object.assign(ACT,{
+ rosStarter:async()=>{const u={},tm=Date.now();ROS_DEFAULT.forEach((x,i)=>{u["k"+tm.toString(36)+i]={time:x[0],title:x[1],note:x[2],who:"",t:tm+i}});await ER("content/ros").update(u);toast("Suggested plan added. Change anything you like.")},
+ rosAdd:async()=>{const title=dv("rn_title","").trim();if(!title)return toast("Say what happens");await ER("content/ros").push({time:dv("rn_time",""),title:title.slice(0,80),note:dv("rn_note","").trim().slice(0,140),who:dv("rn_who",""),t:Date.now()});["rn_time","rn_title","rn_note","rn_who"].forEach(k=>delete L.drafts[k]);render(true)},
+ rosEditOpen:el=>{L.rosEdit=el.dataset.k;["re_time","re_title","re_note","re_who"].forEach(k=>delete L.drafts[k]);render(true)},
+ rosCancel:()=>{L.rosEdit=null;render(true)},
+ rosSave:async el=>{const k=el.dataset.k,x=(C().ros||{})[k]||{};const title=dv("re_title",x.title||"").trim();if(!title)return toast("Say what happens");await ER("content/ros/"+k).update({time:dv("re_time",x.time||""),title:title.slice(0,80),note:dv("re_note",x.note||"").trim().slice(0,140),who:dv("re_who",x.who||"")});L.rosEdit=null;render(true)},
+ rosDel:async el=>{await ER("content/ros/"+el.dataset.k).remove();await ER("rosDone/"+el.dataset.k).remove();L.rosEdit=null;render(true)},
+ rosDone:el=>{const k=el.dataset.k;if((D.rosDone||{})[k])ER("rosDone/"+k).remove();else{ER("rosDone/"+k).set({by:L.modName||"A helper",t:Date.now()});buzz(30)}},
+ rafAdd:async()=>{const name=dv("raf_name","").trim().slice(0,40);if(!name)return toast("Type the guest's name");
+  const n=normName(name);if(rafList().some(x=>normName(x.name)===n))return toast(name+" is already in. One entry per guest.");
+  const pid=ids().find(i=>normName(P(i).name)===n)||null;const tm=Date.now();
+  await ER("raffle").push({name,pid,by:L.modName||"",t:tm});
+  if(dv("raf_log","1")==="1")await ER("gifts").push({from:name,gift:`Diapers (pack of ${rafMin()}+)`,t:tm,by:L.modName||"",raffle:true});
+  delete L.drafts.raf_name;toast(name+" is in the raffle");buzz(30);render(true)},
+ rafDel:el=>{ER("raffle/"+el.dataset.k).remove()},
+ rafMinSave:async()=>{const v=Math.max(1,Math.round(+dv("raf_min",rafMin())||70));await ER("content/raffleMin").set(v);toast("Packs of "+v+" or more count")},
+ rafDraw:async()=>{const list=rafList(),wonSet=new Set(rafWon().map(w=>normName(w.name)));const pool=list.filter(x=>!wonSet.has(normName(x.name)));if(!pool.length)return toast("Everyone in the raffle has already won");
+  const w=pool[rnd(pool.length)],tm=now();const names=pool.map(x=>x.name);for(let i=names.length-1;i>0;i--){const j=rnd(i+1);[names[i],names[j]]=[names[j],names[i]]}
+  await ER("rafWins").push({name:w.name,t:Date.now()});setState({raffle:{t:tm,winner:w.name,names:names.slice(0,40),show:true}});toast("Drawing on the big screen…")},
+ rafHide:()=>setState({raffle:null}),
+ gfAdd:async()=>{const from=dv("gf_from","").trim().slice(0,40),gift=dv("gf_gift","").trim().slice(0,120);if(!from)return toast("Who is it from?");if(!gift)return toast("What's the gift?");
+  await ER("gifts").push({from,gift,t:Date.now(),by:L.modName||""});delete L.drafts.gf_from;delete L.drafts.gf_gift;buzz(30);render(true);const el=document.querySelector('[data-draft="gf_from"]');if(el)el.focus()},
+ gfThank:el=>{ER("gifts/"+el.dataset.k+"/thanked").set(!!el.checked)},
+ gfDel:el=>{ER("gifts/"+el.dataset.k).remove()},
+ gfCopy:()=>copyText(giftText()),
+ gfCsv:()=>{const rows=[["From","Gift","Thank-you sent"]].concat(giftList().map(x=>[x.from,x.gift,x.thanked?"Yes":""]));download(`gift-list-${EV}.csv`,new Blob(["﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n")],{type:"text/csv"}))}
+});
+
+/* the old raffle on the Scores tab drew from every guest; point it to the Tonight tab */
+const _mScoresTonight=mScores;
+mScores=function(){return _mScoresTonight().replace(/<section class="card stack"><h3>Prizes<\/h3>[\s\S]*?<\/section>/,`<section class="card row between"><span class="small">The diaper raffle and gift log are on the <b>Tonight</b> tab.</span><button class="btn sm" data-act="mtab" data-k="tonight">Open Tonight</button></section>`)};
+
+/* helpers see their next job on the Live tab */
+const _mLiveTonight=mLive;
+mLive=function(){const items=rosItems().filter(x=>!(D.rosDone||{})[x.k]);const nx=items.find(rosMine);
+ const card=nx?`<section class="card row between gilt"><div><span class="eyebrow">${L.modId&&nx.who===L.modId?"Your next job":"Up next"}</span><div><b>${esc(fmtTime(nx.time))}</b> ${esc(nx.title)}${rosLate(nx)?' <span class="pill warn">Running late</span>':""}</div></div><div class="row"><button class="btn sm primary" data-act="rosDone" data-k="${nx.k}">Done</button><button class="btn sm" data-act="mtab" data-k="tonight">Run of show</button></div></section>`:"";
+ return card+_mLiveTonight()};
+
+moderator=function(){
+ const tab=(k,l)=>`<button data-act="mtab" data-k="${k}" aria-pressed="${L.mtab===k}">${l}</button>`;
+ const body=({live:mLive,tonight:mTonight,moments:mMoments,teams:mTeams,scores:mScores,content:mContent,custom:mCustom,event:mEvent,memories:mMemories,menu:mMenu,party:mParty}[L.mtab]||mLive)();
+ const pr=D.meta&&D.meta.practice?`<div class="banner soft"><span><b>Practice run</b> with pretend guests. Open a <a href="${esc(eventURL(EV))}" target="_blank" rel="noopener">guest view</a> or the <a href="${esc(eventURL(EV,"screen"))}" target="_blank" rel="noopener">big screen</a> to see what they see.</span><button class="btn sm" data-act="endPractice">End practice</button></div>`:"";
+ return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${tab("tonight","Tonight")}${tab("moments","Moments")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("menu","Menu")}${tab("party",adultOn()?"Party & 21+":"Party games")}${tab("custom","Custom games")}${tab("event","Event")}${tab("memories","Memories")}</nav><div class="stack mw0">${body}</div></div>`};
+
+/* ================= WEAK SIGNAL MODE ================= */
+/* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
+   This shows a small pill so nobody thinks it's broken, warns before closing with unsent changes,
+   and keeps an offline copy of the page so it still opens in a dead zone. */
+L.pending=0;L.everConnected=false;
+Object.assign(ES,{"Weak signal. Keep going. Everything is saved on your phone and sends when the signal is back.":"Señal débil. Sigue jugando. Todo se guarda en tu teléfono y se envía cuando vuelva la señal.","Saving…":"Guardando…","{n} waiting to send":"{n} por enviar"});
+let netT=null;
+function netPill(){let el=document.getElementById("net");if(!el){el=document.createElement("div");el.id="net";el.setAttribute("role","status");el.setAttribute("aria-live","polite");el.hidden=true;document.body.appendChild(el)}
+ if(!db||VIEW==="screen"||VIEW==="print"){el.hidden=true;return}
+ const off=L.everConnected&&!L.connected;
+ if(off){el.className="off";el.innerHTML=`<i></i><span>${t("Weak signal. Keep going. Everything is saved on your phone and sends when the signal is back.")}${L.pending?" · "+t("{n} waiting to send",{n:L.pending}):""}</span>`;el.hidden=false;clearTimeout(netT);return}
+ if(L.pending>0){clearTimeout(netT);netT=setTimeout(()=>{if(L.pending>0&&L.connected){el.className="";el.innerHTML=`<i></i><span>${t("Saving…")}</span>`;el.hidden=false}},700);return}
+ clearTimeout(netT);el.hidden=true}
+(function(){const F=window.firebase&&firebase.database&&firebase.database.Reference;if(!F)return;const R=F.prototype;
+ const track=p=>{if(!p||typeof p.then!=="function")return p;L.pending++;netPill();const done=()=>{L.pending=Math.max(0,L.pending-1);netPill()};p.then(done,done);return p};
+ ["set","update","remove","setWithPriority"].forEach(m=>{const o=R[m];if(o)R[m]=function(){return track(o.apply(this,arguments))}});
+ const ot=R.transaction;if(ot)R.transaction=function(){return track(ot.apply(this,arguments))};
+ const op=R.push;if(op)R.push=function(v){const r=op.apply(this,arguments);if(v!==undefined)track(r);return r}})();
+const _connectNet=connect;
+connect=function(){_connectNet();if(db)db.ref(".info/connected").on("value",s=>{if(s.val())L.everConnected=true;netPill()})};
+addEventListener("beforeunload",e=>{if(L.pending>0){e.preventDefault();e.returnValue=""}});
+addEventListener("online",()=>{try{db&&db.goOnline()}catch(e){}});
+if("serviceWorker" in navigator&&location.protocol==="https:")addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})});
+
 render();connect();if(VIEW==="guest")loadDict();
 if(VIEW==="screen")setInterval(()=>{if(!db)return;ER("reactions").orderByChild("t").endAt(now()-60000).once("value").then(s=>{const v=s.val()||{};Object.keys(v).forEach(k=>ER("reactions/"+k).remove())})},30000);
 
