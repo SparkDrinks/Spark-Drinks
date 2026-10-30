@@ -2404,17 +2404,17 @@ Object.assign(ACT,{
  hostOpen:el=>{const k=el.dataset.k;L.hostOpen=L.hostOpen===k?null:k;if(L.hostOpen)watchHostEvent(k);render(true)},
  adultToggle:el=>{const code=el.dataset.code||EV;const cur=code===EV?!!C().adultOn:!!((D.hostEv||{})[code]||{}).adultOn;ER("content/adultOn",code).set(!cur);toast(!cur?"21+ section is on for "+code:"21+ section is off")},
  /* invite codes */
- invNew:()=>{const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";const code=[...Array(8)].map(()=>A[rnd(A.length)]).join("");const max=+dv("inv_max","1")||0;RT("invites/"+code).set({label:(dv("inv_label","")).trim()||"Invite",max,used:0,active:true,t:Date.now()});L.drafts.inv_label="";toast("Invite code "+code+" created")},
+ invNew:()=>{const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";const code=[...Array(8)].map(()=>A[rnd(A.length)]).join("");RT("invites/"+code).set({label:(dv("inv_label","")).trim()||"Invite",max:1,used:0,active:true,t:Date.now()});L.drafts.inv_label="";toast("Invite code "+code+" created")},
  invToggle:el=>{const v=(D.invites||{})[el.dataset.k];if(v)RT(`invites/${el.dataset.k}/active`).set(!v.active)},
  invDel:el=>RT("invites/"+el.dataset.k).remove(),
  /* new-event page */
  nwCheck:async()=>{const code=(dv("nw_inv","")).toUpperCase().replace(/[^A-Z0-9]/g,"");const v=(await RT("invites/"+code).once("value")).val();
-  if(!v||!v.active)return toast("That invite code isn't valid. Ask the host for a new one.");if(v.max&&v.used>=v.max)return toast("That invite code has already been used.");L.newInv=code;render(true)},
+  if(!v||!v.active)return toast("That invite code isn't valid. Ask the host for a new one.");if((v.used||0)>=1||v.event)return toast("That invite code has already been used.");L.newInv=code;render(true)},
  nwType:el=>{L.drafts.nw_type=el.value;render(true)},
  nwImg:el=>{const f=el.files[0];if(!f)return;shrinkImage(f,640,.72,img=>{L.drafts.nw_image=img;extractPalette(img,pal=>{L.palette=pal;const th=autoTheme(pal);Object.keys(th).forEach(k=>L.drafts["ts_c_"+k]=th[k]);previewTheme("ts_");render(true)})})},
  nwCreate:async()=>{const d=k=>(L.drafts[k]||"").trim();const name=d("nw_name"),pin=d("nw_pin"),you=d("nw_you");
   if(!name)return toast("Give your event a name");if(!you)return toast("Type your name");if(pin.length<4)return toast("Choose a PIN with at least 4 digits");
-  const inv=L.newInv;const ok=await new Promise(res=>RT("invites/"+inv).transaction(v=>{if(!v||!v.active||(v.max&&v.used>=v.max))return;v.used=(v.used||0)+1;return v},(e,c)=>res(c)));if(!ok)return toast("That invite code can't be used any more.");
+  const inv=L.newInv;const ok=await new Promise(res=>RT("invites/"+inv).transaction(v=>{if(!v||!v.active||(v.used||0)>=1||v.event)return;v.used=1;return v},(e,c)=>res(c)));if(!ok)return toast("That invite code can't be used any more.");
   let code=d("nw_code").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);const idx=(await RT("index").once("value")).val()||{};
   if(code&&(await ER("meta",code).once("value")).val())code="";
   if(!code||idx[code]){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";do{code=[...Array(5)].map(()=>A[rnd(A.length)]).join("")}while(idx[code])}
@@ -2422,7 +2422,7 @@ Object.assign(ACT,{
   Object.assign(content,{title:name,honorees:hon,date,tagline:d("nw_tag")||[hon?`Celebrating ${hon}`:"",date?fmtDate(date):""].filter(Boolean).join(" · "),themeDesc:(content.themeDesc||"a celebration")});
   if(L.drafts.nw_image)content.image=L.drafts.nw_image;Object.assign(content,themeFromDrafts("ts_"));
   const tm=Date.now(),h=await hashPin(pin),u={};
-  u["events/"+code+"/meta"]={name,created:tm,invite:inv,setup:{type:true}};u["events/"+code+"/content"]=content;u["index/"+code]={name,created:tm};
+  u["events/"+code+"/meta"]={name,created:tm,invite:inv,setup:{type:true}};u["events/"+code+"/content"]=content;u["index/"+code]={name,created:tm,invite:inv,by:you.slice(0,30)};u["invites/"+inv+"/event"]=code;u["invites/"+inv+"/eventName"]=name;u["invites/"+inv+"/usedAt"]=tm;
   const mid=ER("mods",code).push().key;u["events/"+code+"/mods/"+mid]={name:you.slice(0,30),pinHash:h,t:tm,owner:true};
   await db.ref(ROOT).update(u);store.set("mod_"+code,{h,id:mid,r:"mod"});location.href=eventURL(code,"moderator")},
  /* theme studio */
@@ -2459,16 +2459,21 @@ function archiveList(code){const a=(D.archives||{})[code]||{};const ks=Object.ke
 /* --- admin console views --- */
 function hEvents(){const ev=D.events||{},def=D.admin.defaultEvent;const keys=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));
  return `<section class="card stack"><div class="row between"><h2>Your events</h2><span class="small muted">You're the administrator. Moderators work under you.</span></div>${keys.length?keys.map(k=>{const open=L.hostOpen===k;
-  return `<div class="gamerow evrow ${open?"on":""}"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}</div></div>
+  return `<div class="gamerow evrow ${open?"on":""}"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}${ev[k].invite?` · made with invite ${esc(ev[k].invite)}${ev[k].by?" by "+esc(ev[k].by):""}`:""}</div></div>
   <div class="row">${L.confirm==="del:"+k?`<span class="small">Delete everything?</span><button class="btn sm gold" data-act="delEvent" data-k="${k}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm primary" data-act="openMod" data-k="${k}">Console</button><a class="btn sm" href="${esc(eventURL(k))}" target="_blank" rel="noopener">Guest view</a><a class="btn sm" href="${esc(eventURL(k,"screen"))}" target="_blank" rel="noopener">Big screen</a><button class="btn sm ${open?"gold":""}" data-act="hostOpen" data-k="${k}">${open?"Close":"Manage"}</button>${def===k?"":`<button class="btn sm" data-act="setMain" data-k="${k}">Make main</button>`}<button class="btn sm" data-act="askDel" data-k="${k}">Delete</button>`}</div>
   ${open?`<div class="stack evfull adminbox"><h3>Moderators</h3>${modsPanel(k,(D.hostMods||{})[k],(D.hostMeta||{})[k])}
    <h3>21+ section</h3><div class="row between small"><span>Drinking games for guests who confirm they're 21 or older. Off by default.</span><button class="toggle tg-sm" data-act="adultToggle" data-code="${k}" aria-pressed="${!!((D.hostEv||{})[k]||{}).adultOn}"><span>${((D.hostEv||{})[k]||{}).adultOn?"On":"Off"}</span><i></i></button></div>
    <h3>Start fresh</h3>${freshPanel(k)}<h3>Archives</h3>${archiveList(k)}</div>`:""}</div>`}).join(""):'<p class="small muted m0">No events yet.</p>'}</section>
  <section class="card stack"><div class="row between"><h2>New events</h2><a class="btn sm primary" href="${esc(baseURL())}#new" target="_blank" rel="noopener">Open the new-event page</a></div><p class="small muted m0">New events are made on their own page, so nothing here or in your shower changes. Give people an invite code from the Invite codes tab.</p></section>`}
 function hInvites(){const v=D.invites||{},ks=Object.keys(v).sort((a,b)=>(v[b].t||0)-(v[a].t||0));
- return `<section class="card stack"><h2>Invite codes</h2><p class="small muted m0">Anyone who wants to start their own event needs a code from you. Turn a code off at any time.</p>
- <div class="row"><input type="text" class="grow" placeholder="Who it's for, like Cousin Tasha" data-draft="inv_label" value="${esc(dv("inv_label",""))}"><select data-draft="inv_max"><option value="1">One event</option><option value="5">Up to 5 events</option><option value="0">Unlimited</option></select><button class="btn primary" data-act="invNew">Make a code</button></div>
- ${ks.length?ks.map(k=>`<div class="gamerow evrow ${v[k].active?"":"dim"}"><span class="gnum">🎟️</span><div class="mw0"><b class="mono">${k}</b> · ${esc(v[k].label||"")}<div class="small muted">Used ${v[k].used||0}${v[k].max?" of "+v[k].max:""} · ${v[k].active?"active":"turned off"}</div></div><div class="row"><button class="btn sm" data-act="copyLink" data-url="${esc(baseURL()+"?invite="+k+"#new")}">Copy link</button><button class="btn sm" data-act="invToggle" data-k="${k}">${v[k].active?"Turn off":"Turn on"}</button><button class="btn sm" data-act="invDel" data-k="${k}">Delete</button></div></div>`).join(""):'<p class="small muted m0">No codes yet.</p>'}</section>`}
+ return `<section class="card stack"><h2>Invite codes</h2><p class="small muted m0">Each code lets one person create one event and pick their own moderator PIN. Once it's used, it's spent. You can open and change any event made with your codes.</p>
+ <div class="row"><input type="text" class="grow" placeholder="Who it's for, like Cousin Tasha" data-draft="inv_label" value="${esc(dv("inv_label",""))}"><button class="btn primary" data-act="invNew">Make a code</button></div>
+ ${ks.length?ks.map(k=>{const x=v[k],used=!!x.event||(x.used||0)>=1,ev=x.event&&(D.events||{})[x.event];
+  const status=used?(x.event?`Used for <b>${esc(x.eventName||(ev&&ev.name)||x.event)}</b> · code ${esc(x.event)}${ev?"":" · event deleted"}`:"Used"):(x.active?"Not used yet":"Cancelled");
+  const btns=used?(ev?`<button class="btn sm primary" data-act="openMod" data-k="${esc(x.event)}">Open event</button>`:"")+`<button class="btn sm" data-act="invDel" data-k="${k}">Remove</button>`
+   :x.active?`<button class="btn sm" data-act="copyLink" data-url="${esc(baseURL()+"?invite="+k+"#new")}">Copy link</button><button class="btn sm" data-act="invToggle" data-k="${k}">Cancel</button>`
+   :`<button class="btn sm" data-act="invToggle" data-k="${k}">Turn back on</button><button class="btn sm" data-act="invDel" data-k="${k}">Remove</button>`;
+  return `<div class="gamerow evrow ${!used&&!x.active?"dim":""}"><span class="gnum">🎟️</span><div class="mw0"><b class="mono">${k}</b> · ${esc(x.label||"")}<div class="small muted">${status}</div></div><div class="row">${btns}</div></div>`}).join(""):'<p class="small muted m0">No codes yet.</p>'}</section>`}
 function hArchives(){const ev=D.events||{};Object.keys(ev).forEach(watchHostEvent);
  return `<section class="card stack"><h2>Archives</h2><p class="small muted m0">Saved copies of events from Start fresh: players, scores, wishes and photos. Download, restore or delete them.</p>${Object.keys(ev).map(k=>`<div class="stack tight"><h3>${esc(ev[k].name||k)} · ${esc(k)}</h3>${archiveList(k)}</div>`).join("")}</section>`}
 
