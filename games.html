@@ -2489,7 +2489,11 @@ Object.assign(ACT,{
  nwImg:el=>{const f=el.files[0];if(!f)return;shrinkImage(f,640,.72,img=>{L.drafts.nw_image=img;extractPalette(img,pal=>{L.palette=pal;const th=autoTheme(pal);Object.keys(th).forEach(k=>L.drafts["ts_c_"+k]=th[k]);previewTheme("ts_");render(true)})})},
  nwCreate:async()=>{const d=k=>(L.drafts[k]||"").trim();const name=d("nw_name"),pin=d("nw_pin"),you=d("nw_you");
   if(!name)return toast("Give your event a name");if(!you)return toast("Type your name");if(pin.length<4)return toast("Choose a PIN with at least 4 digits");
-  const inv=L.newInv;const ok=await new Promise(res=>RT("invites/"+inv).transaction(v=>{if(!v||!v.active||(v.used||0)>=1||v.event)return;v.used=1;return v},(e,c)=>res(c)));if(!ok)return toast("That invite code can't be used any more.");
+  const inv=L.newInv;
+  /* a transaction first runs on the phone's local copy, which can be empty (null) before the server answers.
+     Returning null there lets Firebase fetch the real code and run this again, instead of giving up. */
+  const ok=await new Promise(res=>RT("invites/"+inv).transaction(v=>{if(v===null)return null;if(!v.active||(v.used||0)>=1||v.event)return;v.used=1;return v},(e,c,snap)=>{const x=snap&&snap.val();res(!e&&c&&!!x&&x.used===1&&!x.event)}));
+  if(!ok)return toast("That invite code can't be used any more. Ask the host for a new one.");
   let code=d("nw_code").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);const idx=(await RT("index").once("value")).val()||{};
   if(code&&(await ER("meta",code).once("value")).val())code="";
   if(!code||idx[code]){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";do{code=[...Array(5)].map(()=>A[rnd(A.length)]).join("")}while(idx[code])}
