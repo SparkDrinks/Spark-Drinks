@@ -825,6 +825,9 @@ html.hmbrand .eyebrow{color:#b45a00}
 .lg-go:disabled{opacity:.7}
 .lg-fine{font-size:12px!important;color:#5d6b86!important;text-align:center;margin:10px 0 0!important}
 @media (max-width:480px){.lg-grid{grid-template-columns:1fr;gap:8px}.lg-card{padding:16px 16px 14px;border-radius:20px}.lg-card h2{font-size:22px}.lg-card p{font-size:14px;margin-bottom:10px}.lg-grid input,.lg-grid select,.lg-grid textarea{min-height:44px;padding:8px 12px}.lg-go{margin-top:10px}}
+.tbar.n{display:flex;flex-wrap:wrap}.tbar.n>div{flex:1 1 92px;min-width:0}
+.seg.wrap{display:flex;flex-wrap:wrap;border-radius:18px}
+.pill.c{background:color-mix(in srgb,#3aa56b 22%,transparent)}.pill.d{background:color-mix(in srgb,#8a5cc9 22%,transparent)}.pill.e{background:color-mix(in srgb,#d9578a 22%,transparent)}.pill.f{background:color-mix(in srgb,#2aa6a6 22%,transparent)}.pill.g{background:color-mix(in srgb,#c9a227 24%,transparent)}.pill.h{background:color-mix(in srgb,#6b7a8f 22%,transparent)}.pill.i{background:color-mix(in srgb,#b5533c 22%,transparent)}.pill.j{background:color-mix(in srgb,#5a9a2a 22%,transparent)}.pill.k{background:color-mix(in srgb,#3b5bdb 22%,transparent)}.pill.l{background:color-mix(in srgb,#a0522d 22%,transparent)}
 </style>
 </head><body>
 <div class="wrap">
@@ -954,7 +957,7 @@ const BLANK_CONTENT={
 const ES={
 "Get ready":"Prepárate","It's a girl!":"¡Es niña!","It's a boy!":"¡Es niño!","Scan to join the games":"Escanea para unirte a los juegos","By joining, you agree to the":"Al unirte, aceptas los","Terms":"Términos","and":"y","Privacy Policy":"Política de privacidad","Now on the big screen":"Ahora en la pantalla grande","Tap anywhere to close":"Toca para cerrar","Keepsake page":"Página de recuerdos","Let's play!":"¡A jugar!",
 "Home":"Inicio","Live game":"Juego","Hunt":"Búsqueda","Photos":"Fotos","Leaders":"Ranking",
-"Welcome":"Bienvenido","Join the games":"Únete a los juegos","Your name":"Tu nombre","First name and last initial":"Nombre e inicial del apellido",
+"Welcome":"Bienvenido","Where are you sitting?":"¿Dónde estás sentado?","Table number or area":"Número de mesa o zona","Your captain:":"Tu capitán:","You are the captain!":"¡Eres el capitán!","You were grouped with people sitting near you.":"Te agruparon con la gente sentada cerca de ti.","The host dealt the teams at random.":"El anfitrión repartió los equipos al azar.","Join the games":"Únete a los juegos","Your name":"Tu nombre","First name and last initial":"Nombre e inicial del apellido",
 "Birth month":"Mes de nacimiento","Day":"Día","Pick your picture":"Elige tu imagen","Take a selfie":"Tómate una selfie","Retake selfie":"Tomar otra selfie","Using your selfie":"Usando tu selfie","or pick a picture above":"o elige una imagen arriba","Your picture":"Tu imagen","Picture updated":"Imagen actualizada",
 "Pick a fun-fact question about you":"Elige una pregunta divertida sobre ti","Your answer":"Tu respuesta",
 "Other guests have to ask you this in person to unlock your secret word.":"Los demás invitados tendrán que preguntarte esto en persona para desbloquear tu palabra secreta.",
@@ -1092,13 +1095,26 @@ const DAYS_IN=[31,29,31,30,31,30,31,31,30,31,30,31];
 const fixDay=(m,d)=>Math.min(DAYS_IN[(m||1)-1],Math.max(1,+d||1));
 /* Seasons: "month" = Dec–May is winter & spring; "dates" = winter starts Dec 21, summer starts Jun 21 */
 function inWinterSpring(m,d){if((st().seasonMode||"month")==="dates"){if(m===12)return d>=21;if(m===6)return d<=20;return m<=5}return m===12||m<=5}
-function teamOf(id){const o=(st().override||{})[id];if(o)return o;const p=P(id);
+/* ---- N teams: up to 7 are "teams", 8+ are "pods" (max 12) ---- */
+const NEWSPLIT=m=>m==="random"||m==="prox"||m==="hand";
+const TKEYS="ABCDEFGHIJKL".split("");
+const nTeams=()=>Math.min(12,Math.max(2,+st().nTeams||2));
+const teamKeys=n=>TKEYS.slice(0,n||nTeams());
+const grpWord=n=>(n||nTeams())>7?"pod":"team";
+const TCOL=["var(--sky)","var(--flame)","#3aa56b","#8a5cc9","#d9578a","#2aa6a6","#c9a227","#6b7a8f","#b5533c","#5a9a2a","#3b5bdb","#a0522d"];
+function hashN(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
+function winnerKey(){let best=-Infinity,w=null,tie=false;teamKeys().forEach(k=>{const v=D.team[k]||0;if(v>best){best=v;w=k;tie=false}else if(v===best)tie=true});return tie?null:w}
+function tiedTop(){const ks=teamKeys();const m=Math.max(...ks.map(k=>D.team[k]||0));return ks.filter(k=>(D.team[k]||0)===m)}
+const captainOf=tm=>{const c=(st().captains||{})[tm];return c&&D.players[c]&&teamOf(c)===tm?c:null};
+function teamOf(id){const o=(st().override||{})[id];if(o&&teamKeys().includes(o))return o;const p=P(id);
+ if(NEWSPLIT(st().split)||nTeams()>2)return teamKeys()[hashN(String(id))%nTeams()];
  if((st().split||"seasons")==="seasons")return inWinterSpring(p.m,p.d)?"A":"B";return p.d%2?"A":"B"}
 function teamName(tm){const n=(st().teamNames||{})[tm];if(n)return n;const s=st().split||"seasons";
+ if(NEWSPLIT(s)||nTeams()>2){const i=TKEYS.indexOf(tm)+1,pod=nTeams()>7;return (L.lang==="es"?(pod?"Grupo ":"Equipo "):(pod?"Pod ":"Team "))+i}
  if(L.lang==="es")return s==="seasons"?(tm==="A"?"Invierno y primavera":"Verano y otoño"):(tm==="A"?"Cumpleaños impares":"Cumpleaños pares");
  return s==="seasons"?(tm==="A"?"Winter & Spring":"Summer & Fall"):(tm==="A"?"Odd birthdays":"Even birthdays")}
 const members=tm=>ids().filter(i=>teamOf(i)===tm);
-function makePods(){const out={};["A","B"].forEach(tm=>{const m=members(tm);const n=Math.max(1,Math.ceil(m.length/8));m.forEach((x,k)=>out[x]=tm+(k%n+1))});return out}
+function makePods(){const out={};teamKeys().forEach(tm=>{const m=members(tm);const n=Math.max(1,Math.ceil(m.length/8));m.forEach((x,k)=>out[x]=tm+(k%n+1))});return out}
 const podOf=id=>(st().pods||{})[id]||null;
 const podMembers=pk=>Object.keys(st().pods||{}).filter(i=>st().pods[i]===pk&&D.players[i]);
 const score=id=>D.scores[id]||0;
@@ -1358,7 +1374,7 @@ window.addEventListener("hashchange",()=>location.reload());
 const ICON={home:'<path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/>',play:'<path d="M7 5v14l12-7z"/>',hunt:'<circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/>',
  board:'<path d="M5 20V10M12 20V4M19 20v-7"/>',photo:'<rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/>'};
 const ic=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
-function teamBar(){return `<div class="tbar"><div class="ta"><span class="small">${esc(teamName("A"))}</span><b class="num">${D.team.A||0}</b></div><div class="tb"><span class="small">${esc(teamName("B"))}</span><b class="num">${D.team.B||0}</b></div></div>`}
+function teamBar(){if(nTeams()>2)return `<div class="tbar n">${teamKeys().map((k,i)=>`<div style="background:color-mix(in srgb,${TCOL[i]} 18%,var(--card))"><span class="small">${esc(teamName(k))}</span><b class="num">${D.team[k]||0}</b></div>`).join("")}</div>`;return `<div class="tbar"><div class="ta"><span class="small">${esc(teamName("A"))}</span><b class="num">${D.team.A||0}</b></div><div class="tb"><span class="small">${esc(teamName("B"))}</span><b class="num">${D.team.B||0}</b></div></div>`}
 
 function player(){
  if(L.me&&L.playersLoaded&&!D.players[L.me]){L.profiles=L.profiles.filter(i=>D.players[i]);store.set("profiles_"+EV,L.profiles);L.me=L.profiles[0]||null;store.set("active_"+EV,L.me);watchMine()}
@@ -1376,6 +1392,7 @@ function joinScreen(){
  const months=L.lang==="es"?["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]:["January","February","March","April","May","June","July","August","September","October","November","December"];
  return `<section class="card stack"><div class="eyebrow">${t("Welcome")}</div><h2>${t("Join the games")}</h2>
  <label class="stack tight"><span class="small">${t("Your name")}</span><input type="text" id="jName" maxlength="24" value="${esc(d.name)}" placeholder="${t("First name and last initial")}" autocomplete="off"></label>
+ ${st().askSeat&&st().split==="prox"?`<label class="stack tight"><span class="small">${t("Where are you sitting?")}</span><input type="text" id="jSit" maxlength="30" value="${esc(d.sit||"")}" placeholder="${t("Table number or area")}" autocomplete="off"></label>`:""}
  <div class="row"><label class="stack tight grow"><span class="small">${t("Birth month")}</span><select id="jMonth">${months.map((x,k)=>`<option value="${k+1}" ${k+1===d.m?"selected":""}>${x}</option>`).join("")}</select></label>
  <label class="stack tight"><span class="small">${t("Day")}</span><input type="number" id="jDay" min="1" max="${DAYS_IN[d.m-1]}" value="${fixDay(d.m,d.d)}"></label></div>
  <div class="stack tight"><span class="small">${t("Pick your picture")}</span><div class="avpick">${AVATARS.map(e=>`<button data-act="jAv" data-e="${e}" aria-pressed="${d.av&&d.av.e===e&&!d.av.img}">${e}</button>`).join("")}
@@ -1384,8 +1401,8 @@ function joinScreen(){
  <div class="stack tight"><span class="small">${t("Your answer")}</span><div class="row">${opts.map((o,k)=>`<button class="btn sm ${k===d.fa?"gold":""}" data-act="jA" data-k="${k}">${esc(o)}</button>`).join("")}</div></div>
  <p class="small muted m0">${t("Other guests have to ask you this in person to unlock your secret word.")}</p>
  <button class="btn primary" data-act="join">${t("Join")}</button>${legalLinks()}${L.profiles.length?`<button class="btn" data-act="cancelJoin">${t("Back")}</button>`:""}</section>`}
-function draftFromForm(){const d=store.get("draft",{name:"",m:1,d:1,fq:0,fa:null,av:{e:AVATARS[0]}});const n=$("#jName"),m=$("#jMonth"),dd=$("#jDay");
- if(n)d.name=n.value;if(m)d.m=+m.value;if(dd)d.d=+dd.value||1;d.d=fixDay(d.m,d.d);store.set("draft",d);return d}
+function draftFromForm(){const d=store.get("draft",{name:"",m:1,d:1,fq:0,fa:null,av:{e:AVATARS[0]}});const n=$("#jName"),m=$("#jMonth"),dd=$("#jDay"),sq=$("#jSit");
+ if(sq)d.sit=sq.value;if(n)d.name=n.value;if(m)d.m=+m.value;if(dd)d.d=+dd.value||1;d.d=fixDay(d.m,d.d);store.set("draft",d);return d}
 const rank=id=>ranked().indexOf(id)+1;
 
 function pHome(){
@@ -1403,7 +1420,7 @@ function pHome(){
 function reactBar(){return `<section class="card stack tight"><span class="small muted">${t("Send a reaction to the big screen")}</span><div class="rxbar">${REACTIONS.map(e=>`<button data-act="react" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></section>`}
 
 function pRecap(){
- const me=L.me,tm=teamOf(me),A=D.team.A||0,B=D.team.B||0,w=A===B?null:(A>B?"A":"B");
+ const me=L.me,tm=teamOf(me),w=winnerKey();
  if(L.recapPhotos===null||L.recapPhotos===undefined){L.recapPhotos=[];const hs=D.mine.hunt||{};Object.keys(hs).filter(k=>hs[k]==="ok").forEach(k=>ER("photos/"+me+"_"+k).once("value").then(s=>{const v=s.val();if(v&&v.img&&!v.removed){L.recapPhotos.push(v.img);renderSoon()}}))}
  const bs=Object.keys(D.mine.badges||{}).filter(k=>BADGES[k]);
  return `<section class="card stack tc recap"><div class="eyebrow">${esc(C().title||"")}</div><div class="winner sm">${t("Thanks for celebrating!")}</div>${w?`<p class="m0"><b>${t("{team} won the night!",{team:esc(teamName(w))})}</b></p>`:`<p class="m0"><b>${t("It's a tie!")}</b></p>`}</section>
@@ -1420,15 +1437,16 @@ function pLive(){
 
 function gSplit(){
  const tm=teamOf(L.me),p=P(L.me);
- const why=(st().split||"seasons")==="seasons"?t("Your birthday is {d}, so you're with everyone born in {s}.",{d:bday(p),s:t(tm==="A"?"winter or spring":"summer or fall")}):t(p.d%2?"Your birthday falls on an odd day of the month.":"Your birthday falls on an even day of the month.");
+ const md=st().split||"seasons";const cap=captainOf(tm);
+ const why=md==="prox"?t("You were grouped with people sitting near you."):(md==="random"||md==="hand")?t("The host dealt the teams at random."):(st().split||"seasons")==="seasons"?t("Your birthday is {d}, so you're with everyone born in {s}.",{d:bday(p),s:t(tm==="A"?"winter or spring":"summer or fall")}):t(p.d%2?"Your birthday falls on an odd day of the month.":"Your birthday falls on an even day of the month.");
  const mates=members(tm).filter(i=>i!==L.me);
  const fixed=(st().teamNames||{})[tm];
  const sg=(D.sugg||{})[tm]||{};const list=Object.keys(sg).map(k=>({k,name:sg[k].name,votes:Object.keys(sg[k].v||{}).length,mine:!!(sg[k].v||{})[L.me]})).sort((a,b)=>b.votes-a.votes);
- return `<section class="card stack tc"><div class="eyebrow">${t("Your team for the whole night")}</div><div class="winner">${esc(teamName(tm))}</div><p class="muted m0">${(st().override||{})[L.me]?t("The moderator placed you on this team."):why}</p></section>
+ return `<section class="card stack tc"><div class="eyebrow">${t("Your team for the whole night")}</div><div class="winner">${esc(teamName(tm))}</div><p class="muted m0">${(!NEWSPLIT(md)&&(st().override||{})[L.me])?t("The moderator placed you on this team."):why}</p>${cap?`<p class="m0">★ ${cap===L.me?`<b>${t("You are the captain!")}</b>`:`${t("Your captain:")} <b>${esc(P(cap).name)}</b>`}</p>`:""}</section>
  <section class="card stack"><h3>${t("Name your team")}</h3>${fixed?`<p class="m0">${t("Your team name is set:")} <b>${esc(fixed)}</b></p>`:`<p class="small muted m0">${t("Suggest a fun name, or vote for one you like.")}</p>
  <div class="row"><input type="text" id="sgTxt" data-draft="sg" class="grow" maxlength="28" value="${esc(dv("sg",""))}"><button class="btn primary" data-act="suggest">${t("Suggest")}</button></div>
  <div class="stack tight">${list.map(s=>`<div class="row between"><span>${esc(s.name)} <span class="muted small">· ${s.votes}</span></span><button class="btn sm ${s.mine?"gold":""}" data-act="voteName" data-k="${s.k}">${s.mine?t("Voted"):t("Vote")}</button></div>`).join("")}</div>`}</section>
- <section class="card"><h3>${t("Find your teammates")}</h3><p class="small muted">${t("Go say hello to these {n} people.",{n:mates.length})}</p><div class="row">${mates.map(i=>`<span class="pill ${tm.toLowerCase()}">${av(i,18)} ${esc(P(i).name)}</span>`).join("")}</div></section>`}
+ <section class="card"><h3>${t("Find your teammates")}</h3><p class="small muted">${t("Go say hello to these {n} people.",{n:mates.length})}</p><div class="row">${mates.map(i=>`<span class="pill ${tm.toLowerCase()}">${cap===i?"★ ":""}${av(i,18)} ${esc(P(i).name)}</span>`).join("")}</div></section>`}
 
 /* Long Word Wins */
 function myTiles(){const lw=D.mine.lw||{},got=lw.got||{};const out=[{l:P(L.me).word[0],from:"your word"}];Object.keys(got).sort((a,b)=>(+got[a]||0)-(+got[b]||0)).forEach(id=>{if(D.players[id])out.push({l:P(id).word[0],from:P(id).name})});return out}
@@ -1584,23 +1602,51 @@ function reviewQueue(){
  const list=Object.keys(D.photos||{}).map(k=>Object.assign({key:k},D.photos[k])).filter(x=>!x.checked).sort((a,b)=>a.t-b.t);const items=HUNTS();
  return `<section class="card stack"><div class="row between"><h3>Scavenger Hunt photos</h3><span class="small muted">${list.length} to check · points are given right away</span></div>${list.length>10?'<div class="nudge">The photo queue is filling up. Your assistant can help from their own phone.</div>':""}${list.length?list.slice(0,12).map(x=>`<div class="item"><div class="thumb">${x.img?`<img src="${x.img}" alt="">`:"?"}</div><div><b>${esc(P(x.who).name)}</b><div class="small muted">Says it's the ${esc(((items[x.k]||{}).n||"item").toLowerCase())}</div></div><div class="row"><button class="btn sm gold" data-act="pOk" data-key="${x.key}">Looks good</button><button class="btn sm" data-act="pNo" data-key="${x.key}">Remove</button></div></div>`).join(""):`<p class="small muted m0">All caught up.</p>`}</section>`}
 
+/* ---- Dealing teams: random, by seating (chart or join answer), or by hand ---- */
+const sitKey=v=>{const x=normName(v);const d=x.match(/\d+/);return d?"table "+(+d[0]):x};
+function proxPlaces(){const out={},tbs=PLN().tables||{},have=Object.values(PLN().seats||{}).filter(x=>x&&tbs[x.tb]),byFull={},byFirst={};
+ have.forEach(x=>{const nn=normName(x.n),lbl=tbs[x.tb].name||"Table";byFull[nn]=lbl;const f=nn.split(" ")[0];(byFirst[f]=byFirst[f]||[]).push({nn,lbl})});
+ ids().forEach(id=>{const p=P(id),nn=normName(p.name);let lbl="";
+  if(byFull[nn])lbl=byFull[nn];else{const parts=nn.split(" "),li=(parts[1]||"")[0];const c=(byFirst[parts[0]]||[]).filter(x=>{const q=x.nn.split(" ");return !li||(q[q.length-1]||"")[0]===li});
+   if(c.length&&new Set(c.map(x=>x.lbl)).size===1)lbl=c[0].lbl}
+  if(!lbl&&p.sit)lbl=sitKey(p.sit);
+  if(lbl)out[id]=lbl});return out}
+const chartOn=()=>{const tbs=PLN().tables||{};return Object.values(PLN().seats||{}).some(x=>x&&tbs[x.tb])};
+function shuffled(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function dealGroups(mode,n){const ks=teamKeys(n),list=ids(),out={},cnt={};ks.forEach(k=>cnt[k]=0);
+ if(mode==="prox"){const pl=proxPlaces();
+  const near=list.filter(i=>pl[i]).sort((a,b)=>String(pl[a]).localeCompare(String(pl[b]),undefined,{numeric:true})||(P(a).t||0)-(P(b).t||0)),rest=list.filter(i=>!pl[i]);
+  near.forEach((id,k)=>{const tm=ks[Math.min(ks.length-1,Math.floor(k*ks.length/near.length))];out[id]=tm;cnt[tm]++});
+  shuffled(rest).forEach(id=>{const tm=ks.reduce((a,b)=>cnt[b]<cnt[a]?b:a);out[id]=tm;cnt[tm]++})}
+ else shuffled(list).forEach((id,k)=>out[id]=ks[k%ks.length]);
+ return out}
 /* ---- Teams ---- */
 function mTeams(){
- const col=tm=>{const m=members(tm);const sg=(D.sugg||{})[tm]||{};const sl=Object.keys(sg).map(k=>({k,name:sg[k].name,v:Object.keys(sg[k].v||{}).length})).sort((a,b)=>b.v-a.v).slice(0,5);
+ const n=nTeams(),W=grpWord(),Wc=W[0].toUpperCase()+W.slice(1),mode=st().split||"seasons",isNew=NEWSPLIT(mode),ks=teamKeys();
+ const col=tm=>{const m=members(tm);const sg=(D.sugg||{})[tm]||{};const sl=Object.keys(sg).map(k=>({k,name:sg[k].name,v:Object.keys(sg[k].v||{}).length})).sort((a,b)=>b.v-a.v).slice(0,5);const cap=captainOf(tm);
   return `<section class="card stack"><div class="row between"><h3>${esc(teamName(tm))}</h3><span class="pill ${tm.toLowerCase()}">${m.length} players</span></div>
-  <div class="stack tight"><span class="small">Team name</span><div class="row"><input type="text" class="grow" data-draft="tn${tm}" value="${esc(dv("tn"+tm,(st().teamNames||{})[tm]||""))}" placeholder="${esc(teamName(tm))}"><button class="btn sm primary" data-act="setTeamName" data-t="${tm}">Set</button></div>
+  <div class="small">${cap?`★ Captain: <b>${esc(P(cap).name)}</b>`:'<span class="muted">No captain yet. Tap "Make captain" next to a name.</span>'}</div>
+  <div class="stack tight"><span class="small">${Wc} name</span><div class="row"><input type="text" class="grow" data-draft="tn${tm}" value="${esc(dv("tn"+tm,(st().teamNames||{})[tm]||""))}" placeholder="${esc(teamName(tm))}"><button class="btn sm primary" data-act="setTeamName" data-t="${tm}">Set</button></div>
   ${sl.length?`<div class="row small">${sl.map(s=>`<button class="btn xs" data-act="useSugg" data-t="${tm}" data-k="${s.k}">${esc(s.name)} · ${s.v}</button>`).join("")}</div>`:'<span class="small muted">Guest suggestions show up here during Team Splitter.</span>'}</div>
-  <div class="stack tight">${m.map(i=>`<div class="row between small"><span>${av(i,22)} ${esc(P(i).name)} <span class="muted">${MON[P(i).m-1]} ${P(i).d}</span>${podOf(i)?` <span class="muted">· pod ${podOf(i)}</span>`:""}${(st().override||{})[i]?' <span class="pill warn">moved</span>':""}${P(i).bot?' <span class="pill">bot</span>':""}</span><span class="row"><button class="btn sm" data-act="move" data-id="${i}">Move to ${tm==="A"?"B":"A"}</button><button class="btn sm" data-act="kick" data-id="${i}">Remove</button></span></div>`).join("")||'<span class="small muted">Nobody yet</span>'}</div></section>`};
- return `<section class="card stack"><h2>How should the room split? ${hint("split")}</h2><div class="seg" role="group" aria-label="Team split"><button data-act="split" data-v="seasons" aria-pressed="${(st().split||"seasons")==="seasons"}">Seasons</button><button data-act="split" data-v="oddeven" aria-pressed="${st().split==="oddeven"}">Odd &amp; even birthdays</button></div>${(st().split||"seasons")==="seasons"?`<div class="row small"><span>Seasons go by ${hint("season")}</span><div class="seg" role="group" aria-label="Season dates"><button data-act="seasonMode" data-v="month" aria-pressed="${(st().seasonMode||"month")==="month"}">Month (Dec–May)</button><button data-act="seasonMode" data-v="dates" aria-pressed="${st().seasonMode==="dates"}">Start dates (Dec 21–Jun 20)</button></div></div>`:""}
- <p class="small muted m0">${(st().split||"seasons")==="seasons"?((st().seasonMode||"month")==="dates"?"Birthdays from December 21 through June 20 (winter and spring) form one team. June 21 through December 20 (summer and fall) form the other.":"Birthdays in December through May (winter and spring) form one team. June through November (summer and fall) form the other."):"Odd days of the month (1st, 3rd, 5th…) form one team, even days the other."} Once the first game after the split starts, latecomers join the smaller team.</p>${st().locked?'<span class="pill warn as">Teams are locked in</span>':""}</section><div class="grid2">${col("A")}${col("B")}</div>`}
+  <div class="stack tight">${m.map(i=>`<div class="row between small"><span>${cap===i?"★ ":""}${av(i,22)} ${esc(P(i).name)} <span class="muted">${MON[P(i).m-1]} ${P(i).d}</span>${P(i).sit&&mode==="prox"?` <span class="muted">· ${esc(P(i).sit)}</span>`:""}${podOf(i)?` <span class="muted">· pod ${podOf(i)}</span>`:""}${!isNew&&(st().override||{})[i]?' <span class="pill warn">moved</span>':""}${P(i).bot?' <span class="pill">bot</span>':""}</span><span class="row"><button class="btn sm ${cap===i?"gold":""}" data-act="captain" data-t="${tm}" data-id="${i}">${cap===i?"Captain":"Make captain"}</button>${n===2?`<button class="btn sm" data-act="move" data-id="${i}">Move to ${tm==="A"?"B":"A"}</button>`:`<select class="sm" data-act="moveTo" data-id="${i}" aria-label="Move ${esc(P(i).name)}">${ks.map(k=>`<option value="${k}" ${k===tm?"selected":""}>${esc(teamName(k))}</option>`).join("")}</select>`}<button class="btn sm" data-act="kick" data-id="${i}">Remove</button></span></div>`).join("")||'<span class="small muted">Nobody yet</span>'}</div></section>`};
+ const pl=mode==="prox"?proxPlaces():{},placed=Object.keys(pl).length,total=ids().length;
+ const desc={random:"Everyone is dealt to a "+W+" at random, evenly. Tap Deal again to reshuffle, then move anyone by hand.",
+  prox:(chartOn()?"Guests who sit near each other end up together, following your seating chart in the Plan tab.":"There is no seating chart yet, so guests are asked where they sit when they join (a table number or an area), and neighbors are grouped.")+` ${placed} of ${total} guests have a seat so far; the rest fill the smallest ${W}s.`,
+  hand:"You place everyone yourself. Start from the current split and use the menu next to each name to move people."}[mode];
+ return `<section class="card stack"><h2>How many ${W}s? ${hint("split")}</h2><div class="seg wrap" role="group" aria-label="Number of teams">${[2,3,4,5,6,7,8,9,10,12].map(k=>`<button data-act="teamN" data-v="${k}" aria-pressed="${n===k}">${k}</button>`).join("")}</div>
+ <p class="small muted m0">Up to seven are called teams. Eight or more are called pods. You have ${n} ${W}s.</p></section>
+ <section class="card stack"><h2>How should the room split?</h2><div class="seg wrap" role="group" aria-label="Team split">${n===2?`<button data-act="split" data-v="seasons" aria-pressed="${mode==="seasons"}">Seasons</button><button data-act="split" data-v="oddeven" aria-pressed="${mode==="oddeven"}">Odd &amp; even birthdays</button>`:""}<button data-act="splitMode" data-v="random" aria-pressed="${mode==="random"}">Random</button><button data-act="splitMode" data-v="prox" aria-pressed="${mode==="prox"}">By seating</button><button data-act="splitMode" data-v="hand" aria-pressed="${mode==="hand"}">By hand</button></div>
+ ${mode==="seasons"?`<div class="row small"><span>Seasons go by ${hint("season")}</span><div class="seg" role="group" aria-label="Season dates"><button data-act="seasonMode" data-v="month" aria-pressed="${(st().seasonMode||"month")==="month"}">Month (Dec–May)</button><button data-act="seasonMode" data-v="dates" aria-pressed="${st().seasonMode==="dates"}">Start dates (Dec 21–Jun 20)</button></div></div>`:""}
+ <p class="small muted m0">${isNew?desc:(mode==="seasons"?((st().seasonMode||"month")==="dates"?"Birthdays from December 21 through June 20 (winter and spring) form one team. June 21 through December 20 (summer and fall) form the other.":"Birthdays in December through May (winter and spring) form one team. June through November (summer and fall) form the other."):"Odd days of the month (1st, 3rd, 5th…) form one team, even days the other.")} Once the first game after the split starts, latecomers join the smaller ${W}.</p>
+ <div class="row">${isNew?`<button class="btn primary" data-act="reDeal">${mode==="prox"?"Regroup by seating":"Deal again"}</button>`:""}<button class="btn" data-act="capRandom">Pick captains at random</button></div>${st().locked?'<span class="pill warn as">Teams are locked in</span>':""}</section><div class="grid2">${ks.map(col).join("")}</div>`}
 
 /* ---- Scores ---- */
-function mScores(){const order=ranked(),A=D.team.A||0,B=D.team.B||0,tie=C().tie||{},tb=st().tiebreak;
+function mScores(){const order=ranked(),tbk=(tiedTop().length>1?tiedTop():teamKeys()),tie=C().tie||{},tb=st().tiebreak;
  return `${teamBar()}
  <section class="card stack"><h3>Finish the night</h3><div class="row"><button class="btn gold" data-act="winner">${st().showWinner?"Hide winner":"Show winner on big screen"}</button><button class="btn primary" data-act="endNight">${st().ended?"Reopen the games":"End the night and send recaps"}</button></div><p class="small muted m0">Ending the night shows the winner with an entrance on the big screen and gives every guest their personal recap.</p></section>
- <section class="card stack"><h3>Tiebreaker ${hint("tie")}</h3><p class="m0">${esc(tie.q||"")} <span class="pill ok">Answer: ${esc(tie.a)}</span></p>${A===B?'<div class="nudge">The teams are tied. Run the tiebreaker.</div>':""}
- ${tb?`<div class="row"><label class="row small">${esc(teamName("A"))} guess <input type="number" data-draft="tbA" value="${esc(dv("tbA",""))}"></label><label class="row small">${esc(teamName("B"))} guess <input type="number" data-draft="tbB" value="${esc(dv("tbB",""))}"></label><button class="btn primary" data-act="tbReveal">Reveal closest</button><button class="btn" data-act="tbOff">Hide</button></div>${tb.result?`<p class="m0"><b>${esc(tb.result)}</b></p>`:""}`:`<button class="btn as" data-act="tbOn">Show tiebreaker on the big screen</button>`}</section>
- <section class="card row between"><span class="small">Team points</span><span class="row">${["A","B"].map(tm=>`<span class="pill ${tm.toLowerCase()}">${esc(teamName(tm))}</span><button class="btn sm" data-act="tadj" data-t="${tm}" data-d="-1">−</button><button class="btn sm" data-act="tadj" data-t="${tm}" data-d="1">+</button>`).join("")}</span></section>
+ <section class="card stack"><h3>Tiebreaker ${hint("tie")}</h3><p class="m0">${esc(tie.q||"")} <span class="pill ok">Answer: ${esc(tie.a)}</span></p>${winnerKey()?"":'<div class="nudge">The '+grpWord()+'s are tied. Run the tiebreaker.</div>'}
+ ${tb?`<div class="row">${tbk.map(k=>`<label class="row small">${esc(teamName(k))} guess <input type="number" data-draft="tb${k}" value="${esc(dv("tb"+k,""))}"></label>`).join("")}<button class="btn primary" data-act="tbReveal">Reveal closest</button><button class="btn" data-act="tbOff">Hide</button></div>${tb.result?`<p class="m0"><b>${esc(tb.result)}</b></p>`:""}`:`<button class="btn as" data-act="tbOn">Show tiebreaker on the big screen</button>`}</section>
+ <section class="card row between"><span class="small">${grpWord()==="pod"?"Pod":"Team"} points</span><span class="row">${teamKeys().map(tm=>`<span class="pill ${tm.toLowerCase()}">${esc(teamName(tm))}</span><button class="btn sm" data-act="tadj" data-t="${tm}" data-d="-1">−</button><button class="btn sm" data-act="tadj" data-t="${tm}" data-d="1">+</button>`).join("")}</span></section>
  <section class="card stack"><h3>Prizes</h3><div class="row small"><span class="pill warn">Raffle</span><span>Draw a random winner from the guests who joined.</span><button class="btn sm" data-act="raffle">Draw</button></div>${st().raffle?`<p class="m0">Raffle winner: <b>${esc(st().raffle)}</b></p>`:""}</section>
  <section class="card tscroll"><table><thead><tr><th>#</th><th>Guest</th><th>Team</th><th class="tr">Points</th><th class="tr">Fix</th></tr></thead><tbody>${order.map((i,k)=>`<tr><td class="num">${k+1}</td><td>${av(i,22)} ${esc(P(i).name)}</td><td><span class="pill ${teamOf(i).toLowerCase()}">${esc(teamName(teamOf(i)))}</span></td><td class="num tr">${score(i)}</td><td class="tr nw"><button class="btn sm" data-act="adj" data-id="${i}" data-d="-1" aria-label="Take a point from ${esc(P(i).name)}">−</button> <button class="btn sm" data-act="adj" data-id="${i}" data-d="1" aria-label="Give a point to ${esc(P(i).name)}">+</button></td></tr>`).join("")}</tbody></table></section>`}
 
@@ -1716,7 +1762,7 @@ function hSettings(){return `<section class="card stack"><h2>Host PIN</h2><p cla
 function bigscreen(){
  const s=st(),order=ranked().slice(0,10),g=s.live?gameById(s.live):null;let stage;
  const opts=SUPOPT();
- if(s.showWinner||s.ended){const A=D.team.A||0,B=D.team.B||0,w=A===B?null:(A>B?"A":"B");stage=`<div class="eyebrow">Tonight's champions</div><div class="winner">${w?esc(teamName(w)):"It's a tie!"}</div><p class="muted">${w?`${D.team[w]} points`:"Time for the tiebreaker question."}</p>`}
+ if(s.showWinner||s.ended){const w=winnerKey();stage=`<div class="eyebrow">Tonight's champions</div><div class="winner">${w?esc(teamName(w)):"It's a tie!"}</div><p class="muted">${w?`${D.team[w]} points`:"Time for the tiebreaker question."}</p>`}
  else if(s.tiebreak){const tie=C().tie||{};stage=`<div class="eyebrow">Tiebreaker</div><h2 class="big">${esc(tie.q||"")}</h2><p class="muted">Each team agrees on one number. Closest guess wins.</p>${s.tiebreak.result?`<div class="winner sm">${esc(s.tiebreak.result)}</div>`:""}`}
  else if(!g){const al=D.album||{},ks=Object.keys(al).slice(-8).reverse();stage=`${C().image?`<img class="ev-art big" src="${C().image}" alt="">`:""}<div class="winner">Welcome!</div><p class="muted">Scan to join the games</p><div class="qrbox asc" data-qr="${esc(eventURL(EV))}" data-size="190"></div>${ks.length?`<div class="strip">${ks.map(k=>`<img src="${al[k].thumb}" alt="">`).join("")}</div>`:""}`}
  else if(g&&g.custom)stage=`<div class="cgph" data-slot="s"></div>`;
@@ -2336,7 +2382,7 @@ function legalFoot(){return `<p class="fine tc"><a href="#" data-act="legal" dat
 function legalSheet(){return `<div class="sheet-bg"></div><div class="sheet legal" role="dialog"><div class="row between"><span></span><button class="btn sm" data-act="legalClose">${t("Close")}</button></div><div class="legal-body">${L.legal==="terms"?termsText():privacyText()}</div><p class="small muted">This text is a starting point, not legal advice. Have a lawyer review it before using the app for paying clients.</p></div>`}
 
 /* ---------- keepsake page (after the party) ---------- */
-function keepsakeView(){const c=C(),A=D.team.A||0,B=D.team.B||0,w=A===B?null:(A>B?"A":"B"),wi=D.wishes||{},wk=Object.keys(wi).sort((a,b)=>(wi[a].t||0)-(wi[b].t||0)),order=ranked().slice(0,10);
+function keepsakeView(){const c=C(),w=winnerKey(),wi=D.wishes||{},wk=Object.keys(wi).sort((a,b)=>(wi[a].t||0)-(wi[b].t||0)),order=ranked().slice(0,10);
  return `<section class="card stack tc keep-hero">${c.image?`<img class="ev-art" src="${c.image}" alt="">`:""}<div class="eyebrow">${esc(c.tagline||"")}</div><div class="winner">${esc(c.title||"Our celebration")}</div>${c.honorees?`<p class="m0">For ${esc(c.honorees)}</p>`:""}</section>
  <section class="card stack"><h2>Final scores</h2>${teamBar()}${w?`<p class="m0 tc"><b>${esc(teamName(w))} won the night!</b></p>`:""}<table><tbody>${order.map((i,k)=>`<tr><td class="num">${k+1}</td><td>${av(i,24)} ${esc(P(i).name)}</td><td class="num tr">${score(i)}</td></tr>`).join("")}</tbody></table></section>
  <section class="card stack"><h2>Wishes</h2>${wk.length?`<div class="wishgrid">${wk.map(k=>`<div class="wish"><p class="m0">${esc(wi[k].text)}</p><p class="small muted m0">${esc(wi[k].name||"")}</p></div>`).join("")}</div>`:'<p class="small muted m0">No wishes were left.</p>'}</section>
@@ -2378,9 +2424,11 @@ const ACT={
  jAv:el=>{const d=draftFromForm();d.av={e:el.dataset.e};store.set("draft",d);render()},
  jSelfie:el=>{const f=el.files[0];if(!f)return;squareImage(f,120,img=>{const d=draftFromForm();d.av={img};store.set("draft",d);render()})},
  join:()=>{const d=draftFromForm();if(!d.name.trim())return toast(t("Enter your name first"));if(d.fa==null)return toast(t("Pick your answer to the fun-fact question"));if(!db)return toast(t("Not connected yet"));
-  const id=ER("players").push().key;const p={name:d.name.trim().slice(0,24),m:d.m,d:d.d,fq:d.fq,fa:d.fa,word:pickWord(),t:Date.now(),av:d.av||{e:AVATARS[0]}};
+  const id=ER("players").push().key;const p={name:d.name.trim().slice(0,24),m:d.m,d:d.d,fq:d.fq,fa:d.fa,word:pickWord(),t:Date.now(),av:d.av||{e:AVATARS[0]}};if(st().askSeat&&st().split==="prox"&&(d.sit||"").trim())p.sit=d.sit.trim().slice(0,30);
   const u={};u["players/"+id]=p;u["scores/"+id]=0;
-  if(st().locked){const a=members("A").length,b=members("B").length;u["state/override/"+id]=a<=b?"A":"B"}
+  if(NEWSPLIT(st().split)||nTeams()>2||st().locked){const ks=teamKeys();let tm=null;
+   if(st().split==="prox"&&p.sit){const key=sitKey(p.sit),mate=ids().find(i=>P(i).sit&&sitKey(P(i).sit)===key);if(mate)tm=teamOf(mate)}
+   if(!tm){const c={};ks.forEach(k=>c[k]=members(k).length);tm=ks.reduce((a,b)=>c[b]<c[a]?b:a)}u["state/override/"+id]=tm}
   ER().update(u).then(()=>{L.profiles.push(id);store.set("profiles_"+EV,L.profiles);L.me=id;store.set("active_"+EV,id);L.joining=false;
    store.set("draft",{name:"",m:1,d:1,fq:0,fa:null,av:{e:AVATARS[rnd(AVATARS.length)]}});watchMine();L.ptab="home";render();toast(t("You're in!"));confetti(80);SND.ding()})},
  cancelJoin:()=>{L.joining=false;render()},
@@ -2440,17 +2488,30 @@ const ACT={
  lwStart:()=>{const m=Math.max(1,+dv("lwMins",st().lwMins||15)||15);setState({lwMins:m,lwEnd:now()+m*60000});toast("Timer started on every phone")},
  pOk:el=>ER("photos/"+el.dataset.key+"/checked").set(true),
  pNo:el=>{const x=D.photos[el.dataset.key];if(!x)return;ER("photos/"+el.dataset.key).update({checked:true,removed:true,img:null});ER(`hunt/${x.who}/${x.k}`).set("removed");award([x.who],-pv("hunt"),teamOf(x.who),-pv("hunt"));toast("Photo removed and points taken back")},
- split:el=>setState({split:el.dataset.v,override:null,pods:null}),
+ split:el=>setState({split:el.dataset.v,override:null,pods:null,askSeat:null,captains:null}),
  seasonMode:el=>setState({seasonMode:el.dataset.v,pods:null}),
  move:el=>{const i=el.dataset.id;ER("state/override/"+i).set(teamOf(i)==="A"?"B":"A")},
+ moveTo:el=>{ER("state/override/"+el.dataset.id).set(el.value)},
+ captain:el=>{const tm=el.dataset.t,id=el.dataset.id;ER("state/captains/"+tm).set(captainOf(tm)===id?null:id)},
+ capRandom:()=>{const c={};teamKeys().forEach(tm=>{const m=members(tm);if(m.length)c[tm]=m[Math.floor(Math.random()*m.length)]});setState({captains:c});toast("Captains picked. Change anyone with the buttons.")},
+ teamN:el=>{const n=+el.dataset.v;let m=st().split||"seasons";if(n>2&&!NEWSPLIT(m))m="random";
+  const p={nTeams:n,split:m,captains:null,pods:null,override:null,askSeat:null};
+  if(NEWSPLIT(m)){p.override=dealGroups(m==="hand"?"random":m,n);p.askSeat=m==="prox"&&!chartOn()?true:null}
+  setState(p);toast(n+" "+(n>7?"pods":"teams"))},
+ splitMode:el=>{const m=el.dataset.v,n=nTeams();const p={split:m,captains:null,pods:null,askSeat:m==="prox"&&!chartOn()?true:null};
+  if(m==="hand"){const o={};ids().forEach(i=>o[i]=teamOf(i));p.override=o;p.captains=st().captains||null}else p.override=dealGroups(m,n);
+  setState(p)},
+ reDeal:()=>{const m=st().split==="prox"?"prox":"random";setState({override:dealGroups(m,nTeams()),captains:null,pods:null});toast(m==="prox"?"Grouped by seating":"Dealt again")},
  kick:el=>{const i=el.dataset.id;ER("players/"+i).remove();ER("scores/"+i).remove();toast("Removed. Their points no longer count on the leaderboard.")},
  setTeamName:el=>{const tm=el.dataset.t,n=(dv("tn"+tm,"")).trim().slice(0,28);ER("state/teamNames/"+tm).set(n||null);toast(n?"Team name set":"Team name cleared")},
  useSugg:el=>{const tm=el.dataset.t,s=((D.sugg||{})[tm]||{})[el.dataset.k];if(s){L.drafts["tn"+tm]=s.name;ER("state/teamNames/"+tm).set(s.name);toast("Team name set")}},
- winner:()=>{const on=!st().showWinner;const p={showWinner:on};if(on){const A=D.team.A||0,B=D.team.B||0;if(A!==B)p.entrance={team:A>B?"A":"B",label:"Tonight's champions",t:now()}}setState(p)},
- endNight:()=>{if(st().ended)return setState({ended:false});const A=D.team.A||0,B=D.team.B||0;const p={ended:true,live:null,countdown:null,showWinner:true};if(A!==B)p.entrance={team:A>B?"A":"B",label:"Tonight's champions",t:now()};setState(p);toast("Recaps sent to every phone")},
+ winner:()=>{const on=!st().showWinner;const p={showWinner:on};if(on){const w=winnerKey();if(w)p.entrance={team:w,label:"Tonight's champions",t:now()}}setState(p)},
+ endNight:()=>{if(st().ended)return setState({ended:false});const w=winnerKey();const p={ended:true,live:null,countdown:null,showWinner:true};if(w)p.entrance={team:w,label:"Tonight's champions",t:now()};setState(p);toast("Recaps sent to every phone")},
  tbOn:()=>setState({tiebreak:{on:true}}),tbOff:()=>setState({tiebreak:null}),
- tbReveal:()=>{const a=+(C().tie||{}).a,ga=parseFloat(dv("tbA","")),gb=parseFloat(dv("tbB",""));if(isNaN(ga)||isNaN(gb))return toast("Enter both teams' guesses");
-  const da=Math.abs(ga-a),db2=Math.abs(gb-a);let res,w=null;if(da===db2)res=`Both guesses are just as close. The answer was ${a}.`;else{w=da<db2?"A":"B";res=`${teamName(w)} wins the tiebreaker. The answer was ${a}.`}
+ tbReveal:()=>{const a=+(C().tie||{}).a,ks=(tiedTop().length>1?tiedTop():teamKeys()),g={};
+  for(const k of ks){const v=parseFloat(dv("tb"+k,""));if(isNaN(v))return toast("Enter every "+grpWord()+"'s guess");g[k]=Math.abs(v-a)}
+  const best=Math.min(...ks.map(k=>g[k])),ws=ks.filter(k=>g[k]===best);let res,w=null;
+  if(ws.length>1)res=`Some guesses are just as close. The answer was ${a}.`;else{w=ws[0];res=`${teamName(w)} wins the tiebreaker. The answer was ${a}.`}
   const p={tiebreak:{on:true,result:res}};if(w){ER("team/"+w).transaction(v=>(v||0)+1);p.entrance={team:w,label:"Wins the tiebreaker",t:now()}}setState(p)},
  tadj:el=>ER("team/"+el.dataset.t).transaction(v=>(v||0)+ +el.dataset.d),
  raffle:()=>{const a=ids().filter(i=>!P(i).bot);const pool=a.length?a:ids();if(!pool.length)return;setState({raffle:P(pool[rnd(pool.length)]).name})},
