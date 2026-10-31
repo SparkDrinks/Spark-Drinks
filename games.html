@@ -836,7 +836,7 @@ html.hmbrand .eyebrow{color:#b45a00}
 <div id="mo" aria-live="polite"></div><div id="rv" aria-live="assertive"></div><div id="tour"></div><div id="rx" aria-hidden="true"></div><div id="ov" aria-live="polite"></div><div id="cd" role="status" aria-live="assertive"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>if(/[?&]e=demo(&|$)/i.test(location.search))document.write('<script src="demo.js"><\/script>')</script>
+<script>if(/[?&]e=demo(&|$)/i.test(location.search))document.write('<script src="demo.js?v=5"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
@@ -4389,8 +4389,8 @@ function leadTap(){try{localStorage.setItem("hm_demo_taps",String(leadCount()+1)
 async function leadSend(o){const url=FIREBASE_CONFIG.databaseURL.replace(/\/$/,"")+"/"+ROOT+"/leads.json";
  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)});if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}
 if(demoOn()){
- document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest("[data-act],a[href],button,label.upl,input[type=checkbox]");if(!el||leadDone())return;
-  if(el.closest(".demobar")||el.closest("#leadgate"))return;
+ document.addEventListener("click",e=>{const el=e.target;if(!el||!el.closest||leadDone())return;
+  if(el.closest(".demobar")||el.closest("#leadgate")||el.closest("#tour"))return;
   leadTap();if(leadCount()<LEAD_FREE||L.leadShown)return;L.leadShown=true;
   /* the second tap does what it was meant to do, then the form slides in once */
   setTimeout(()=>{if(leadDone())return;if(window.top!==window){try{window.top.postMessage({hm:"leadgate"},location.origin)}catch(x){}}else showLeadGate()},700)},true);

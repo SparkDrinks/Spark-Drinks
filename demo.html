@@ -105,6 +105,8 @@ h1 span{background:linear-gradient(90deg,var(--amber),var(--gold));-webkit-backg
 </section>
 <p class="note">Tip: open the host's phone and the big screen in two tabs side by side to watch them sync. <span class="wideonly">Or use the three screens above.</span><br><button id="reset" type="button">Start the demo over</button></p>
 <script>
+/* demo.html?reset clears this device's demo state, so the contact form can be seen again */
+if(/[?&]reset\b/.test(location.search)){try{["hm_lead_done","hm_demo_taps","hm_lead_pending","hm_demo_db"].forEach(k=>localStorage.removeItem(k));Object.keys(localStorage).filter(k=>/^pg_.*DEMO/.test(k)).forEach(k=>localStorage.removeItem(k))}catch(e){}history.replaceState(null,"",location.pathname)}
 const go=()=>{const f=(id,src)=>{const el=document.getElementById(id);if(el&&!el.src)el.src=src};
  if(matchMedia("(min-width:1180px)").matches){f("fHost","games.html?e=DEMO#moderator");setTimeout(()=>f("fTv","games.html?e=DEMO#screen"),1200);setTimeout(()=>f("fGuest","games.html?e=DEMO"),1800)}};
 const fit=()=>{const st=document.querySelector(".stage");if(!st)return;st.style.zoom=1;const w=st.scrollWidth;st.style.zoom=Math.min(1,(innerWidth-24)/w).toFixed(3)};
