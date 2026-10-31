@@ -851,6 +851,7 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .clrow{padding:8px 0;border-bottom:1px solid var(--line)}.clrow.done b{opacity:.6}.clrow a{color:inherit}
 .brandrow{display:flex;align-items:center;gap:10px}.brandlogo{max-height:44px;max-width:120px;object-fit:contain;border-radius:6px}.dayNow{font-size:1.7rem;line-height:1.2}.daybtn{font-size:1.3rem;padding:18px 24px;width:100%}.dayhelp{width:100%;padding:16px;font-size:1.1rem}
 .fbstars .btn{font-size:1.4rem;padding:8px 14px}
+.acctbar{padding:2px 4px}.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em}
 </style>
 </head><body>
 <div class="wrap">
@@ -862,6 +863,7 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 <div id="mo" aria-live="polite"></div><div id="rv" aria-live="assertive"></div><div id="tour"></div><div id="rx" aria-hidden="true"></div><div id="ov" aria-live="polite"></div><div id="cd" role="status" aria-live="assertive"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>if(/[?&]e=demo(&|$)/i.test(location.search)||/[?&]pdemo=1(&|$)/.test(location.search))document.write('<script src="demo.js?v=6"><\/script>');if(/[?&]pdemo=1(&|$)/.test(location.search))document.write('<script src="pdemo.js?v=1"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -1069,9 +1071,11 @@ const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: r
 
 const QS=new URLSearchParams(location.search);
 const EV=((QS.get("e")||"").toUpperCase().replace(/[^A-Z0-9-]/g,""))||null;
-const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";if(new URLSearchParams(location.search).has("client"))return "client";if(new URLSearchParams(location.search).has("fb"))return "fb";return ["host","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
+/* planner space: client, teammate and feedback links carry ?p=<planner id>; the planner portal sets it after sign-in */
+let PSP=/^[A-Za-z0-9_-]{1,64}$/.test(QS.get("p")||"")?"planners/"+QS.get("p")+"/":"";
+const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";if(new URLSearchParams(location.search).has("client"))return "client";if(new URLSearchParams(location.search).has("fb"))return "fb";return ["host","planner","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
 const baseURL=()=>location.origin+location.pathname;
-const eventURL=(code,hash)=>baseURL()+"?e="+encodeURIComponent(code)+(hash?"#"+hash:"");
+const eventURL=(code,hash)=>baseURL()+"?"+(window.__HMPDEMO?"pdemo=1&":"")+"e="+encodeURIComponent(code)+(hash?"#"+hash:"");
 
 const D={meta:null,content:null,state:{},players:{},scores:{},team:{A:0,B:0},mine:{hunt:{},lw:{},cw:{},badges:{},wishes:{}},
  photos:{},tv:{},tvr:{},sup:{},claims:{},album:{},wishes:{},sugg:{},lwAll:{},events:{},themes:{},admin:{},huntAll:{}};
@@ -1242,7 +1246,8 @@ function connect(){
  if(VIEW==="mate"){mateConnect();return}
  if(VIEW==="client"){clConnect();return}
  if(VIEW==="fb"){fbConnect();return}
- if(VIEW==="host"){RT("feedback").on("value",s=>{D.fbk=s.val()||{};renderSoon()});RT("brand").on("value",s=>{D.brand=s.val();renderSoon()});RT("dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});[["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(p).on("value",s=>{D[k]=s.val()||{};renderSoon()}));RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
+ if(VIEW==="planner"){plConnect();return}
+ if(VIEW==="host"){hostConnect();return}
  if(!EV){routeWithoutCode();return}
  subscribeEvent();
 }
@@ -1253,8 +1258,8 @@ function checkAuth(){const m=L.masterHash;
 async function routeWithoutCode(){
  const def=(await RT("admin/defaultEvent").once("value")).val();
  if(def){location.replace(eventURL(def,VIEW==="guest"?"":VIEW));return}
- const idx=(await RT("index").once("value")).val();
- if(!idx){ // first run: set up the baby shower as the main event
+ const idx=(await RT("index/SHOWER").once("value").catch(()=>null));
+ if(idx&&!idx.val()){ // first run: set up the baby shower as the main event
   await createEvent("SHOWER","Baby shower · Raveen & Stafford Jr.",clone(DEFAULT_CONTENT),await hashPin("0102"),false);
   await RT("admin/defaultEvent").set("SHOWER");location.replace(eventURL("SHOWER",VIEW==="guest"?"":VIEW));return}
  L.loaded=true;renderSoon()}
@@ -1348,6 +1353,7 @@ function render(force){
  else if(VIEW==="mate")html=mateView();
  else if(VIEW==="client")html=clientView();
  else if(VIEW==="fb")html=fbView();
+ else if(VIEW==="planner")html=plannerView();
  else if(!EV)html=L.loaded?landing():loadingView();
  else if(L.missing)html=landing(true);
  else if(!L.loaded)html=loadingView();
@@ -1382,8 +1388,8 @@ document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("#rv");if(r){const s=st().reveal;if(s&&now()>s.at+1500){r.classList.remove("on");r.innerHTML=""}}});
 
 function headerView(){
- const c=C();const noEv=(!EV||L.missing)&&VIEW==="guest";const title=noEv||VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"?"Host Mode":(c.title||"Host Mode");
- const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="fb"?"Quick feedback":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":noEv?"Plan it. Run it. Remember it.":(c.tagline||"");
+ const c=C();const noEv=(!EV||L.missing)&&VIEW==="guest";const title=noEv||VIEW==="host"||VIEW==="planner"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"?"Host Mode":(c.title||"Host Mode");
+ const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="planner"?"Planner portal":VIEW==="fb"?"Quick feedback":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":noEv?"Plan it. Run it. Remember it.":(c.tagline||"");
  const showAa=VIEW==="guest"||VIEW==="album"||VIEW==="keepsake";
  return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span><button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
 function loadingView(){return `<div class="card muted">${t("Loading…")}</div>`}
@@ -1769,8 +1775,8 @@ function hostView(){
  if(!L.loaded)return loadingView();
  if(!L.hostOK)return `<section class="card stack narrow"><div class="eyebrow">Administrator</div><h2>Enter the host PIN</h2><p class="small muted m0">The host PIN is the administrator PIN. It opens every event. It starts as 0102 until you change it.</p><input type="password" inputmode="numeric" id="hpin" data-draft="hpin" value="${esc(dv("hpin",""))}"><button class="btn primary" data-act="hostPin">Open</button></section>`;
  const tab=(k,l)=>`<button data-act="hostTab" data-k="${k}" aria-pressed="${(L.hostTab||"events")===k}">${l}</button>`;
- const body={events:hEvents,invites:hInvites,team:hTeam,clients:hClients,leads:hLeads,archives:hArchives,themes:hThemes,library:hLibrary,settings:hSettings}[L.hostTab||"events"]();
- return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("team","Teammates"+(mateBehind()?` <span class="pill warn">${mateBehind()}</span>`:""))}${tab("clients","Clients"+(clAttention()?` <span class="pill warn">${clAttention()}</span>`:""))}${tab("leads","Contacts"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
+ const body={events:hEvents,invites:hInvites,planners:hPlanners,leads:hLeads,archives:hArchives,themes:hThemes,library:hLibrary,settings:hSettings}[L.hostTab||"events"]();
+ return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("planners","Planners")}${tab("leads","Contacts"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
 function hEvents(){const ev=D.events||{},def=D.admin.defaultEvent;const keys=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));const th=D.themes||{};
  return `<section class="card stack"><h2>Your events</h2>${keys.length?keys.map(k=>`<div class="gamerow evrow"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}</div></div>
  <div class="row">${L.confirm==="del:"+k?`<span class="small">Delete everything?</span><button class="btn sm gold" data-act="delEvent" data-k="${k}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm primary" data-act="openMod" data-k="${k}">Console</button><a class="btn sm" href="${esc(eventURL(k))}" target="_blank" rel="noopener">Guest view</a><a class="btn sm" href="${esc(eventURL(k,"screen"))}" target="_blank" rel="noopener">Big screen</a>${def===k?"":`<button class="btn sm" data-act="setMain" data-k="${k}">Make main</button>`}<button class="btn sm" data-act="askDel" data-k="${k}">Delete</button>`}</div></div>`).join(""):'<p class="small muted m0">No events yet.</p>'}</section>
@@ -2821,19 +2827,20 @@ Object.assign(ACT,{
  nwImg:el=>{const f=el.files[0];if(!f)return;shrinkImage(f,640,.72,img=>{L.drafts.nw_image=img;extractPalette(img,pal=>{L.palette=pal;const th=autoTheme(pal);Object.keys(th).forEach(k=>L.drafts["ts_c_"+k]=th[k]);previewTheme("ts_");render(true)})})},
  nwCreate:async()=>{const d=k=>(L.drafts[k]||"").trim();const name=d("nw_name"),pin=d("nw_pin"),you=d("nw_you");
   if(!name)return toast("Give your event a name");if(!you)return toast("Type your name");if(pin.length<4)return toast("Choose a PIN with at least 4 digits");
-  const inv=L.newInv;
+  const inv=L.newInv,plu=L.newPl;
   /* a transaction first runs on the phone's local copy, which can be empty (null) before the server answers.
      Returning null there lets Firebase fetch the real code and run this again, instead of giving up. */
-  const ok=await new Promise(res=>RT("invites/"+inv).transaction(v=>{if(v===null)return null;if(!v.active||(v.used||0)>=1||v.event)return;v.used=1;return v},(e,c,snap)=>{const x=snap&&snap.val();res(!e&&c&&!!x&&x.used===1&&!x.event)}));
+  const ok=plu?true:await new Promise(res=>RT("invites/"+inv).transaction(v=>{if(v===null)return null;if(!v.active||(v.used||0)>=1||v.event)return;v.used=1;return v},(e,c,snap)=>{const x=snap&&snap.val();res(!e&&c&&!!x&&x.used===1&&!x.event)}));
   if(!ok)return toast("That invite code can't be used any more. Ask the host for a new one.");
-  let code=d("nw_code").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);const idx=(await RT("index").once("value")).val()||{};
-  if(code&&(await ER("meta",code).once("value")).val())code="";
-  if(!code||idx[code]){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";do{code=[...Array(5)].map(()=>A[rnd(A.length)]).join("")}while(idx[code])}
+  let code=d("nw_code").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);const taken=async c=>!!(await ER("meta",c).once("value")).val()||!!(await RT("index/"+c).once("value")).val();
+  if(code&&await taken(code))code="";
+  if(!code){const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";do{code=[...Array(5)].map(()=>A[rnd(A.length)]).join("")}while(await taken(code))}
   const type=L.drafts.nw_type||"baby";const content=templateFor(type,name);const hon=d("nw_hon"),date=d("nw_date");
   Object.assign(content,{title:name,honorees:hon,date,tagline:d("nw_tag")||[hon?`Celebrating ${hon}`:"",date?fmtDate(date):""].filter(Boolean).join(" · "),themeDesc:(content.themeDesc||"a celebration")});
   if(L.drafts.nw_image)content.image=L.drafts.nw_image;Object.assign(content,themeFromDrafts("ts_"));
   const tm=Date.now(),h=await hashPin(pin),u={};
-  u["events/"+code+"/meta"]={name,created:tm,invite:inv,setup:{type:true}};u["events/"+code+"/content"]=content;u["index/"+code]={name,created:tm,invite:inv,by:you.slice(0,30)};u["invites/"+inv+"/event"]=code;u["invites/"+inv+"/eventName"]=name;u["invites/"+inv+"/usedAt"]=tm;
+  u["events/"+code+"/meta"]={name,created:tm,invite:inv,setup:{type:true}};u["events/"+code+"/content"]=content;if(plu){u["events/"+code+"/meta"].invite=null;u["events/"+code+"/meta"].planner=plu;u["index/"+code]={name,created:tm,planner:plu,by:you.slice(0,30)};u["planners/"+plu+"/events/"+code]={name,created:tm}}
+  else{u["index/"+code]={name,created:tm,invite:inv,by:you.slice(0,30)};u["invites/"+inv+"/event"]=code;u["invites/"+inv+"/eventName"]=name;u["invites/"+inv+"/usedAt"]=tm}
   const mid=ER("mods",code).push().key;u["events/"+code+"/mods/"+mid]={name:you.slice(0,30),pinHash:h,t:tm,owner:true};
   await db.ref(ROOT).update(u);store.set("mod_"+code,{h,id:mid,r:"mod"});location.href=eventURL(code,"moderator")},
  /* theme studio */
@@ -2941,7 +2948,7 @@ let fontKey="";function loadFonts(f){if(!document.head)return;const fams=[...new
 function applyTheme(){const c=C();if(EV&&window.__themePre&&!D.contentLoaded){}else setThemeVars(c.colors||{},Object.assign({title:"Great Vibes",head:"Marcellus",body:"Figtree",size:15},c.fonts||{}),c.glow);
  const r=document.documentElement;r.classList.toggle("large",!!L.large);r.classList.toggle("hc",!!L.hc);r.lang=L.lang==="es"?"es":"en";
  if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_");
- document.title=(VIEW==="host"||((!EV||L.missing)&&VIEW==="guest")?"Host Mode":VIEW==="new"?"Create your event · Host Mode":(c.title||"Host Mode"))+(VIEW==="moderator"?" · Moderator":VIEW==="screen"?" · Big screen":VIEW==="host"?" · Admin":"")}
+ document.title=(VIEW==="host"||VIEW==="planner"||((!EV||L.missing)&&VIEW==="guest")?"Host Mode":VIEW==="new"?"Create your event · Host Mode":(c.title||"Host Mode"))+(VIEW==="moderator"?" · Moderator":VIEW==="screen"?" · Big screen":VIEW==="host"?" · Admin":"")}
 function themeStudio(p,inWizard){const base=Object.assign(curColors(),C().colors||{});const pal=L.palette||C().palette||[];const t2=themeFromDrafts(p);
  const warn=[];const ck=(a,b,r,l)=>{const v=contrast(t2.colors[a],t2.colors[b]);if(v<r)warn.push(`${l} may be hard to read (${v.toFixed(1)}:1, aim for ${r}:1)`)};
  ck("ink","ground",4.5,"Main text on the page background");ck("ink","card",4.5,"Main text on cards");ck("hd","card",3,"Headings on cards");ck("muted","card",3,"Soft text on cards");if(contrast("#ffffff",t2.colors.btn1)<2.5)warn.push("White button text on the button start color may be hard to read");
@@ -3661,7 +3668,7 @@ const markKind=()=>{const m=C().mark;if(m==="none")return null;if(MARKS[m])retur
 function markSVG(k,size){const m=MARKS[k];if(!m)return "";const id="gm"+k+size;
  return `<svg class="tmark" viewBox="${m.vb}" width="${size}" height="${Math.round(size*(+m.vb.split(" ")[3])/(+m.vb.split(" ")[2]))}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dc83"/><stop offset=".5" style="stop-color:var(--gold)"/><stop offset="1" stop-color="#9c6b00"/></linearGradient></defs><path d="${m.d}" fill="none" stroke="url(#${id})" stroke-width="${size>=40?1.7:1.4}" stroke-linecap="round" stroke-linejoin="round"/>${m.eye?`<circle cx="${m.eye[0]}" cy="${m.eye[1]}" r=".95" fill="url(#${id})"/>`:""}</svg>`}
 const titleMark=size=>{const k=markKind();return k?markSVG(k,size):""};
-const _hvDL=headerView;headerView=function(){const h=_hvDL();if(!EV||L.missing||VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
+const _hvDL=headerView;headerView=function(){const h=_hvDL();if(!EV||L.missing||VIEW==="host"||VIEW==="planner"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
 const _mEventDL=mEvent;mEvent=function(){const cur=markKind()||"none";const b=(k,l)=>`<button class="btn sm ${cur===k?"primary":""}" data-act="setMark" data-k="${k}" aria-pressed="${cur===k}">${k==="none"?"":markSVG(k,22)} ${l}</button>`;
  return _mEventDL()+`<section class="card stack"><h2>Title mark</h2><p class="small muted m0">A small gold drawing beside the event title on guests' phones and the big screen.</p><div class="row">${b("bird","Songbird")}${b("rose","Rose")}${b("none","None")}</div></section>`};
 ACT.setMark=el=>{ER("content/mark").set(el.dataset.k);toast(el.dataset.k==="none"?"Title mark off":"Title mark updated")};
@@ -4416,7 +4423,7 @@ Object.assign(ACT,{
 
 /* ---- Host Mode's own look: the create-event page and the host console wear the brand, not an event's theme ---- */
 const BRAND={colors:{bar:"#0c2147",ground:"#f2f5fa",card:"#ffffff",line:"#d2dbea",ink:"#0c2147",muted:"#4b5b79",hd:"#0f2c5c",hd2:"#b45a00",btn1:"#0f2c5c",btn2:"#1f4f96",rose:"#f7941d",flame:"#f26722",gold:"#f2b134",violet:"#0f2c5c",leaf:"#3dae2b"},fonts:{title:"Montserrat",head:"Montserrat",body:"Figtree",size:15}};
-const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||(VIEW==="guest"&&(!EV||L.missing));
+const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="planner"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||(VIEW==="guest"&&(!EV||L.missing));
 const _applyThemeBrand=applyTheme;
 applyTheme=function(){_applyThemeBrand();const on=brandView();document.documentElement.classList.toggle("hmbrand",on);if(!on)return;
  setThemeVars(BRAND.colors,BRAND.fonts,true);if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_")};
@@ -4510,7 +4517,7 @@ if(demoOn())setTimeout(()=>{let p=null;try{p=JSON.parse(localStorage.getItem("hm
 
 /* host console: Contacts tab */
 D.leads={};
-const _connectLeads=connect;connect=function(){_connectLeads();if(VIEW==="host"&&db)RT("leads").on("value",s=>{D.leads=s.val()||{};renderSoon()})};
+/* the Contacts list is loaded with the other owner-only data (ownerSubs) */
 const leadList=()=>Object.keys(D.leads||{}).map(k=>Object.assign({k},D.leads[k])).sort((a,b)=>(b.t||0)-(a.t||0));
 function hLeads(){const l=leadList();
  return `<section class="card stack"><div class="row between"><h2>Contacts</h2><span class="pill gold">${l.length}</span></div><p class="small muted m0">People who left their details: demo visitors, and planners or venues who used the “Talk to us” form on the home page. New ones appear here as they come in.</p>
@@ -4530,10 +4537,11 @@ Object.assign(ACT,{
 D.mates={};D.mtasks={};D.mateMe=null;
 function mateKey(){return new URLSearchParams(location.search).get("mate")||""}
 function mateConnect(){const id=mateKey();if(!id){L.loaded=true;renderSoon();return}
- RT("mates/"+id).on("value",s=>{D.mateMe=s.val();L.loaded=true;renderSoon()});
- RT("mateTasks/"+id).on("value",s=>{D.mtasks=Object.assign({},D.mtasks,{[id]:s.val()||{}});renderSoon()});
- RT("brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});RT("dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});
- RT("clients").on("value",s=>{D.clients=s.val()||{};renderSoon()});RT("clientVendors").on("value",s=>{D.cven=s.val()||{};renderSoon()})}
+ RT(PSP+"mates/"+id).on("value",s=>{D.mateMe=s.val();L.loaded=true;renderSoon()});
+ RT(PSP+"mateTasks/"+id).on("value",s=>{D.mtasks=Object.assign({},D.mtasks,{[id]:s.val()||{}});renderSoon()});
+ RT(PSP+"brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});RT(PSP+"dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});
+ if(PSP){const seen={};const watch=()=>mateTasksOf(id).forEach(x=>{if(x.ev&&!seen[x.ev]){seen[x.ev]=1;RT(PSP+"tv/"+x.ev).on("value",s=>{D.tv=Object.assign({},D.tv,{[x.ev]:s.val()||{}});renderSoon()})}});RT(PSP+"mateTasks/"+id).on("value",watch)}
+ else{RT("clients").on("value",s=>{D.clients=s.val()||{};renderSoon()});RT("clientVendors").on("value",s=>{D.cven=s.val()||{};renderSoon()})}}
 const mateTasksOf=id=>{const t=(D.mtasks||{})[id]||{};return Object.keys(t).map(k=>Object.assign({k},t[k])).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||String(a.due||"9999").localeCompare(String(b.due||"9999"))||(a.t||0)-(b.t||0))};
 const mateStats=id=>{const l=mateTasksOf(id),d=l.filter(x=>x.done).length;return {total:l.length,done:d,open:l.length-d,pct:l.length?Math.round(d/l.length*100):0}};
 const mateToday=()=>new Date().toISOString().slice(0,10);
@@ -4541,7 +4549,7 @@ const mateLate=x=>!x.done&&x.due&&x.due<mateToday();
 const mateBehind=()=>Object.keys(D.mates||{}).filter(id=>mateTasksOf(id).some(mateLate)).length;
 const mateDue=d=>{if(!d)return "";const t=new Date(d+"T12:00:00");return isNaN(t)?d:t.toLocaleDateString(undefined,{month:"short",day:"numeric"})};
 const mateBar=pct=>`<div class="mbar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
-function mateLink(id){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?mate="+encodeURIComponent(id)}
+function mateLink(id){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?mate="+encodeURIComponent(id)+(PLID()?"&p="+encodeURIComponent(PLID()):"")}
 
 /* ---- the teammate's own portal ---- */
 function mateView(){
@@ -4558,7 +4566,9 @@ function mateView(){
  ${Object.keys(groups).map(g=>`<section class="card stack"><h3>${esc(g)}</h3><div class="stack tight">${groups[g].map(row).join("")}</div></section>`).join("")}
  ${mateVendorsCard(id)}
  <p class="small muted tc">You only see your own tasks. Ticking a box tells your planner right away.</p>`}
-function mateVendorsCard(id){const evs=new Set(mateTasksOf(id).map(x=>x.ev).filter(Boolean));if(!evs.size)return "";const out=[];Object.keys(D.clients||{}).forEach(cid=>{const c=D.clients[cid];if(!evs.has(c.ev))return;const vs=clVendors(cid).filter(v=>v.team);if(vs.length)out.push(`<section class="card stack"><h3>Vendors · ${esc(c.evName||c.ev)}</h3><div class="stack tight">${vs.map(clVendorRow).join("")}</div></section>`)});return out.join("")}
+function mateVendorsCard(id){const evs=new Set(mateTasksOf(id).map(x=>x.ev).filter(Boolean));if(!evs.size)return "";const out=[];
+ if(Object.keys(D.tv||{}).length){[...evs].forEach(ev=>{const vs=Object.keys((D.tv||{})[ev]||{}).map(k=>D.tv[ev][k]);const nm=(mateTasksOf(id).find(x=>x.ev===ev)||{}).evName||ev;if(vs.length)out.push(`<section class="card stack"><h3>Vendors · ${esc(nm)}</h3><div class="stack tight">${vs.map(clVendorRow).join("")}</div></section>`)});return out.join("")}
+Object.keys(D.clients||{}).forEach(cid=>{const c=D.clients[cid];if(!evs.has(c.ev))return;const vs=clVendors(cid).filter(v=>v.team);if(vs.length)out.push(`<section class="card stack"><h3>Vendors · ${esc(c.evName||c.ev)}</h3><div class="stack tight">${vs.map(clVendorRow).join("")}</div></section>`)});return out.join("")}
 
 /* ---- the planner's Teammates tab ---- */
 function hTeam(){
@@ -4583,18 +4593,18 @@ function hTeam(){
  ${ids2.map(card).join("")||'<section class="card"><p class="small muted m0">No teammates yet. Add the first one above, then copy their link and text it to them.</p></section>'}`}
 
 Object.assign(ACT,{
- mateAdd:async()=>{const n=dv("mt_name","").trim().slice(0,40);if(!n)return toast("Type a name first");const r=RT("mates").push();await r.set({name:n,t:Date.now()});L.drafts.mt_name="";L.mateOpen=r.key;toast("Added. Copy their link and send it.");render(true)},
+ mateAdd:async()=>{const n=dv("mt_name","").trim().slice(0,40);if(!n)return toast("Type a name first");const r=RT(PSP+"mates").push();await r.set({name:n,t:Date.now()});L.drafts.mt_name="";L.mateOpen=r.key;toast("Added. Copy their link and send it.");render(true)},
  mateOpen:el=>{L.mateOpen=L.mateOpen===el.dataset.k?null:el.dataset.k;render(true)},
- mateDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="md"+id){L.confirm="md"+id;return render(true)}L.confirm=null;await RT("mateTasks/"+id).remove();await RT("mates/"+id).remove();toast("Removed")},
+ mateDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="md"+id){L.confirm="md"+id;return render(true)}L.confirm=null;await RT(PSP+"mateTasks/"+id).remove();await RT(PSP+"mates/"+id).remove();toast("Removed")},
  mateTaskAdd:async()=>{const who=dv("mt_who",""),title=dv("mt_title","").trim().slice(0,120);if(!who)return toast("Choose who it's for");if(!title)return toast("Type the task");
   const evc=dv("mt_ev",""),evn=evc&&(D.events||{})[evc]?(D.events[evc].name||evc):"";const base={title,ev:evc||"",evName:evn,due:dv("mt_due",""),note:dv("mt_note","").trim().slice(0,160),done:false,t:Date.now()};
-  const targets=who==="*"?Object.keys(D.mates||{}):[who];const u={};targets.forEach((id,i)=>{u[id+"/"+RT("mateTasks/"+id).push().key]=base});
-  await RT("mateTasks").update(u);["mt_title","mt_note","mt_due"].forEach(k=>delete L.drafts[k]);toast(targets.length>1?"Task added for everyone":"Task added");render(true)},
- matePlanTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.mtasks||{})[m]||{})[k]||{};await RT(`mateTasks/${m}/${k}`).update({done:!x.done,doneAt:x.done?null:Date.now(),by:x.done?null:"planner"})},
- mateTaskDel:async el=>{await RT(`mateTasks/${el.dataset.m}/${el.dataset.k}`).remove()},
- mateRemind:async el=>{const id=el.dataset.k,s2=mateStats(id);await RT("mates/"+id+"/nudge").set({t:Date.now(),msg:`You have ${s2.open} open task${s2.open===1?"":"s"}.`});toast("Reminder sent to "+((D.mates[id]||{}).name||"them"))},
- mateRemindBehind:async()=>{const u={};Object.keys(D.mates||{}).forEach(id=>{if(mateStats(id).open&&mateTasksOf(id).some(mateLate))u[id+"/nudge"]={t:Date.now(),msg:`You have ${mateTasksOf(id).filter(mateLate).length} overdue task(s).`}});await RT("mates").update(u);toast("Reminders sent")},
- mateTick:async el=>{const id=mateKey(),k=el.dataset.k,on=el.checked;await RT(`mateTasks/${id}/${k}`).update({done:on,doneAt:on?Date.now():null,by:on?"mate":null});buzz(20)},
+  const targets=who==="*"?Object.keys(D.mates||{}):[who];const u={};targets.forEach((id,i)=>{u[id+"/"+RT(PSP+"mateTasks/"+id).push().key]=base});
+  await RT(PSP+"mateTasks").update(u);["mt_title","mt_note","mt_due"].forEach(k=>delete L.drafts[k]);toast(targets.length>1?"Task added for everyone":"Task added");render(true)},
+ matePlanTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.mtasks||{})[m]||{})[k]||{};await RT(PSP+`mateTasks/${m}/${k}`).update({done:!x.done,doneAt:x.done?null:Date.now(),by:x.done?null:"planner"})},
+ mateTaskDel:async el=>{await RT(PSP+`mateTasks/${el.dataset.m}/${el.dataset.k}`).remove()},
+ mateRemind:async el=>{const id=el.dataset.k,s2=mateStats(id);await RT(PSP+"mates/"+id+"/nudge").set({t:Date.now(),msg:`You have ${s2.open} open task${s2.open===1?"":"s"}.`});toast("Reminder sent to "+((D.mates[id]||{}).name||"them"))},
+ mateRemindBehind:async()=>{const u={};Object.keys(D.mates||{}).forEach(id=>{if(mateStats(id).open&&mateTasksOf(id).some(mateLate))u[id+"/nudge"]={t:Date.now(),msg:`You have ${mateTasksOf(id).filter(mateLate).length} overdue task(s).`}});await RT(PSP+"mates").update(u);toast("Reminders sent")},
+ mateTick:async el=>{const id=mateKey(),k=el.dataset.k,on=el.checked;await RT(PSP+`mateTasks/${id}/${k}`).update({done:on,doneAt:on?Date.now():null,by:on?"mate":null});buzz(20)},
  mateSeen:()=>{store.set("mateSeen_"+mateKey(),Date.now());render(true)}});
 
 /* ================= CLIENT PORTALS: one private link per client, no account needed =================
@@ -4607,13 +4617,13 @@ D.clients={};D.ctasks={};D.cmsgs={};D.cfiles={};D.cliMe=null;
 const CL_MAX=10*1024*1024;
 function clKey(){return new URLSearchParams(location.search).get("client")||""}
 function clConnect(){const id=clKey();if(!id){L.loaded=true;renderSoon();return}
- RT("brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
- RT("clients/"+id).on("value",s=>{D.cliMe=s.val();L.loaded=true;renderSoon()});
- RT("clientTasks/"+id).on("value",s=>{D.ctasks=Object.assign({},D.ctasks,{[id]:s.val()||{}});renderSoon()});
- RT("clientMsgs/"+id).on("value",s=>{D.cmsgs=Object.assign({},D.cmsgs,{[id]:s.val()||{}});renderSoon()});
- RT("clientFiles/"+id).on("value",s=>{D.cfiles=Object.assign({},D.cfiles,{[id]:s.val()||{}});renderSoon()});
- RT("clientApprovals/"+id).on("value",s=>{D.caps=Object.assign({},D.caps,{[id]:s.val()||{}});renderSoon()});
- [["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(p+"/"+id).on("value",s=>{D[k]=Object.assign({},D[k],{[id]:s.val()||{}});renderSoon()}))}
+ RT(PSP+"brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
+ RT(PSP+"clients/"+id).on("value",s=>{D.cliMe=s.val();L.loaded=true;renderSoon()});
+ RT(PSP+"clientTasks/"+id).on("value",s=>{D.ctasks=Object.assign({},D.ctasks,{[id]:s.val()||{}});renderSoon()});
+ RT(PSP+"clientMsgs/"+id).on("value",s=>{D.cmsgs=Object.assign({},D.cmsgs,{[id]:s.val()||{}});renderSoon()});
+ RT(PSP+"clientFiles/"+id).on("value",s=>{D.cfiles=Object.assign({},D.cfiles,{[id]:s.val()||{}});renderSoon()});
+ RT(PSP+"clientApprovals/"+id).on("value",s=>{D.caps=Object.assign({},D.caps,{[id]:s.val()||{}});renderSoon()});
+ [["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(PSP+p+"/"+id).on("value",s=>{D[k]=Object.assign({},D[k],{[id]:s.val()||{}});renderSoon()}))}
 const clList=(src,id)=>{const o=(D[src]||{})[id]||{};return Object.keys(o).map(k=>Object.assign({k},o[k]))};
 const clVisible=x=>x.owner==="client"||!!x.show;
 const clTasksOf=(id,all)=>clList("ctasks",id).filter(x=>all||clVisible(x)).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||String(a.due||"9999").localeCompare(String(b.due||"9999"))||(a.t||0)-(b.t||0));
@@ -4624,7 +4634,7 @@ const clUnread=id=>{const c=(D.clients||{})[id]||{};return clMsgsOf(id).filter(m
 const clPending=id=>clFilesOf(id).filter(f=>f.kind==="guests"&&f.status==="pending").length;
 const clAttention=()=>Object.keys(D.clients||{}).reduce((n,id)=>n+clUnread(id)+clPending(id)+clApNew(id),0);
 const clLate=x=>!x.done&&x.due&&x.due<mateToday();
-function clLink(id){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?client="+encodeURIComponent(id)}
+function clLink(id){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?client="+encodeURIComponent(id)+(PLID()?"&p="+encodeURIComponent(PLID()):"")}
 const clMB=n=>n<1048576?Math.max(1,Math.round(n/1024))+" KB":(n/1048576).toFixed(n>=10485760?0:1)+" MB";
 const clAgo=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<60?"just now":s<3600?Math.floor(s/60)+" min ago":s<86400?Math.floor(s/3600)+" hr ago":new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"})};
 
@@ -4638,8 +4648,8 @@ async function clXlsxToCsv(file){if(!window.JSZip)throw new Error("nozip");const
  return rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(",")).join("\n")}
 function clShrink(file,max,q){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error("read"));fr.onload=()=>{const img=new Image();img.onerror=()=>rej(new Error("img"));img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext("2d").drawImage(img,0,0,c.width,c.height);res({data:c.toDataURL("image/jpeg",q),w:c.width,h:c.height})};img.src=fr.result};fr.readAsDataURL(file)})}
 const clReadURL=f=>new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error("read"));fr.onload=()=>res(String(fr.result));fr.readAsDataURL(f)});
-async function clSave(id,meta,data){const k=RT("clientFiles/"+id).push().key;await RT(`clientBlobs/${id}/${k}`).set(data);await RT(`clientFiles/${id}/${k}`).set(Object.assign({t:Date.now()},meta));return k}
-async function clGetBlob(id,k){const s=await RT(`clientBlobs/${id}/${k}`).once("value");return s.val()||""}
+async function clSave(id,meta,data){const k=RT(PSP+"clientFiles/"+id).push().key;await RT(PSP+`clientBlobs/${id}/${k}`).set(data);await RT(PSP+`clientFiles/${id}/${k}`).set(Object.assign({t:Date.now()},meta));return k}
+async function clGetBlob(id,k){const s=await RT(PSP+`clientBlobs/${id}/${k}`).once("value");return s.val()||""}
 async function clOpen(id,k,name,kind){toast("Opening…");const d=await clGetBlob(id,k);if(!d)return toast("That file is no longer there");
  try{let url=d,rev=false;if(d.startsWith("data:")){const b=await (await fetch(d)).blob();url=URL.createObjectURL(b);rev=true}
   if(kind==="guests"){const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove()}else{const w=window.open(url,"_blank");if(!w){const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove()}}
@@ -4725,36 +4735,36 @@ async function clDoImport(id,k,mode){const c=(D.clients||{})[id];if(!c||!c.ev)re
  const snap=(await ER("guests",c.ev).once("value")).val()||{};const base=mode==="replace"?{}:snap;const have={};Object.keys(base).forEach(g=>{const n=normName(base[g].name);have[n]=(have[n]||0)+1});
  const seen={},u={},tm=Date.now();let added=0;list.forEach((g,i)=>{const n=normName(g.name);seen[n]=(seen[n]||0)+1;if(seen[n]<=(have[n]||0))return;const e={name:g.name,t:tm+i};if(g.rsvp)e.rsvp=g.rsvp;if(g.invited!=null)e.invited=g.invited;if(g.plusOf)e.plusOf=g.plusOf;u["g"+tm.toString(36)+i]=e;added++});
  if(mode==="replace")await ER("guests",c.ev).set(u);else if(added)await ER("guests",c.ev).update(u);
- await RT(`clientFiles/${id}/${k}/status`).set("imported");toast(mode==="replace"?`Guest list replaced with ${added} names`:added?`${added} guest${added===1?"":"s"} added`:"Everyone was already on the list");render(true)}
+ await RT(PSP+`clientFiles/${id}/${k}/status`).set("imported");toast(mode==="replace"?`Guest list replaced with ${added} names`:added?`${added} guest${added===1?"":"s"} added`:"Everyone was already on the list");render(true)}
 
 Object.assign(ACT,{
  /* planner */
- clAdd:async()=>{const n=dv("cl_name","").trim().slice(0,40);if(!n)return toast("Type the client's name");const ev=dv("cl_ev",""),en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";const r=RT("clients").push();await r.set({name:n,ev,evName:en,date:dv("cl_date",""),t:Date.now()});const tk=dv("cl_tpl","");let nt=0;if(tk)nt=await clApplyTpl(r.key,tk,dv("cl_date",""));["cl_name","cl_date","cl_tpl"].forEach(k=>delete L.drafts[k]);L.cliOpen=r.key;L.cliTab="list";toast(nt?`Added with ${nt} checklist items. Copy their link and send it.`:"Added. Copy their link and send it.");render(true)},
+ clAdd:async()=>{const n=dv("cl_name","").trim().slice(0,40);if(!n)return toast("Type the client's name");const ev=dv("cl_ev",""),en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";const r=RT(PSP+"clients").push();await r.set({name:n,ev,evName:en,date:dv("cl_date",""),t:Date.now()});const tk=dv("cl_tpl","");let nt=0;if(tk)nt=await clApplyTpl(r.key,tk,dv("cl_date",""));["cl_name","cl_date","cl_tpl"].forEach(k=>delete L.drafts[k]);L.cliOpen=r.key;L.cliTab="list";toast(nt?`Added with ${nt} checklist items. Copy their link and send it.`:"Added. Copy their link and send it.");render(true)},
  cliOpen:el=>{L.cliOpen=L.cliOpen===el.dataset.k?null:el.dataset.k;L.cliTab="list";L.clPrev=null;render(true)},
- cliSub:async el=>{L.cliTab=el.dataset.k;L.clPrev=null;if(L.cliTab==="chat"&&L.cliOpen)await RT(`clients/${L.cliOpen}/plSeen`).set(Date.now());render(true)},
- clSetEv:async el=>{const id=el.dataset.m,ev=el.value,en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";await RT("clients/"+id).update({ev,evName:en});toast(ev?"Linked to "+en:"Unlinked")},
- clDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="cd"+id){L.confirm="cd"+id;return render(true)}L.confirm=null;await Promise.all(["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clients"].map(p=>RT(p+"/"+id).remove()));L.cliOpen=null;toast("Removed")},
+ cliSub:async el=>{L.cliTab=el.dataset.k;L.clPrev=null;if(L.cliTab==="chat"&&L.cliOpen)await RT(PSP+`clients/${L.cliOpen}/plSeen`).set(Date.now());render(true)},
+ clSetEv:async el=>{const id=el.dataset.m,ev=el.value,en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";await RT(PSP+"clients/"+id).update({ev,evName:en});toast(ev?"Linked to "+en:"Unlinked")},
+ clDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="cd"+id){L.confirm="cd"+id;return render(true)}L.confirm=null;await Promise.all(["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clients"].map(p=>RT(PSP+p+"/"+id).remove()));L.cliOpen=null;toast("Removed")},
  cltShow:el=>{L.drafts.clt_show=el.checked?"1":"0"},
  clTaskAdd:async el=>{const id=el.dataset.m,title=dv("clt_title","").trim().slice(0,120);if(!title)return toast("Type the item first");const owner=dv("clt_owner","client");
-  await RT(`clientTasks/${id}`).push().set({title,owner,due:dv("clt_due",""),note:dv("clt_note","").trim().slice(0,160),show:owner==="client"?true:dv("clt_show","")==="1",done:false,t:Date.now()});["clt_title","clt_note","clt_due"].forEach(k=>delete L.drafts[k]);toast("Item added");render(true)},
- clPlanTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.ctasks||{})[m]||{})[k]||{};await RT(`clientTasks/${m}/${k}`).update({done:!x.done,doneAt:x.done?null:Date.now(),by:x.done?null:"planner"})},
- clShow:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.ctasks||{})[m]||{})[k]||{};await RT(`clientTasks/${m}/${k}/show`).set(!x.show)},
- clTaskDel:async el=>{await RT(`clientTasks/${el.dataset.m}/${el.dataset.k}`).remove()},
- clFileShare:async el=>{const m=el.dataset.m,k=el.dataset.k,f=((D.cfiles||{})[m]||{})[k]||{};await RT(`clientFiles/${m}/${k}/share`).set(!f.share)},
- clFileDel:async el=>{const m=el.dataset.m,k=el.dataset.k;await RT(`clientBlobs/${m}/${k}`).remove();await RT(`clientFiles/${m}/${k}`).remove();toast("Deleted")},
+  await RT(PSP+`clientTasks/${id}`).push().set({title,owner,due:dv("clt_due",""),note:dv("clt_note","").trim().slice(0,160),show:owner==="client"?true:dv("clt_show","")==="1",done:false,t:Date.now()});["clt_title","clt_note","clt_due"].forEach(k=>delete L.drafts[k]);toast("Item added");render(true)},
+ clPlanTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.ctasks||{})[m]||{})[k]||{};await RT(PSP+`clientTasks/${m}/${k}`).update({done:!x.done,doneAt:x.done?null:Date.now(),by:x.done?null:"planner"})},
+ clShow:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.ctasks||{})[m]||{})[k]||{};await RT(PSP+`clientTasks/${m}/${k}/show`).set(!x.show)},
+ clTaskDel:async el=>{await RT(PSP+`clientTasks/${el.dataset.m}/${el.dataset.k}`).remove()},
+ clFileShare:async el=>{const m=el.dataset.m,k=el.dataset.k,f=((D.cfiles||{})[m]||{})[k]||{};await RT(PSP+`clientFiles/${m}/${k}/share`).set(!f.share)},
+ clFileDel:async el=>{const m=el.dataset.m,k=el.dataset.k;await RT(PSP+`clientBlobs/${m}/${k}`).remove();await RT(PSP+`clientFiles/${m}/${k}`).remove();toast("Deleted")},
  clOpen:el=>{const m=el.dataset.m,k=el.dataset.k,f=((D.cfiles||{})[m]||{})[k]||{};clOpen(m,k,f.name||"file",f.kind)},
  clPreview:async el=>{const m=el.dataset.m,k=el.dataset.k;if(L.clPrev===k){L.clPrev=null;return render(true)}L.clPrev=k;L.clPrevList=parseGuests(await clGuestText(m,k));render(true)},
  clImport:async el=>{const m=el.dataset.m,k=el.dataset.k,mode=el.dataset.mode;if(mode==="replace"&&L.confirm!=="rp"+k){L.confirm="rp"+k;return render(true)}L.confirm=null;await clDoImport(m,k,mode)},
- clDismiss:async el=>{await RT(`clientFiles/${el.dataset.m}/${el.dataset.k}/status`).set("dismissed");toast("Won't be used")},
+ clDismiss:async el=>{await RT(PSP+`clientFiles/${el.dataset.m}/${el.dataset.k}/status`).set("dismissed");toast("Won't be used")},
  clPlanFile:async el=>{const id=L.cliOpen,f=el.files&&el.files[0];if(!f||!id)return;if(f.size>CL_MAX)return toast("That file is over 10 MB");toast("Uploading…");
   try{const isImg=/^image\//.test(f.type);let data,thumb;if(isImg){const r=await clShrink(f,1800,.82);data=r.data;thumb=(await clShrink(f,160,.7)).data}else data=await clReadURL(f);
    await clSave(id,Object.assign({name:f.name.slice(0,80),kind:isImg?"photo":"doc",size:f.size,by:"planner",share:false},thumb?{thumb}:{}),data);toast("Uploaded. It's private until you share it.")}catch(e){toast("Couldn't upload that file")}el.value=""},
  /* both sides */
  clSend:async el=>{const from=el.dataset.from,id=from==="client"?clKey():el.dataset.m,key=from==="client"?"cl_msg":"cl_msg_"+id,text=dv(key,"").trim().slice(0,1000);if(!text)return toast("Type a message first");
-  await RT("clientMsgs/"+id).push().set({from,text,t:Date.now()});delete L.drafts[key];if(from==="planner")await RT(`clients/${id}/plSeen`).set(Date.now());render(true)},
+  await RT(PSP+"clientMsgs/"+id).push().set({from,text,t:Date.now()});delete L.drafts[key];if(from==="planner")await RT(PSP+`clients/${id}/plSeen`).set(Date.now());render(true)},
  /* client */
  clTab:el=>{L.clTab=el.dataset.k;render(true)},
- clTick:async el=>{const id=clKey(),k=el.dataset.k,on=el.checked;await RT(`clientTasks/${id}/${k}`).update({done:on,doneAt:on?Date.now():null,by:on?"client":null});buzz(20)},
+ clTick:async el=>{const id=clKey(),k=el.dataset.k,on=el.checked;await RT(PSP+`clientTasks/${id}/${k}`).update({done:on,doneAt:on?Date.now():null,by:on?"client":null});buzz(20)},
  clErrX:()=>{L.clErr=null;render(true)},
  clHelp:()=>{const e=L.clErr||{};L.drafts.cl_msg=`Hi! I tried to upload "${e.file||"a file"}"${e.size?` (${clMB(e.size)})`:""} but it didn't work${e.size>CL_MAX?" because it was too large":""}. Can you help?`;L.clErr=null;L.clTab="chat";render(true)},
  clNames:async()=>{const id=clKey(),txt=dv("cl_names","").trim();if(!txt)return toast("Type or paste some names first");const n=parseGuests(txt).length;if(!n)return toast("No names found");
@@ -4786,8 +4796,8 @@ const clTplItems=key=>{if(key.startsWith("s:")){const s=CL_STARTERS[key.slice(2)
 const starterShow=i=>i[2]==="client"?true:!!i[3];
 function clDueFrom(date,days){if(!date||days==null||isNaN(+days))return "";const d=new Date(date+"T12:00:00");if(isNaN(d))return "";d.setDate(d.getDate()-Math.round(+days));return d.toISOString().slice(0,10)}
 async function clApplyTpl(id,key,date){const items=clTplItems(key);if(!items.length)return 0;const u={},tm=Date.now();
- items.forEach((x,i)=>{u[RT("clientTasks/"+id).push().key]={title:x.title,owner:x.owner||"client",due:clDueFrom(date,x.days),note:x.note||"",show:x.owner==="client"?true:!!x.show,done:false,t:tm+i}});
- await RT("clientTasks/"+id).update(u);return items.length}
+ items.forEach((x,i)=>{u[RT(PSP+"clientTasks/"+id).push().key]={title:x.title,owner:x.owner||"client",due:clDueFrom(date,x.days),note:x.note||"",show:x.owner==="client"?true:!!x.show,done:false,t:tm+i}});
+ await RT(PSP+"clientTasks/"+id).update(u);return items.length}
 const clAps=id=>clList("caps",id).sort((a,b)=>(b.t||0)-(a.t||0));
 const clApPending=id=>clAps(id).filter(a=>a.status==="pending").length;
 const clApNew=id=>{const c=(D.clients||{})[id]||{};return clAps(id).filter(a=>a.status!=="pending"&&(a.decidedAt||0)>(c.plSeenAp||0)).length};
@@ -4812,22 +4822,22 @@ Object.assign(ACT,{
   try{const img=/^image\//.test(f.type);let data,thumb;if(img){data=(await clShrink(f,1800,.82)).data;thumb=(await clShrink(f,160,.7)).data}else data=await clReadURL(f);
    const k=await clSave(id,Object.assign({name:f.name.slice(0,80),kind:img?"photo":"doc",size:f.size,by:"planner",share:true},thumb?{thumb}:{}),data);L.apFile={k,name:f.name};render(true)}catch(e){toast("Couldn't attach that file")}},
  clApSend:async el=>{const id=el.dataset.m,title=dv("ap_title","").trim().slice(0,100);if(!title)return toast("Give it a title, like “Wedding menu”");
-  const r=RT("clientApprovals/"+id).push();await r.set({title,note:dv("ap_note","").trim().slice(0,400),fileId:L.apFile?L.apFile.k:"",fileName:L.apFile?L.apFile.name:"",status:"pending",version:1,t:Date.now(),hist:{h1:{s:"sent",t:Date.now()}}});
+  const r=RT(PSP+"clientApprovals/"+id).push();await r.set({title,note:dv("ap_note","").trim().slice(0,400),fileId:L.apFile?L.apFile.k:"",fileName:L.apFile?L.apFile.name:"",status:"pending",version:1,t:Date.now(),hist:{h1:{s:"sent",t:Date.now()}}});
   ["ap_title","ap_note"].forEach(k=>delete L.drafts[k]);L.apFile=null;toast("Sent to the client for approval");render(true)},
- clApRevise:async el=>{const m=el.dataset.m,k=el.dataset.k,a=((D.caps||{})[m]||{})[k];if(!a)return;const hk=RT(`clientApprovals/${m}/${k}/hist`).push().key;
+ clApRevise:async el=>{const m=el.dataset.m,k=el.dataset.k,a=((D.caps||{})[m]||{})[k];if(!a)return;const hk=RT(PSP+`clientApprovals/${m}/${k}/hist`).push().key;
   const u={status:"pending",version:(a.version||1)+1,decidedAt:null,comment:"",by:null};if(L.apFile){u.fileId=L.apFile.k;u.fileName=L.apFile.name}
-  await RT(`clientApprovals/${m}/${k}`).update(u);await RT(`clientApprovals/${m}/${k}/hist/${hk}`).set({s:"revised",t:Date.now()});L.apFile=null;toast("Sent again");render(true)},
- clApDel:async el=>{await RT(`clientApprovals/${el.dataset.m}/${el.dataset.k}`).remove();toast("Deleted")},
- clApprove:async el=>{const id=clKey(),k=el.dataset.k,hk=RT(`clientApprovals/${id}/${k}/hist`).push().key;
-  await RT(`clientApprovals/${id}/${k}`).update({status:"approved",decidedAt:Date.now(),by:(D.cliMe||{}).name||"Client",comment:""});await RT(`clientApprovals/${id}/${k}/hist/${hk}`).set({s:"approved",t:Date.now()});delete L.drafts["cl_ap_"+k];toast("Approved. Thank you!");render(true)},
- clChanges:async el=>{const id=clKey(),k=el.dataset.k,c=dv("cl_ap_"+k,"").trim().slice(0,500);if(!c)return toast("Tell us what to change first");const hk=RT(`clientApprovals/${id}/${k}/hist`).push().key;
-  await RT(`clientApprovals/${id}/${k}`).update({status:"changes",decidedAt:Date.now(),by:(D.cliMe||{}).name||"Client",comment:c});await RT(`clientApprovals/${id}/${k}/hist/${hk}`).set({s:"changes",c,t:Date.now()});delete L.drafts["cl_ap_"+k];toast("Sent to your planner");render(true)},
+  await RT(PSP+`clientApprovals/${m}/${k}`).update(u);await RT(PSP+`clientApprovals/${m}/${k}/hist/${hk}`).set({s:"revised",t:Date.now()});L.apFile=null;toast("Sent again");render(true)},
+ clApDel:async el=>{await RT(PSP+`clientApprovals/${el.dataset.m}/${el.dataset.k}`).remove();toast("Deleted")},
+ clApprove:async el=>{const id=clKey(),k=el.dataset.k,hk=RT(PSP+`clientApprovals/${id}/${k}/hist`).push().key;
+  await RT(PSP+`clientApprovals/${id}/${k}`).update({status:"approved",decidedAt:Date.now(),by:(D.cliMe||{}).name||"Client",comment:""});await RT(PSP+`clientApprovals/${id}/${k}/hist/${hk}`).set({s:"approved",t:Date.now()});delete L.drafts["cl_ap_"+k];toast("Approved. Thank you!");render(true)},
+ clChanges:async el=>{const id=clKey(),k=el.dataset.k,c=dv("cl_ap_"+k,"").trim().slice(0,500);if(!c)return toast("Tell us what to change first");const hk=RT(PSP+`clientApprovals/${id}/${k}/hist`).push().key;
+  await RT(PSP+`clientApprovals/${id}/${k}`).update({status:"changes",decidedAt:Date.now(),by:(D.cliMe||{}).name||"Client",comment:c});await RT(PSP+`clientApprovals/${id}/${k}/hist/${hk}`).set({s:"changes",c,t:Date.now()});delete L.drafts["cl_ap_"+k];toast("Sent to your planner");render(true)},
  clTplApply:async el=>{const id=el.dataset.m,key=dv("tpl_apply_"+id,"");if(!key)return toast("Pick a template first");const c=(D.clients||{})[id]||{};const n=await clApplyTpl(id,key,c.date||"");toast(n?`${n} items added`:"That template is empty");render(true)},
  clTplSave:async el=>{const id=el.dataset.m,name=dv("tpl_name_"+id,"").trim().slice(0,50);if(!name)return toast("Name the template first");const c=(D.clients||{})[id]||{},l=clTasksOf(id,true);if(!l.length)return toast("Add some checklist items first");
   const items=l.map(x=>{const o={title:x.title,owner:x.owner,note:x.note||"",show:!!x.show};if(x.due&&c.date){const d=Math.round((new Date(c.date+"T12:00:00")-new Date(x.due+"T12:00:00"))/864e5);if(!isNaN(d))o.days=d}return o});
-  await RT("clientTemplates").push().set({name,items,t:Date.now()});delete L.drafts["tpl_name_"+id];toast("Saved as a template");render(true)},
- clTplDel:async el=>{const k=el.dataset.k;if(L.confirm!=="td"+k){L.confirm="td"+k;return render(true)}L.confirm=null;await RT("clientTemplates/"+k).remove();toast("Template deleted")},
- clSetDate:async el=>{await RT("clients/"+el.dataset.m+"/date").set(el.value||"");toast(el.value?"Event date saved":"Date cleared")}
+  await RT(PSP+"clientTemplates").push().set({name,items,t:Date.now()});delete L.drafts["tpl_name_"+id];toast("Saved as a template");render(true)},
+ clTplDel:async el=>{const k=el.dataset.k;if(L.confirm!=="td"+k){L.confirm="td"+k;return render(true)}L.confirm=null;await RT(PSP+"clientTemplates/"+k).remove();toast("Template deleted")},
+ clSetDate:async el=>{await RT(PSP+"clients/"+el.dataset.m+"/date").set(el.value||"");toast(el.value?"Event date saved":"Date cleared")}
 });
 
 /* ================= STEP 4: payments view, shared calendar, vendor contacts, weekly summary =================
@@ -4899,18 +4909,18 @@ function clSummaryBox(id){const note=dv("sum_note_"+id,"");return `<div class="c
 
 Object.assign(ACT,{
  clPayAdd:async el=>{const id=el.dataset.m,t=dv("pay_title","").trim().slice(0,80),a=parseFloat(String(dv("pay_amt","")).replace(/[$,\s]/g,""));if(!t)return toast("What is the payment for?");if(isNaN(a)||a<0)return toast("Type an amount, like 500");
-  await RT("clientPayments/"+id).push().set({title:t,amount:a,due:dv("pay_due",""),paid:false,t:Date.now()});["pay_title","pay_amt","pay_due"].forEach(k=>delete L.drafts[k]);toast("Payment added");render(true)},
- clPayTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.cpay||{})[m]||{})[k]||{};await RT(`clientPayments/${m}/${k}`).update({paid:!x.paid,paidAt:x.paid?null:Date.now()})},
- clPayDel:async el=>{await RT(`clientPayments/${el.dataset.m}/${el.dataset.k}`).remove()},
+  await RT(PSP+"clientPayments/"+id).push().set({title:t,amount:a,due:dv("pay_due",""),paid:false,t:Date.now()});["pay_title","pay_amt","pay_due"].forEach(k=>delete L.drafts[k]);toast("Payment added");render(true)},
+ clPayTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.cpay||{})[m]||{})[k]||{};await RT(PSP+`clientPayments/${m}/${k}`).update({paid:!x.paid,paidAt:x.paid?null:Date.now()})},
+ clPayDel:async el=>{await RT(PSP+`clientPayments/${el.dataset.m}/${el.dataset.k}`).remove()},
  clDateAdd:async el=>{const id=el.dataset.m,t=dv("dt_title","").trim().slice(0,80),d=dv("dt_date","");if(!t)return toast("What's happening?");if(!d)return toast("Pick a date");
-  await RT("clientDates/"+id).push().set({title:t,date:d,time:dv("dt_time",""),note:dv("dt_note","").trim().slice(0,140),t:Date.now()});["dt_title","dt_date","dt_time","dt_note"].forEach(k=>delete L.drafts[k]);toast("Date added");render(true)},
- clDateDel:async el=>{await RT(`clientDates/${el.dataset.m}/${el.dataset.k}`).remove()},
+  await RT(PSP+"clientDates/"+id).push().set({title:t,date:d,time:dv("dt_time",""),note:dv("dt_note","").trim().slice(0,140),t:Date.now()});["dt_title","dt_date","dt_time","dt_note"].forEach(k=>delete L.drafts[k]);toast("Date added");render(true)},
+ clDateDel:async el=>{await RT(PSP+`clientDates/${el.dataset.m}/${el.dataset.k}`).remove()},
  clVenAdd:async el=>{const id=el.dataset.m,n=dv("vn_name","").trim().slice(0,60);if(!n)return toast("Type the vendor's name");
-  await RT("clientVendors/"+id).push().set({name:n,role:dv("vn_role","").trim().slice(0,40),phone:dv("vn_phone","").trim().slice(0,30),email:dv("vn_email","").trim().slice(0,80),arrive:dv("vn_arrive",""),delivers:dv("vn_delivers","").trim().slice(0,80),show:true,team:true,t:Date.now()});
+  await RT(PSP+"clientVendors/"+id).push().set({name:n,role:dv("vn_role","").trim().slice(0,40),phone:dv("vn_phone","").trim().slice(0,30),email:dv("vn_email","").trim().slice(0,80),arrive:dv("vn_arrive",""),delivers:dv("vn_delivers","").trim().slice(0,80),show:true,team:true,t:Date.now()});
   ["vn_name","vn_role","vn_phone","vn_email","vn_arrive","vn_delivers"].forEach(k=>delete L.drafts[k]);toast("Vendor added");render(true)},
- clVenFlag:async el=>{const m=el.dataset.m,k=el.dataset.k,f=el.dataset.f,v=((D.cven||{})[m]||{})[k]||{};await RT(`clientVendors/${m}/${k}/${f}`).set(!v[f])},
- clVenDel:async el=>{await RT(`clientVendors/${el.dataset.m}/${el.dataset.k}`).remove()},
- clSummarySend:async el=>{const id=el.dataset.m,note=dv("sum_note_"+id,"").trim();await RT("clientMsgs/"+id).push().set({from:"planner",text:clSummaryText(id,note),t:Date.now()});await RT(`clients/${id}/plSeen`).set(Date.now());delete L.drafts["sum_note_"+id];toast("Posted to the client's messages");render(true)},
+ clVenFlag:async el=>{const m=el.dataset.m,k=el.dataset.k,f=el.dataset.f,v=((D.cven||{})[m]||{})[k]||{};await RT(PSP+`clientVendors/${m}/${k}/${f}`).set(!v[f])},
+ clVenDel:async el=>{await RT(PSP+`clientVendors/${el.dataset.m}/${el.dataset.k}`).remove()},
+ clSummarySend:async el=>{const id=el.dataset.m,note=dv("sum_note_"+id,"").trim();await RT(PSP+"clientMsgs/"+id).push().set({from:"planner",text:clSummaryText(id,note),t:Date.now()});await RT(PSP+`clients/${id}/plSeen`).set(Date.now());delete L.drafts["sum_note_"+id];toast("Posted to the client's messages");render(true)},
  clIcsOne:el=>{const id=clKey(),x=clTimeline(id).find(i=>i.k===el.dataset.k);if(!x)return;clDownload("event.ics",clIcs([x],(D.cliMe||{}).evName),"text/calendar")},
  clIcsAll:()=>{const id=clKey(),tl=clTimeline(id);if(!tl.length)return;clDownload("event-calendar.ics",clIcs(tl,(D.cliMe||{}).evName),"text/calendar")}
 });
@@ -4966,13 +4976,13 @@ Object.assign(ACT,{
  brLogoX:()=>{L.brLogo="";render(true)},
  brSave:async()=>{const b=D.brand||{},name=dv("br_name",b.name||"").trim().slice(0,40),color=brandHex(dv("br_color",b.color||"")),logo=L.brLogo!==undefined?L.brLogo:b.logo||"";
   if(logo.length>120000)return toast("That logo is too big. Try a simpler picture.");
-  await RT("brand").set({name,color,logo});L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Branding saved");render(true)},
- brClear:async()=>{await RT("brand").remove();L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Back to the Host Mode look");render(true)},
- dayOfToggle:async()=>{await RT("dayOf").set(!D.dayOf);toast(D.dayOf?"Day-of mode is off":"Day-of mode is on")},
- mateDone:async el=>{const id=mateKey(),k=el.dataset.k;await RT(`mateTasks/${id}/${k}`).update({done:true,doneAt:Date.now(),by:"mate"});buzz(30)},
- mateHelp:async()=>{const id=mateKey();await RT("mates/"+id+"/help").set({t:Date.now(),msg:"Needs help now",ok:false});buzz(40);toast("Your planner has been told")},
- mateHelpX:async()=>{await RT("mates/"+mateKey()+"/help").remove()},
- mateHelpOk:async el=>{await RT("mates/"+el.dataset.k+"/help/ok").set(true);toast("Marked as handled")},
+  await RT(PSP+"brand").set({name,color,logo});L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Branding saved");render(true)},
+ brClear:async()=>{await RT(PSP+"brand").remove();L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Back to the Host Mode look");render(true)},
+ dayOfToggle:async()=>{await RT(PSP+"dayOf").set(!D.dayOf);toast(D.dayOf?"Day-of mode is off":"Day-of mode is on")},
+ mateDone:async el=>{const id=mateKey(),k=el.dataset.k;await RT(PSP+`mateTasks/${id}/${k}`).update({done:true,doneAt:Date.now(),by:"mate"});buzz(30)},
+ mateHelp:async()=>{const id=mateKey();await RT(PSP+"mates/"+id+"/help").set({t:Date.now(),msg:"Needs help now",ok:false});buzz(40);toast("Your planner has been told")},
+ mateHelpX:async()=>{await RT(PSP+"mates/"+mateKey()+"/help").remove()},
+ mateHelpOk:async el=>{await RT(PSP+"mates/"+el.dataset.k+"/help/ok").set(true);toast("Marked as handled")},
  mateFull:()=>{L.mateFull=!L.mateFull;render(true)}
 });
 
@@ -4982,12 +4992,12 @@ Object.assign(ACT,{
    clients get the same form on their portal Overview. "ok" = the person said we may quote them by name; "quote" = the planner chose to feature it. */
 D.fbk={};D.fbEv=null;
 const fbKeyQ=()=>(new URLSearchParams(location.search).get("fb")||"").toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,40);
-function fbLink(key){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?fb="+encodeURIComponent(key)}
+function fbLink(key){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?fb="+encodeURIComponent(key)+(PLID()?"&p="+encodeURIComponent(PLID()):"")}
 const fbList=key=>{const o=(D.fbk||{})[key]||{};return Object.keys(o).map(k=>Object.assign({k},o[k])).sort((a,b)=>(b.t||0)-(a.t||0))};
 const fbAvg=l=>l.length?Math.round(l.reduce((n,x)=>n+(+x.rating||0),0)/l.length*10)/10:0;
 const fbStars=n=>"★".repeat(n)+"☆".repeat(5-n);
 function fbConnect(){const k=fbKeyQ();if(!k){L.loaded=true;renderSoon();return}
- RT("brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
+ RT(PSP+"brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
  RT("index/"+k).once("value").then(s=>{D.fbEv=s.val();L.loaded=true;renderSoon()}).catch(()=>{L.loaded=true;renderSoon()})}
 function fbForm(key,who,name){const r=+dv("fb_rating_"+key,0);
  return `<div class="stack"><div class="stack tight"><span class="small">How was it?</span><div class="row fbstars" role="group" aria-label="Rating">${[1,2,3,4,5].map(n=>`<button class="btn ${r>=n?"primary":""}" data-act="fbRate" data-key="${esc(key)}" data-v="${n}" aria-label="${n} star${n>1?"s":""}" aria-pressed="${r===n}">★</button>`).join("")}</div></div>
@@ -5021,11 +5031,11 @@ function hFbPos(h){const i=h.indexOf("</section>");return i<0?h+hFeedbackCard():
 Object.assign(ACT,{
  fbRate:el=>{L.drafts["fb_rating_"+el.dataset.key]=+el.dataset.v;render(true)},
  fbSend:async el=>{const key=el.dataset.key,who=el.dataset.who,r=+dv("fb_rating_"+key,0);if(!r)return toast("Tap a star first");
-  await RT("feedback/"+key).push().set({who,name:String(who==="client"?el.dataset.name||"":dv("fb_name_"+key,"")).trim().slice(0,40),rating:r,best:dv("fb_best_"+key,"").trim().slice(0,400),better:dv("fb_better_"+key,"").trim().slice(0,400),ok:!!dv("fb_ok_"+key,false),t:Date.now()});
+  await RT(PSP+"feedback/"+key).push().set({who,name:String(who==="client"?el.dataset.name||"":dv("fb_name_"+key,"")).trim().slice(0,40),rating:r,best:dv("fb_best_"+key,"").trim().slice(0,400),better:dv("fb_better_"+key,"").trim().slice(0,400),ok:!!dv("fb_ok_"+key,false),t:Date.now()});
   store.set("fbDone_"+who+"_"+key,true);["rating","best","better","name","ok"].forEach(f=>delete L.drafts["fb_"+f+"_"+key]);toast("Thank you!");render(true)},
- fbQuote:async el=>{const p=el.dataset.p,k=el.dataset.k,x=((D.fbk||{})[p]||{})[k]||{};await RT(`feedback/${p}/${k}/quote`).set(!x.quote)},
- fbDel:async el=>{await RT(`feedback/${el.dataset.p}/${el.dataset.k}`).remove()},
- fbAsk:async el=>{const id=el.dataset.m,c=(D.clients||{})[id]||{};await RT("clientMsgs/"+id).push().set({from:"planner",text:`Thank you for letting us be part of ${c.evName||"your event"}! When you have a minute, please tell us how it went. The "How did we do?" card is on your Overview page.`,t:Date.now()});await RT(`clients/${id}/plSeen`).set(Date.now());await RT(`clients/${id}/askFb`).set(Date.now());toast("Asked in the client's messages")},
+ fbQuote:async el=>{const p=el.dataset.p,k=el.dataset.k,x=((D.fbk||{})[p]||{})[k]||{};await RT(PSP+`feedback/${p}/${k}/quote`).set(!x.quote)},
+ fbDel:async el=>{await RT(PSP+`feedback/${el.dataset.p}/${el.dataset.k}`).remove()},
+ fbAsk:async el=>{const id=el.dataset.m,c=(D.clients||{})[id]||{};await RT(PSP+"clientMsgs/"+id).push().set({from:"planner",text:`Thank you for letting us be part of ${c.evName||"your event"}! When you have a minute, please tell us how it went. The "How did we do?" card is on your Overview page.`,t:Date.now()});await RT(PSP+`clients/${id}/plSeen`).set(Date.now());await RT(PSP+`clients/${id}/askFb`).set(Date.now());toast("Asked in the client's messages")},
  fbCopyQuotes:el=>{const k=el.dataset.k;copyText(fbList(k).filter(x=>x.quote&&x.best).map(fbQuoteText).join("\n\n"))}
 });
 
@@ -5033,7 +5043,7 @@ Object.assign(ACT,{
    A pretend planning business, Northlight Events, with Dublin Investments as its main client.
    Runs on demo.js's in-browser database (its own storage, separate from the Rosa's 30th demo).
    The console opens without a PIN; client and teammate portals are one tap away in the demo bar. */
-const PDEMO_V=1;
+const PDEMO_V=3;
 const pdemoOn=()=>!!window.__HMPDEMO;
 function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"{}");if(cur.pdemoV===PDEMO_V&&cur.partygames)return;
  const day=n=>{const x=new Date();x.setHours(12,0,0,0);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)},ago=h=>Date.now()-h*36e5;
@@ -5041,12 +5051,14 @@ function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"
  const tasks=(list)=>{const o={};list.forEach((x,i)=>o["t"+i]=Object.assign({show:true,done:false,t:i+1},x));return o};
  const csv="Name,Email,Company\nSiobhan Kelly,siobhan@example.com,Dublin Investments\nConor Walsh,conor@example.com,Dublin Investments\nGrace Doyle,grace@example.com,Liffey Partners\nRonan Byrne,ronan@example.com,Dublin Investments\nMegan Ryan,megan@example.com,Harbour Capital\nDeclan Murphy,declan@example.com,Dublin Investments";
  const svgLogo="data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0f5e63"/><path d="M18 44V20l28 24V20" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#f2b134"/></svg>');
- const pg={
-  admin:{},brand:{name:"Northlight Events",color:"#0f5e63",logo:svgLogo},dayOf:false,
-  index:{DUBLIN:{name:"Annual Company Conference",created:ago(400)},WHELAN:{name:"Sarah & James's Wedding",created:ago(300)},OCONNOR:{name:"Margaret's 50th",created:ago(900)}},
-  events:{DUBLIN:{meta:{name:"Annual Company Conference",created:ago(400)},content:dub},
-   WHELAN:{meta:{name:"Sarah & James's Wedding",created:ago(300)},content:{title:"Sarah & James",honorees:"Sarah & James",tagline:"Forever starts here",eventType:"wedding",date:day(220)}},
-   OCONNOR:{meta:{name:"Margaret's 50th",created:ago(900)},content:{title:"Margaret's 50th",honorees:"Margaret",eventType:"birthday",date:day(-24)}}},
+ const pl={
+  profile:{name:"Claire Moran",biz:"Northlight Events",email:"claire@northlight.example",code:"DEMO",t:ago(2000)},
+  events:{DUBLIN:{name:"Annual Company Conference",created:ago(400)},WHELAN:{name:"Sarah & James's Wedding",created:ago(300)},OCONNOR:{name:"Margaret's 50th",created:ago(900)}},
+  brand:{name:"Northlight Events",color:"#0f5e63",logo:svgLogo},dayOf:false,
+  /* events: */ _idx:{DUBLIN:{name:"Annual Company Conference",created:ago(400),planner:"northlight"},WHELAN:{name:"Sarah & James's Wedding",created:ago(300)},OCONNOR:{name:"Margaret's 50th",created:ago(900)}},
+  events_:{DUBLIN:{meta:{name:"Annual Company Conference",created:ago(400),planner:"northlight"},mods:{m1:{name:"Claire",pinHash:"demo",owner:true}},content:dub},
+   WHELAN:{meta:{name:"Sarah & James's Wedding",created:ago(300)},mods:{m1:{name:"Claire",pinHash:"demo",owner:true}},content:{title:"Sarah & James",honorees:"Sarah & James",tagline:"Forever starts here",eventType:"wedding",date:day(220)}},
+   OCONNOR:{meta:{name:"Margaret's 50th",created:ago(900)},mods:{m1:{name:"Claire",pinHash:"demo",owner:true}},content:{title:"Margaret's 50th",honorees:"Margaret",eventType:"birthday",date:day(-24)}}},
   clients:{dublin:{name:"Dublin Investments",ev:"DUBLIN",evName:"Annual Company Conference",date:day(EVD),t:ago(1),plSeen:ago(30)},
    whelan:{name:"Sarah & James Whelan",ev:"WHELAN",evName:"Sarah & James's Wedding",date:day(220),t:ago(300),plSeen:ago(5)},
    oconnor:{name:"Margaret O'Connor",ev:"OCONNOR",evName:"Margaret's 50th",date:day(-24),t:ago(900),plSeen:ago(100),askFb:ago(200)}},
@@ -5095,14 +5107,17 @@ function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"
     f:{title:"Pick up the balloon arch",ev:"OCONNOR",evName:"Margaret's 50th",due:day(-25),done:true,doneAt:ago(610),by:"mate",t:6}},
    niamh:{a:{title:"Call the caterer about dietary needs",ev:"DUBLIN",evName:"Annual Company Conference",due:day(-1),done:false,t:1},
     b:{title:"Run registration and hand out badges",ev:"DUBLIN",evName:"Annual Company Conference",due:day(EVD),done:false,t:2},
-    c:{title:"Update the seating chart",ev:"WHELAN",evName:"Sarah & James's Wedding",due:day(60),done:false,t:3}}},
-  leads:{}};
+    c:{title:"Update the seating chart",ev:"WHELAN",evName:"Sarah & James's Wedding",due:day(60),done:false,t:3}}}};
+ const evs=pl.events_;delete pl.events_;const idx=pl._idx;delete pl._idx;
+ pl.tv={DUBLIN:{}};Object.keys(pl.clientVendors.dublin).forEach(k=>{const v=pl.clientVendors.dublin[k];if(v.team)pl.tv.DUBLIN["dublin_"+k]={name:v.name,role:v.role||"",phone:v.phone||"",email:v.email||"",arrive:v.arrive||"",delivers:v.delivers||"",note:v.note||""}});
+ const pg={admin:{},index:idx,events:evs,planners:{northlight:pl}};
  localStorage.setItem("hm_pdemo_db",JSON.stringify({pdemoV:PDEMO_V,partygames:pg}));try{firebase.database().ref("pdemoV").set(PDEMO_V)}catch(e){}}
-function pdemoReset(){try{localStorage.removeItem("hm_pdemo_db");["mateSeen_liam","mateSeen_niamh","clSeen_dublin"].forEach(k=>store.set(k,0));Object.keys(localStorage).filter(k=>/fbDone_|hm_theme_(DUBLIN|WHELAN|OCONNOR)/.test(k)).forEach(k=>localStorage.removeItem(k))}catch(e){}if(VIEW==="host")location.reload();else location.href="games.html?pdemo=1#host"}
+function pdemoReset(){try{localStorage.removeItem("hm_pdemo_db");["mateSeen_liam","mateSeen_niamh","clSeen_dublin"].forEach(k=>store.set(k,0));Object.keys(localStorage).filter(k=>/fbDone_|hm_theme_(DUBLIN|WHELAN|OCONNOR)/.test(k)).forEach(k=>localStorage.removeItem(k))}catch(e){}if(VIEW==="planner")location.reload();else location.href="games.html?pdemo=1#planner"}
 if(pdemoOn()){
  try{pdemoSeed()}catch(e){console.warn("planner demo seed",e)}
- if(VIEW==="host"){L.hostOK=true;if(!L.hostTab)L.hostTab="clients";if(L.cliOpen===undefined)L.cliOpen="dublin";if(!L.cliTab)L.cliTab="list"}
- const _caPD=checkAuth;checkAuth=function(){_caPD();if(VIEW==="host")L.hostOK=true};
+ if(VIEW==="planner"){if(L.cliOpen===undefined)L.cliOpen="dublin";if(!L.cliTab)L.cliTab="list"}
+ if(VIEW==="host")location.replace("games.html?pdemo=1#planner");
+ ["DUBLIN","WHELAN","OCONNOR"].forEach(k=>{if(!store.get("mod_"+k,null))store.set("mod_"+k,{h:"demo",id:"m1",r:"mod"})});
  /* every link the app hands out stays inside the demo */
  const pdq=u=>u.replace(/games\.html\?/,"games.html?pdemo=1&");
  const _clL=clLink,_mtL=mateLink,_fbL=fbLink;clLink=id=>pdq(_clL(id));mateLink=id=>pdq(_mtL(id));fbLink=k=>pdq(_fbL(k));
@@ -5111,8 +5126,131 @@ if(pdemoOn()){
  if(window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
 }
 function pdemoBar(){if(!pdemoOn()||window.top!==window)return "";const on=VIEW;const a=(href,l,v)=>`<a class="${on===v?"on":""}" href="${href}">${l}</a>`;
- return `<div class="demoslot"><div class="demobar"><span class="dbt">Planner demo</span>${a("games.html?pdemo=1#host","Planner","host")}${a("games.html?pdemo=1&client=dublin","Client","client")}${a("games.html?pdemo=1&mate=liam","Teammate","mate")}<a href="planners.html">Back</a><button data-act="pdemoReset">Start over</button></div></div>`}
+ return `<div class="demoslot"><div class="demobar"><span class="dbt">Planner demo</span>${a("games.html?pdemo=1#planner","Planner","planner")}${a("games.html?pdemo=1&p=northlight&client=dublin","Client","client")}${a("games.html?pdemo=1&p=northlight&mate=liam","Teammate","mate")}<a href="planners.html">Back</a><button data-act="pdemoReset">Start over</button></div></div>`}
 const _hvPD=headerView;headerView=function(){return pdemoBar()+_hvPD()};
+
+/* ================= ACCOUNTS + PLANNER PORTAL =================
+   Three levels:
+   - Owner (Roy): signs in with email + password at #host. Owner-only tools: events, invite codes, planners, contacts, settings.
+   - Planner: signs in at #planner. Their own space at partygames/planners/{uid}: events they created, clients, teammates,
+     templates, branding, day-of switch, feedback. Client, teammate and feedback links carry ?p={uid}.
+   - Guests, clients, teammates: no account. Guests join an event by code; clients and teammates by their personal link.
+   partygames/owner = owner uid (claimed once)       partygames/pinvites/{CODE} = planner invite {label, active, by, t}
+   partygames/plist/{uid} = {name, biz, email, t}     partygames/planners/{uid}/profile = {name, biz, email, code, t}
+   partygames/planners/{uid}/events/{EV} = {name, created}   partygames/planners/{uid}/tv/{EV} = vendors shared with teammates */
+const AUTH=()=>{try{return window.firebase&&firebase.auth?firebase.auth():null}catch(e){return null}};
+const PLID=()=>PSP?PSP.split("/")[1]:"";
+const authErr=e=>{const c=(e&&e.code)||"";return {"auth/invalid-email":"That email address doesn't look right.","auth/user-not-found":"No account with that email.","auth/wrong-password":"That password isn't right.","auth/invalid-credential":"That email and password don't match.","auth/invalid-login-credentials":"That email and password don't match.","auth/email-already-in-use":"There's already an account with that email. Sign in instead.","auth/weak-password":"Use a password with at least 8 characters.","auth/too-many-requests":"Too many tries. Wait a minute and try again.","auth/network-request-failed":"No connection. Check your signal and try again."}[c]||("Something went wrong: "+((e&&e.message)||c))};
+D.owner=null;D.pinvites={};D.plist={};D.plMe=null;D.tv={};
+function acctForm(kind){/* kind: "signin" | "owner" | "planner" */
+ const f=(k,l,t,extra)=>`<label class="stack tight"><span class="small">${l}</span><input type="${t||"text"}" data-draft="${k}" value="${t==="password"?"":esc(dv(k,""))}" ${extra||""}></label>`;
+ if(kind==="owner")return `${f("ac_pin","Current host PIN","password",'inputmode="numeric" autocomplete="off"')}${f("ac_email","Your email","email",'autocomplete="email"')}${f("ac_pw","Choose a password (8+ characters)","password",'autocomplete="new-password"')}<button class="btn primary" data-act="acOwner">Create the owner account</button>`;
+ if(kind==="planner")return `${f("ac_code","Planner invite code","text",'autocapitalize="characters" autocomplete="off"')}${f("ac_name","Your name","text",'autocomplete="name"')}${f("ac_biz","Business name","text",'autocomplete="organization"')}${f("ac_email","Email","email",'autocomplete="email"')}${f("ac_pw","Choose a password (8+ characters)","password",'autocomplete="new-password"')}<button class="btn primary" data-act="acPlanner">Create my planner account</button>`;
+ return `${f("ac_email","Email","email",'autocomplete="email"')}${f("ac_pw","Password","password",'autocomplete="current-password"')}<button class="btn primary" data-act="acSignIn">Sign in</button><button class="btn xs as" data-act="acForgot">Forgot your password?</button>`}
+const acPw=()=>{const el=document.querySelector('[data-draft="ac_pw"]');return el?el.value:""};
+Object.assign(ACT,{
+ acSignIn:async()=>{const a=AUTH();if(!a)return;try{await a.signInWithEmailAndPassword(dv("ac_email","").trim(),acPw());toast("Signed in")}catch(e){toast(authErr(e))}},
+ acForgot:async()=>{const a=AUTH(),em=dv("ac_email","").trim();if(!em)return toast("Type your email first, then tap this again");try{await a.sendPasswordResetEmail(em);toast("Check your email for a link to reset your password")}catch(e){toast(authErr(e))}},
+ acOut:async()=>{const a=AUTH();if(a)await a.signOut();L.plOK=false;L.hostOK=false;location.reload()},
+ acMode:el=>{L.acMode=el.dataset.k;render(true)},
+ acOwner:async()=>{const a=AUTH();if(!a)return;if(D.owner)return toast("The owner account is already set up. Sign in instead.");
+  if(await hashPin(dv("ac_pin",""))!==L.masterHash)return toast("That host PIN isn't right");
+  const pw=acPw();if(pw.length<8)return toast("Use a password with at least 8 characters");
+  try{const c=await a.createUserWithEmailAndPassword(dv("ac_email","").trim(),pw);await RT("owner").set(c.user.uid);toast("Owner account created. You're signed in.")}catch(e){toast(authErr(e))}},
+ acPlanner:async()=>{const a=AUTH();if(!a)return;const code=dv("ac_code","").toUpperCase().replace(/[^A-Z0-9]/g,""),name=dv("ac_name","").trim().slice(0,60),biz=dv("ac_biz","").trim().slice(0,80),em=dv("ac_email","").trim(),pw=acPw();
+  const isOwner=a.currentUser&&a.currentUser.uid===D.owner;
+  if(!isOwner){if(!code)return toast("Type your planner invite code");const v=(await RT("pinvites/"+code).once("value")).val();if(!v||!v.active)return toast("That planner code isn't valid. Ask Host Mode for a new one.");if(v.by)return toast("That planner code has already been used.")}
+  if(!name)return toast("Type your name");
+  try{let u=a.currentUser;if(!u){if(pw.length<8)return toast("Use a password with at least 8 characters");u=(await a.createUserWithEmailAndPassword(em,pw)).user}
+   const prof={name,biz,email:u.email||em,code:isOwner?"OWNER":code,t:Date.now()};
+   if(!isOwner)await RT("pinvites/"+code).update({by:u.uid,usedAt:Date.now(),name});
+   await RT("planners/"+u.uid+"/profile").set(prof);await RT("plist/"+u.uid).set({name,biz,email:prof.email,t:prof.t});
+   ["ac_code","ac_name","ac_biz","ac_pw"].forEach(k=>delete L.drafts[k]);toast("Welcome to your planner portal!");location.reload()}catch(e){toast(authErr(e))}}
+});
+
+/* ---- owner console gate ---- */
+const _checkAuthOwner=checkAuth;
+checkAuth=function(){_checkAuthOwner();if(VIEW==="host"&&AUTH()&&!window.__HMPDEMO)L.hostOK=!!(L.user&&D.owner&&L.user.uid===D.owner)};
+let ownerSubbed=false;
+function ownerSubs(){if(ownerSubbed||!db)return;ownerSubbed=true;
+ RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()},()=>{L.loaded=true;renderSoon()});
+ RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});
+ RT("leads").on("value",s=>{D.leads=s.val()||{};renderSoon()});RT("pinvites").on("value",s=>{D.pinvites=s.val()||{};renderSoon()});RT("plist").on("value",s=>{D.plist=s.val()||{};renderSoon()});
+ Promise.all(["clients","mates"].map(n=>RT(n).once("value").then(x=>Object.keys(x.val()||{}).length).catch(()=>0))).then(([c,m])=>{L.legacy={c,m};renderSoon()})}
+function hostConnect(){RT("owner").on("value",s=>{D.owner=s.val()||null;checkAuth();if(L.hostOK)ownerSubs();else L.loaded=true;renderSoon()});
+ const a=AUTH();if(!a){/* no sign-in available (offline test copy): fall back to the PIN */L.authReady=true;ownerSubs();return}
+ a.onAuthStateChanged(u=>{L.user=u;L.authReady=true;checkAuth();if(L.hostOK)ownerSubs();renderSoon()})}
+const _hostView0=hostView;
+hostView=function(){const a=AUTH();if(!a||window.__HMPDEMO)return _hostView0();
+ if(!L.authReady)return loadingView();
+ if(!L.hostOK){const card=(h,b)=>`<section class="card stack narrow"><div class="eyebrow">Host Mode owner</div><h2>${h}</h2>${b}</section>`;
+  if(L.user)return card("This isn't the owner account",`<p class="small muted m0">You're signed in as ${esc(L.user.email||"")}. The admin console is only for the Host Mode owner.</p><a class="btn primary" href="${esc(baseURL())}#planner">Go to the planner portal</a><button class="btn" data-act="acOut">Sign out</button>`);
+  if(!D.owner)return card("Set up the owner account",`<p class="small muted m0">One time only. Prove it's you with the current host PIN, then choose the email and password you'll sign in with from now on.</p>${acctForm("owner")}`);
+  return card("Sign in",`<p class="small muted m0">The admin console is for the Host Mode owner.</p>${acctForm("signin")}`)}
+ const h=_hostView0();return h.replace('<div class="stack mw0">',`<div class="stack mw0"><div class="row between small acctbar"><span class="muted">Signed in as ${esc(L.user.email||"")}</span><span class="row"><a class="btn xs" href="${esc(baseURL())}#planner">My planner portal</a><button class="btn xs" data-act="acOut">Sign out</button></span></div>`)};
+
+/* ---- owner: Planners tab ---- */
+function hPlanners(){const pv=D.pinvites||{},pl=D.plist||{},ks=Object.keys(pv).sort((a,b)=>(pv[b].t||0)-(pv[a].t||0)),ids=Object.keys(pl).sort((a,b)=>(pl[b].t||0)-(pl[a].t||0)),lg=L.legacy||{};
+ return `<section class="card stack"><h2>Planners</h2><p class="small muted m0">Planners and venues get their own portal with their own clients, teammates and events. They can't see your owner tools or anyone else's data. Give each one a planner code to create their account at <b>${esc(baseURL())}#planner</b>.</p>
+ <div class="row"><input type="text" class="grow" data-draft="pi_label" maxlength="60" value="${esc(dv("pi_label",""))}" placeholder="Who it's for, e.g. Claire at Northlight Events"><button class="btn primary" data-act="piNew">New planner code</button></div>
+ ${ks.length?`<div class="stack tight">${ks.map(k=>{const v=pv[k];return `<div class="row between small clrow"><span class="mw0"><b class="mono">${esc(k)}</b> · ${esc(v.label||"")}<span class="db muted">${v.by?`Used by ${esc(v.name||"a planner")}`:v.active?"Not used yet":"Turned off"}</span></span><span class="row">${v.by?"":`<button class="btn xs" data-act="copyText" data-t="${esc(baseURL()+"#planner")}  Planner code: ${esc(k)}">Copy</button><button class="btn xs" data-act="piToggle" data-k="${esc(k)}">${v.active?"Turn off":"Turn on"}</button>`}</span></div>`}).join("")}</div>`:""}</section>
+ <section class="card stack"><h3>Planner accounts</h3>${ids.length?`<div class="stack tight">${ids.map(id=>`<div class="clrow small"><b>${esc(pl[id].name||"")}</b>${pl[id].biz?` · ${esc(pl[id].biz)}`:""}<div class="muted">${esc(pl[id].email||"")}${pl[id].t?" · joined "+esc(clAgo(pl[id].t)):""}</div></div>`).join("")}</div>`:'<p class="small muted m0">No planners yet.</p>'}</section>
+ ${(lg.c||lg.m)?`<section class="card stack"><h3>Move your earlier clients and teammates</h3><p class="small muted m0">You have ${lg.c} client${lg.c===1?"":"s"} and ${lg.m} teammate${lg.m===1?"":"s"} from before planner portals existed. Move them into your own planner portal so they keep working after the database is locked. Their old links will stop working; send the new ones from your portal.</p><button class="btn primary as" data-act="piMigrate">Move them to my planner portal</button></section>`:""}`}
+Object.assign(ACT,{
+ piNew:()=>{const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";const code="P"+[...Array(7)].map(()=>A[rnd(A.length)]).join("");RT("pinvites/"+code).set({label:(dv("pi_label","")).trim().slice(0,60)||"Planner",active:true,t:Date.now()});L.drafts.pi_label="";toast("Planner code "+code+" created")},
+ piToggle:el=>{const v=(D.pinvites||{})[el.dataset.k];if(v)RT(`pinvites/${el.dataset.k}/active`).set(!v.active)},
+ copyText:el=>copyText(el.dataset.t),
+ piMigrate:async()=>{const uid=L.user&&L.user.uid;if(!uid)return;const base="planners/"+uid+"/";
+  const prof=(await RT(base+"profile").once("value")).val();
+  if(!prof){const p={name:"Roy",biz:"Host Mode",email:L.user.email||"",code:"OWNER",t:Date.now()};await RT(base+"profile").set(p);await RT("plist/"+uid).set({name:p.name,biz:p.biz,email:p.email,t:p.t})}
+  const nodes=["clients","clientTasks","clientMsgs","clientFiles","clientBlobs","clientTemplates","clientApprovals","clientPayments","clientDates","clientVendors","mates","mateTasks","brand","dayOf","feedback"];
+  for(const n of nodes){const v=(await RT(n).once("value")).val();if(v!=null){await RT(base+n).update(typeof v==="object"?v:{});if(typeof v!=="object")await RT(base+n).set(v)}}
+  /* the events those clients were linked to now show in the portal */
+  const cl=(await RT(base+"clients").once("value")).val()||{},idx=D.events||{},u={};Object.values(cl).forEach(c=>{if(c.ev&&idx[c.ev])u[c.ev]={name:idx[c.ev].name||c.ev,created:idx[c.ev].created||Date.now()}});if(Object.keys(u).length)await RT(base+"events").update(u);
+  for(const n of nodes)await RT(n).remove();L.legacy={c:0,m:0};toast("Moved. Open your planner portal to see them.");render(true)}
+});
+
+/* ---- the planner portal ---- */
+let plSubbed=false;
+function plSubs(){if(plSubbed||!db)return;plSubbed=true;
+ RT(PSP+"profile").on("value",s=>{D.plMe=s.val();renderSoon()});
+ RT(PSP+"events").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});
+ RT(PSP+"feedback").on("value",s=>{D.fbk=s.val()||{};renderSoon()});RT(PSP+"brand").on("value",s=>{D.brand=s.val();renderSoon()});RT(PSP+"dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});
+ RT(PSP+"mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});RT(PSP+"mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});
+ [["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(PSP+p).on("value",s=>{D[k]=s.val()||{};if(k==="cven"||k==="clients")tvSyncSoon();renderSoon()}))}
+/* teammates can't list a planner's clients, so the vendors marked "teammates see" are copied per event into tv/{EV} */
+let tvT=null;function tvSyncSoon(){clearTimeout(tvT);tvT=setTimeout(tvSync,600)}
+function tvSync(){if(!PSP||VIEW!=="planner")return;const out={};Object.keys(D.clients||{}).forEach(cid=>{const ev=D.clients[cid].ev;if(!ev)return;clVendors(cid).filter(v=>v.team).forEach(v=>{(out[ev]=out[ev]||{})[cid+"_"+v.k]={name:v.name,role:v.role||"",phone:v.phone||"",email:v.email||"",arrive:v.arrive||"",delivers:v.delivers||"",note:v.note||""}})});
+ const j=JSON.stringify(out);if(j===L.tvLast)return;L.tvLast=j;RT(PSP+"tv").set(out)}
+function plConnect(){
+ if(window.__HMPDEMO){PSP="planners/northlight/";L.plOK=true;L.authReady=true;plSubs();return}
+ const a=AUTH();if(!a){/* offline test copy without sign-in */PSP="planners/test/";L.authReady=true;L.plOK=true;plSubs();return}
+ RT("owner").on("value",s=>{D.owner=s.val()||null;renderSoon()});
+ a.onAuthStateChanged(async u=>{L.user=u;L.authReady=true;
+  if(!u){L.plOK=false;L.loaded=true;renderSoon();return}
+  const prof=(await RT("planners/"+u.uid+"/profile").once("value").catch(()=>null));const pv=prof&&prof.val();
+  if(pv){PSP="planners/"+u.uid+"/";D.plMe=pv;L.plOK=true;plSubs()}else{L.plOK=false;L.loaded=true}
+  renderSoon()})}
+function plannerView(){
+ if(!L.authReady||(L.plOK&&!L.loaded))return loadingView();
+ if(!L.plOK){const card=(h,b)=>`<section class="card stack narrow"><div class="eyebrow">Planner portal</div><h2>${h}</h2>${b}</section>`;
+  if(L.user){const own=L.user.uid===D.owner;return card(own?"Set up your planner portal":"Finish your planner account",`<p class="small muted m0">${own?"As the owner you can run your own clients here too.":"Signed in as "+esc(L.user.email||"")+". Add your planner code to finish."}</p>${own?`<label class="stack tight"><span class="small">Your name</span><input type="text" data-draft="ac_name" value="${esc(dv("ac_name",""))}"></label><label class="stack tight"><span class="small">Business name</span><input type="text" data-draft="ac_biz" value="${esc(dv("ac_biz",""))}"></label><button class="btn primary" data-act="acPlanner">Open my planner portal</button>`:acctForm("planner").replace(/<label class="stack tight"><span class="small">(Email|Choose a password)[\s\S]*?<\/label>/g,"")}<button class="btn xs as" data-act="acOut">Sign out</button>`)}
+  const mode=L.acMode||"signin";
+  return card(mode==="new"?"Create your planner account":"Sign in",`${mode==="new"?`<p class="small muted m0">You'll need the planner code Host Mode sent you.</p>${acctForm("planner")}<button class="btn xs as" data-act="acMode" data-k="signin">I already have an account</button>`:`${acctForm("signin")}<button class="btn xs as" data-act="acMode" data-k="new">New planner? Create your account</button>`}`)}
+ const tab=(k,l)=>`<button data-act="plTab" data-k="${k}" aria-pressed="${(L.plTab||"clients")===k}">${l}</button>`;
+ const body={events:plEvents,clients:hClients,team:hTeam}[L.plTab||"clients"]();const me=D.plMe||{};
+ return `<div class="console"><nav class="side">${tab("clients","Clients"+(clAttention()?` <span class="pill warn">${clAttention()}</span>`:""))}${tab("events","Events")}${tab("team","Teammates"+(mateBehind()?` <span class="pill warn">${mateBehind()}</span>`:""))}</nav><div class="stack mw0"><div class="row between small acctbar"><span class="muted">${esc(me.name||"")}${me.biz?" · "+esc(me.biz):""}</span>${window.__HMPDEMO?"":`<button class="btn xs" data-act="acOut">Sign out</button>`}</div>${body}</div></div>`}
+function plEvents(){const ev=D.events||{},ks=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));
+ const nu=baseURL()+"?"+(window.__HMPDEMO?"pdemo=1&":"")+"planner=1#new";
+ return `<section class="card stack"><div class="row between"><h2>Your events</h2><a class="btn primary" href="${esc(nu)}">New event</a></div><p class="small muted m0">Each event gets its own code, games, big screen and guest check-in. Link an event to a client in the Clients tab.</p>
+ ${ks.length?`<div class="stack tight">${ks.map(k=>{const cl=Object.keys(D.clients||{}).filter(id=>D.clients[id].ev===k).map(id=>D.clients[id].name);return `<div class="clrow"><div class="row between"><div class="mw0"><b>${esc(ev[k].name||k)}</b><div class="small muted">Code ${esc(k)}${cl.length?" · for "+esc(cl.join(", ")):""}</div></div></div><div class="row small"><a class="btn xs" href="${esc(eventURL(k,"moderator"))}">Run it</a><a class="btn xs" href="${esc(eventURL(k,""))}">Guest view</a><a class="btn xs" href="${esc(eventURL(k,"screen"))}">Big screen</a></div></div>`}).join("")}</div>`:'<p class="small muted m0">No events yet. Tap New event to create your first one.</p>'}</section>`}
+ACT.plTab=el=>{L.plTab=el.dataset.k;L.confirm=null;render()};
+
+/* ---- creating an event from the planner portal: no invite code, and it lands in the portal ---- */
+if(VIEW==="new"&&QS.get("planner")==="1"){
+ const setPl=uid=>{L.newPl=uid;L.newInv="PLANNER";renderSoon()};
+ if(window.__HMPDEMO)setPl("northlight");
+ else setTimeout(()=>{const a=AUTH();if(a)a.onAuthStateChanged(u=>{if(u)RT("planners/"+u.uid+"/profile").once("value").then(s=>{if(s.val())setPl(u.uid)}).catch(()=>{})})},0)}
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.

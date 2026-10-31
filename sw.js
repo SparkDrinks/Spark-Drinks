@@ -2,7 +2,7 @@
    Pages: fresh from the network when possible, saved copy when not.
    Libraries and fonts: saved copy first, refreshed in the background.
    Live data (Firebase) is never touched here. */
-const CACHE = "hostmode-v4";
+const CACHE = "hostmode-v5";
 const LIBS = /^https:\/\/(www\.gstatic\.com\/firebasejs|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
 self.addEventListener("install", e => {
