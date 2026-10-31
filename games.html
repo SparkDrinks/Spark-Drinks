@@ -4441,7 +4441,7 @@ connect=function(){if(demoOn()){try{demoSeed()}catch(e){console.warn("demo seed"
 function demoBar(){if(!demoOn()||window.top!==window)return "";const v=(h,l)=>`<a class="${(VIEW===(h||"guest"))?"on":""}" href="games.html?e=DEMO${h?"#"+h:""}">${l}</a>`;
  return `<div class="demoslot"><div class="demobar"><span class="dbt">Demo</span>${v("moderator","Host")}${v("screen","Big screen")}${v("","Guest")}<a href="demo.html">All three</a><button data-act="demoReset">Start over</button></div></div>`}
 /* the bar floats with you down the page and fades the further you scroll */
-function demoFloat(){const b=document.querySelector(".demobar"),sl=document.querySelector(".demoslot");if(!b||!sl)return;const h=b.offsetHeight+22;if(sl.dataset.h!=h){sl.dataset.h=h;sl.style.height=h+"px"}const y=window.scrollY||document.documentElement.scrollTop||0;b.style.opacity=String(Math.max(.15,1-y/320*.85).toFixed(2))}
+function demoFloat(){const b=document.querySelector(".demobar"),sl=document.querySelector(".demoslot");if(!b||!sl)return;const h=b.offsetHeight+22;if(sl.dataset.h!=h){sl.dataset.h=h;sl.style.height=h+"px"}const y=window.scrollY||document.documentElement.scrollTop||0;const mx=Math.max(1,(document.documentElement.scrollHeight||0)-(window.innerHeight||0));b.style.opacity=String(Math.max(0,Math.min(1,1-y/mx)).toFixed(2));b.style.pointerEvents=+b.style.opacity<.05?"none":""}
 if(demoOn()&&window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
 const _hvDemo=headerView;headerView=function(){return demoBar()+_hvDemo()};
 ACT.demoReset=()=>demoReset();
