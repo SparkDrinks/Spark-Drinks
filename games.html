@@ -584,6 +584,10 @@ body:has(.phone){background-image:radial-gradient(900px 440px at 50% -170px,colo
 /* phone: when the header carries moderator controls, put them on their own line so the title has room */
 @media (max-width:640px){header.top:has(>.row){flex-wrap:wrap}header.top:has(>.row) .brand{flex:1 1 100%}header.top:has(>.row)>.row{order:-1;width:100%;justify-content:flex-end;flex-wrap:nowrap}header.top:has(>.row)>.row .pill{white-space:nowrap}}
 .brand h1{overflow-wrap:normal;padding-bottom:.08em}
+.glrows{max-height:60vh;overflow:auto}
+.glrows .evrow{display:flex;align-items:center;gap:10px;padding:8px 10px}.glrows .evrow .mw0{flex:1;min-width:0}.glrows .evrow .gnum{width:16px}
+.glrows .pill:not(.ok):not(.live){background:color-mix(in srgb,var(--muted) 12%,transparent);color:var(--muted)}
+textarea{font:inherit;color:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card)}
 </style>
 </head><body>
 <div class="wrap">
@@ -3095,7 +3099,7 @@ const _subTonight=subscribeEvent;
 subscribeEvent=function(){_subTonight();
  if(VIEW==="moderator"||VIEW==="screen"){ER("raffle").on("value",s=>{D.raf=s.val()||{};renderSoon()});ER("rafWins").on("value",s=>{D.rafWins=s.val()||{};renderSoon()})}
  if(VIEW==="moderator"){ER("gifts").on("value",s=>{D.gifts=s.val()||{};renderSoon()});ER("rosDone").on("value",s=>{D.rosDone=s.val()||{};renderSoon()})}};
-const guestNames=()=>ids().filter(i=>!P(i).bot).map(i=>P(i).name).filter(Boolean);
+let guestNames=()=>ids().filter(i=>!P(i).bot).map(i=>P(i).name).filter(Boolean);
 const nameList=id=>`<datalist id="${id}">${[...new Set(guestNames())].sort().map(n=>`<option value="${esc(n)}"></option>`).join("")}</datalist>`;
 const helperName=id=>id&&(D.mods||{})[id]?D.mods[id].name:"Everyone";
 
@@ -3232,6 +3236,60 @@ moderator=function(){
  const body=({live:mLive,tonight:mTonight,moments:mMoments,teams:mTeams,scores:mScores,content:mContent,custom:mCustom,event:mEvent,memories:mMemories,menu:mMenu,party:mParty}[L.mtab]||mLive)();
  const pr=D.meta&&D.meta.practice?`<div class="banner soft"><span><b>Practice run</b> with pretend guests. Open a <a href="${esc(eventURL(EV))}" target="_blank" rel="noopener">guest view</a> or the <a href="${esc(eventURL(EV,"screen"))}" target="_blank" rel="noopener">big screen</a> to see what they see.</span><button class="btn sm" data-act="endPractice">End practice</button></div>`:"";
  return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${tab("tonight","Tonight")}${tab("moments","Moments")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("menu","Menu")}${tab("party",adultOn()?"Party & 21+":"Party games")}${tab("custom","Custom games")}${tab("event","Event")}${tab("memories","Memories")}</nav><div class="stack mw0">${body}</div></div>`};
+
+/* ---- guest list: import, check-in, and name suggestions ---- */
+D.guests={};
+const _subGuests=subscribeEvent;
+subscribeEvent=function(){_subGuests();if(VIEW==="moderator")ER("guests").on("value",s=>{D.guests=s.val()||{};renderSoon()})};
+const glList=()=>Object.keys(D.guests||{}).map(k=>Object.assign({k},D.guests[k])).sort((a,b)=>String(a.name).localeCompare(String(b.name),undefined,{sensitivity:"base"}));
+const glMembers=g=>String(g.name||"").split(/\s*\/\s*/).map(s=>s.trim()).filter(Boolean);
+const glInGames=g=>{const names=new Set(ids().filter(i=>!P(i).bot).map(i=>normName(P(i).name)));return glMembers(g).some(m=>names.has(normName(m)))};
+const rsvpOf=v=>{v=normName(v);return /^(y|yes|going|attending|accepted)/.test(v)?"yes":/^(n|no|not going|declined|can't|cant)/.test(v)?"no":v?"maybe":""};
+function csvRows(txt){const rows=[];let row=[],cell="",q=false;for(let i=0;i<txt.length;i++){const c=txt[i];
+  if(q){if(c==='"'){if(txt[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c}
+  else if(c==='"')q=true;else if(c===","||c==="\t"){row.push(cell);cell=""}else if(c==="\n"||c==="\r"){if(c==="\r"&&txt[i+1]==="\n")i++;row.push(cell);rows.push(row);row=[];cell=""}else cell+=c}
+ if(cell||row.length){row.push(cell);rows.push(row)}return rows}
+/* Accepts one name per line, or a spreadsheet saved as CSV (a "Name" column is found by its header; RSVP and invite columns are picked up when present). */
+function parseGuests(txt){txt=String(txt||"").replace(/^﻿/,"");const rows=csvRows(txt).map(r=>r.map(c=>c.replace(/\s+/g," ").trim()));if(!rows.length)return [];
+ let ni=0,ri=-1,ii=-1,start=0;const h=rows[0].map(c=>c.toLowerCase());
+ if(h.some(c=>/name|guest/.test(c))){ni=Math.max(0,h.findIndex(c=>/name|guest/.test(c)));ri=h.findIndex(c=>/rsvp|status|going|attend/.test(c)&&!/#/.test(c));ii=h.findIndex(c=>/invit/.test(c));start=1}
+ const out=[];for(const r of rows.slice(start)){const name=(r[ni]||"").trim();if(!name||/^(total|invitations sent)/i.test(name))continue;
+  out.push({name:name.slice(0,80),rsvp:ri>=0?rsvpOf(r[ri]):"",invited:ii>=0?/^y/i.test(r[ii]||""):null})}return out}
+function glImport(list){const have={};glList().forEach(g=>{const n=normName(g.name);have[n]=(have[n]||0)+1});const seen={},u={},tm=Date.now();let added=0;
+ list.forEach((g,i)=>{const n=normName(g.name);seen[n]=(seen[n]||0)+1;if(seen[n]<=(have[n]||0))return;
+  const e={name:g.name,t:tm+i};if(g.rsvp)e.rsvp=g.rsvp;if(g.invited!=null)e.invited=g.invited;u["g"+tm.toString(36)+i]=e;added++});
+ return {u,added,skipped:list.length-added}}
+function glSection(){const list=glList(),here=list.filter(g=>g.arrived).length,f=L.glFilter||"todo";
+ const importBox=`<div class="stack tight"><textarea data-draft="gl_paste" rows="5" placeholder="Paste names, one per line, or a spreadsheet copied as CSV">${esc(dv("gl_paste",""))}</textarea>
+  <div class="row"><button class="btn sm primary" data-act="glPaste">Import pasted names</button><label class="btn sm upl">Upload a .csv file<input type="file" accept=".csv,.txt,text/csv,text/plain" data-act="glFile"></label></div>
+  <p class="small muted m0">From Google Sheets: File → Download → Comma-separated values. A party like “Arlette / Evan Cooper” stays together as one row.</p></div>`;
+ if(!list.length)return `<section class="card stack"><div class="row between"><h2>Guest list</h2></div><p class="small muted m0">Import your guest list to check people in at the door and see who hasn't joined the games yet. Their names also show up as suggestions in the raffle and gift log.</p>${importBox}</section>`;
+ const show=list.filter(g=>f==="all"||f==="todo"&&!g.arrived||f==="here"&&g.arrived||f==="nogames"&&g.arrived&&!glInGames(g));
+ const tab=(k,l)=>`<button class="btn sm ${f===k?"primary":""}" data-act="glFilter" data-k="${k}">${l}</button>`;
+ const rv={yes:'<span class="pill ok">RSVP yes</span>',no:'<span class="pill">Not coming</span>',maybe:'<span class="pill">RSVP waiting</span>'};
+ return `<section class="card stack"><div class="row between"><h2>Guest list</h2><span class="pill gold">${here} of ${list.length} here</span></div>
+ <div class="row">${tab("todo","Not here yet")}${tab("here","Arrived")}${tab("nogames","Here, not in the games")}${tab("all","Everyone")}</div>
+ <div class="stack tight glrows">${show.length?show.map(g=>`<div class="gamerow evrow ${g.arrived?"dim":""}"><span class="gnum">${g.arrived?"✓":"·"}</span><div class="mw0"><b>${esc(g.name)}</b> ${rv[g.rsvp]||""}${glInGames(g)?' <span class="pill live">In the games</span>':""}</div>
+  <div class="row"><button class="btn sm ${g.arrived?"":"primary"}" data-act="glArrive" data-k="${g.k}">${g.arrived?"Undo":"Here"}</button></div></div>`).join(""):'<p class="small muted m0">Nobody in this list.</p>'}</div>
+ <div class="row"><input type="text" class="grow" data-draft="gl_new" value="${esc(dv("gl_new",""))}" placeholder="Add a walk-in guest" aria-label="Add a guest"><button class="btn sm" data-act="glAdd">Add</button></div>
+ <details><summary class="small">Import more or start over</summary><div class="stack tight">${importBox}
+  ${L.confirm==="glClear"?`<div class="row"><span class="small">Remove the whole guest list?</span><button class="btn sm gold" data-act="glClear">Yes, remove it</button><button class="btn sm" data-act="cancelConfirm">No</button></div>`:`<button class="btn sm as" data-act="askGlClear">Remove the guest list</button>`}</div></details></section>`}
+async function glDoImport(txt){const list=parseGuests(txt);if(!list.length)return toast("No names found");const r=glImport(list);
+ if(r.added){D.guests=Object.assign({},D.guests,r.u);await ER("guests").update(r.u)}
+ delete L.drafts.gl_paste;toast(`${r.added} guest${r.added===1?"":"s"} added${r.skipped?`, ${r.skipped} already on the list`:""}`);render(true)}
+Object.assign(ACT,{
+ glPaste:()=>glDoImport(dv("gl_paste","")),
+ glFile:el=>{const f=el.files&&el.files[0];if(!f)return;if(/\.xlsx?$/i.test(f.name))return toast("Save it as a .csv file first (File → Download → CSV)");const fr=new FileReader();fr.onload=()=>glDoImport(fr.result);fr.readAsText(f)},
+ glFilter:el=>{L.glFilter=el.dataset.k;render(true)},
+ glArrive:el=>{const k=el.dataset.k,g=(D.guests||{})[k];if(!g)return;const v=g.arrived?null:{t:Date.now(),by:L.modName||""};D.guests=Object.assign({},D.guests,{[k]:Object.assign({},g,{arrived:v})});ER("guests/"+k+"/arrived").set(v);if(v)buzz(30);render(true)},
+ glAdd:async()=>{const n=dv("gl_new","").trim().slice(0,80);if(!n)return toast("Type the guest's name");const k="g"+Date.now().toString(36);const e={name:n,t:Date.now(),walkin:true,arrived:{t:Date.now(),by:L.modName||""}};D.guests=Object.assign({},D.guests,{[k]:e});await ER("guests/"+k).set(e);delete L.drafts.gl_new;toast(n+" added and checked in");render(true)},
+ askGlClear:()=>{L.confirm="glClear";render(true)},
+ glClear:async()=>{L.confirm=null;D.guests={};await ER("guests").remove();toast("Guest list removed");render(true)}
+});
+/* suggestions in the raffle and gift log: people in the games plus everyone on the guest list */
+const _guestNamesBase=guestNames;
+guestNames=function(){return _guestNamesBase().concat(glList().flatMap(g=>{const m=glMembers(g);return m.length>1?m:[g.name]}))};
+mTonight=function(){return rosSection()+glSection()+rafSection()+giftSection()};
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
