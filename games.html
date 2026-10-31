@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e8338f">
 <title>Host Mode</title>
-<script>try{var m=/[?&]e=([^&#]*)/i.exec(location.search),k=m&&"hm_theme_"+decodeURIComponent(m[1]).toUpperCase().replace(/[^A-Z0-9-]/g,""),v=k&&JSON.parse(localStorage.getItem(k)||"null");if(v){window.__themePre=1;for(var p in v)document.documentElement.style.setProperty(p,v[p])}}catch(e){}</script>
+<script>try{var m=/[?&]e=([^&#]*)/i.exec(location.search),k=m&&"hm_theme_"+decodeURIComponent(m[1]).toUpperCase().replace(/[^A-Z0-9-]/g,""),v=k&&JSON.parse(localStorage.getItem(k)||"null");if(v){window.__themePre=1;for(var p in v)if(p.slice(0,2)==="--")document.documentElement.style.setProperty(p,v[p]);if(v.bar){var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute("content",v.bar)}}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Marcellus&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
@@ -1266,7 +1266,7 @@ function createEvent(code,name,content,pinHash,practice){const tm=Date.now();con
 function subscribeEvent(){
  const on=(p,fn)=>ER(p).on("value",s=>{fn(s.val());renderSoon()});
  ER("meta").on("value",s=>{D.meta=s.val();L.missing=!D.meta;L.loaded=true;checkAuth();renderSoon()});
- on("content",v=>{D.content=v||null;cwCache.key=null;applyTheme()});
+ on("content",v=>{D.content=v||null;D.contentLoaded=true;cwCache.key=null;applyTheme()});
  on("state",v=>{D.state=v||{};onState()});
  on("players",v=>{D.players=v||{};L.playersLoaded=true});
  on("scores",v=>D.scores=v||{});
@@ -2932,13 +2932,13 @@ function previewTheme(p){const t2=themeFromDrafts(p);setThemeVars(t2.colors,t2.f
 function setThemeVars(colors,fonts,glow){const r=document.documentElement;const map={ground:"--ground",card:"--card",line:"--line",ink:"--ink",muted:"--muted",hd:"--hd",hd2:"--hd2",btn1:"--btn1",btn2:"--btn2",rose:"--rose",flame:"--flame",gold:"--gold",violet:"--violet",leaf:"--leaf"};
  Object.keys(map).forEach(k=>{if(colors&&colors[k])r.style.setProperty(map[k],colors[k])});if(colors&&colors.ground)r.style.setProperty("--ground-2",mixHex(colors.ground,colors.violet||colors.rose||"#7b3fb8",.08));
  if(colors&&colors.ground)r.style.setProperty("--mint",mixHex(colors.ground,colors.leaf||"#2f8a4c",.1));
- const meta=document.querySelector('meta[name="theme-color"]');if(meta&&meta.setAttribute)meta.setAttribute("content",(colors&&(colors.bar||colors.rose))||"#e8338f");
+ const meta=document.querySelector('meta[name="theme-color"]');const barC=colors&&(colors.bar||colors.rose);if(meta&&meta.setAttribute&&(barC||!window.__themePre))meta.setAttribute("content",barC||"#e8338f");
  r.classList.toggle("noglow",glow===false);
- try{if(EV&&colors&&Object.keys(colors).length){const o={};["--ground","--card","--line","--ink","--muted","--hd","--hd2","--btn1","--btn2","--rose","--flame","--gold","--violet","--leaf","--ground-2","--mint"].forEach(k=>{const x=r.style.getPropertyValue(k);if(x)o[k]=x});const j=JSON.stringify(o);if(localStorage.getItem("hm_theme_"+EV)!==j)localStorage.setItem("hm_theme_"+EV,j)}}catch(e){}
+ try{if(EV&&colors&&Object.keys(colors).length){const o={};["--ground","--card","--line","--ink","--muted","--hd","--hd2","--btn1","--btn2","--rose","--flame","--gold","--violet","--leaf","--ground-2","--mint"].forEach(k=>{const x=r.style.getPropertyValue(k);if(x)o[k]=x});if(colors.bar||colors.rose)o.bar=colors.bar||colors.rose;const j=JSON.stringify(o);if(localStorage.getItem("hm_theme_"+EV)!==j)localStorage.setItem("hm_theme_"+EV,j)}}catch(e){}
  if(fonts){loadFonts(fonts);r.style.setProperty("--f-script",`"${fonts.title}",${FONT_FALL.title}`);r.style.setProperty("--f-caps",`"${fonts.head}",${FONT_FALL.head}`);r.style.setProperty("--f-body",`"${fonts.body}",${FONT_FALL.body}`);document.body&&(document.body.style.fontSize=(+fonts.size||15)+"px")}}
 let fontKey="";function loadFonts(f){if(!document.head)return;const fams=[...new Set([f.title,f.head,f.body].filter(Boolean))];const key=fams.join("|");if(key===fontKey)return;fontKey=key;let el=document.getElementById("fontlink");if(!el){el=document.createElement("link");el.id="fontlink";el.rel="stylesheet";document.head.appendChild(el)}
  el.href="https://fonts.googleapis.com/css2?"+fams.map(x=>"family="+x.replace(/ /g,"+")+":wght@400;600;700").join("&")+"&display=swap"}
-function applyTheme(){const c=C();setThemeVars(c.colors||{},Object.assign({title:"Great Vibes",head:"Marcellus",body:"Figtree",size:15},c.fonts||{}),c.glow);
+function applyTheme(){const c=C();if(EV&&window.__themePre&&!D.contentLoaded){}else setThemeVars(c.colors||{},Object.assign({title:"Great Vibes",head:"Marcellus",body:"Figtree",size:15},c.fonts||{}),c.glow);
  const r=document.documentElement;r.classList.toggle("large",!!L.large);r.classList.toggle("hc",!!L.hc);r.lang=L.lang==="es"?"es":"en";
  if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_");
  document.title=(VIEW==="host"?"Host Mode":VIEW==="new"?"Create your event · Host Mode":(c.title||"Host Mode"))+(VIEW==="moderator"?" · Moderator":VIEW==="screen"?" · Big screen":VIEW==="host"?" · Admin":"")}
