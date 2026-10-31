@@ -810,6 +810,8 @@ html.hmbrand .eyebrow{color:#b45a00}
 #leadgate .lg-bg{position:fixed;inset:0;background:rgba(7,21,49,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .lg-card{position:relative;width:min(520px,100%);background:#fff;color:#0c2147;border-radius:24px;padding:24px;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);font-family:Figtree,system-ui,sans-serif;max-height:calc(100vh - 32px);overflow:auto}
 .lg-card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;border-radius:24px 24px 0 0;background:linear-gradient(90deg,#f7941d 60%,#3dae2b 60%)}
+.lg-x{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:1.5px solid #e7e0d4;background:#fff;color:#0c2147;font:600 26px/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
+.lg-x:hover{background:#fffaf3;border-color:#0c2147}
 .lg-eb{font-weight:800;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#b45a00}
 .lg-card h2{font-family:Montserrat,system-ui,sans-serif;font-weight:900;font-size:26px;letter-spacing:-.02em;margin:6px 0 6px;color:#0c2147}
 .lg-card p{margin:0 0 14px;color:#33415c;font-size:15px;line-height:1.45}
@@ -1693,7 +1695,7 @@ function hostView(){
  if(!L.hostOK)return `<section class="card stack narrow"><div class="eyebrow">Administrator</div><h2>Enter the host PIN</h2><p class="small muted m0">The host PIN is the administrator PIN. It opens every event. It starts as 0102 until you change it.</p><input type="password" inputmode="numeric" id="hpin" data-draft="hpin" value="${esc(dv("hpin",""))}"><button class="btn primary" data-act="hostPin">Open</button></section>`;
  const tab=(k,l)=>`<button data-act="hostTab" data-k="${k}" aria-pressed="${(L.hostTab||"events")===k}">${l}</button>`;
  const body={events:hEvents,invites:hInvites,leads:hLeads,archives:hArchives,themes:hThemes,library:hLibrary,settings:hSettings}[L.hostTab||"events"]();
- return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("leads","Demo leads"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
+ return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("leads","Contacts"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
 function hEvents(){const ev=D.events||{},def=D.admin.defaultEvent;const keys=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));const th=D.themes||{};
  return `<section class="card stack"><h2>Your events</h2>${keys.length?keys.map(k=>`<div class="gamerow evrow"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}</div></div>
  <div class="row">${L.confirm==="del:"+k?`<span class="small">Delete everything?</span><button class="btn sm gold" data-act="delEvent" data-k="${k}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm primary" data-act="openMod" data-k="${k}">Console</button><a class="btn sm" href="${esc(eventURL(k))}" target="_blank" rel="noopener">Guest view</a><a class="btn sm" href="${esc(eventURL(k,"screen"))}" target="_blank" rel="noopener">Big screen</a>${def===k?"":`<button class="btn sm" data-act="setMain" data-k="${k}">Make main</button>`}<button class="btn sm" data-act="askDel" data-k="${k}">Delete</button>`}</div></div>`).join(""):'<p class="small muted m0">No events yet.</p>'}</section>
@@ -4379,7 +4381,7 @@ if(VIEW==="new"&&QS.get("invite"))setTimeout(()=>{if(!L.newInv)ACT.nwCheck()},90
 /* ================= DEMO CONTACT GATE =================
    Visitors explore freely for two taps; before the third, they leave their contact details once.
    Details go to the real database (partygames/leads) through its REST address, since the demo itself
-   runs on a pretend database. The host sees them on the host console's Demo leads tab. */
+   runs on a pretend database. The host sees them on the host console's Contacts tab. */
 const LEAD_FREE=2;
 const leadDone=()=>{try{return !!localStorage.getItem("hm_lead_done")}catch(e){return true}};
 const leadCount=()=>{try{return +localStorage.getItem("hm_demo_taps")||0}catch(e){return 0}};
@@ -4396,13 +4398,13 @@ if(demoOn()){
 }
 function showLeadGate(){if(document.getElementById("leadgate"))return;const g=document.createElement("div");g.id="leadgate";g.innerHTML=LEAD_FORM_HTML();document.body.appendChild(g);leadWire(g)}
 /* the same form is used on demo.html, so it lives in one string */
-const LEAD_FORM_HTML=()=>`<div class="lg-bg"></div><form class="lg-card" novalidate aria-labelledby="lgT"><div class="lg-eb">Enjoying the demo?</div><h2 id="lgT">Tell us how to reach you</h2>
+const LEAD_FORM_HTML=()=>`<div class="lg-bg"></div><form class="lg-card" novalidate aria-labelledby="lgT"><button type="button" class="lg-x" aria-label="Close">×</button><div class="lg-eb">Enjoying the demo?</div><h2 id="lgT">Tell us how to reach you</h2>
  <p>Leave your details to keep exploring. We'll send you an invite code when you're ready to plan your own event.</p>
  <div class="lg-grid"><label>Your name<input name="name" autocomplete="name" required></label><label>Email<input name="email" type="email" autocomplete="email" required></label>
  <label>Phone (optional)<input name="phone" type="tel" autocomplete="tel"></label><label>What are you planning?<select name="type"><option value="">Choose one</option>${Object.keys(EVENT_TYPES).map(k=>`<option>${EVENT_TYPES[k].label}</option>`).join("")}<option>I plan events for clients</option></select></label>
  <label>Event date (optional)<input name="date" type="date"></label><label class="lg-wide">Anything else? (optional)<textarea name="note" rows="2"></textarea></label></div>
  <p class="lg-err" hidden></p><button class="lg-go" type="submit">Keep exploring</button><p class="lg-fine">We only use this to contact you about Host Mode.</p></form>`;
-function leadWire(g){const f=g.querySelector("form");f.addEventListener("submit",async e=>{e.preventDefault();const v=k=>String((f.elements[k]&&f.elements[k].value)||"").trim();const err=f.querySelector(".lg-err");
+function leadWire(g){const f=g.querySelector("form");g.querySelector(".lg-x").onclick=()=>g.remove();g.querySelector(".lg-bg").onclick=()=>g.remove();addEventListener("keydown",function k(e){if(e.key==="Escape"){g.remove();removeEventListener("keydown",k)}});f.addEventListener("submit",async e=>{e.preventDefault();const v=k=>String((f.elements[k]&&f.elements[k].value)||"").trim();const err=f.querySelector(".lg-err");
   const o={name:v("name").slice(0,80),email:v("email").slice(0,120),phone:v("phone").slice(0,40),type:v("type").slice(0,60),date:v("date").slice(0,20),note:v("note").slice(0,600),t:{".sv":"timestamp"},src:"demo",page:location.hash.slice(1)||"guest"};
   if(!o.name){err.textContent="Please add your name.";err.hidden=false;return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(o.email)){err.textContent="Please check your email address.";err.hidden=false;return}
@@ -4412,19 +4414,19 @@ function leadWire(g){const f=g.querySelector("form");f.addEventListener("submit"
 /* a lead that couldn't be sent (no signal) goes out next time */
 if(demoOn())setTimeout(()=>{let p=null;try{p=JSON.parse(localStorage.getItem("hm_lead_pending")||"null")}catch(e){}if(p)leadSend(p).then(()=>localStorage.removeItem("hm_lead_pending")).catch(()=>{})},3000);
 
-/* host console: Demo leads tab */
+/* host console: Contacts tab */
 D.leads={};
 const _connectLeads=connect;connect=function(){_connectLeads();if(VIEW==="host"&&db)RT("leads").on("value",s=>{D.leads=s.val()||{};renderSoon()})};
 const leadList=()=>Object.keys(D.leads||{}).map(k=>Object.assign({k},D.leads[k])).sort((a,b)=>(b.t||0)-(a.t||0));
 function hLeads(){const l=leadList();
- return `<section class="card stack"><div class="row between"><h2>Demo leads</h2><span class="pill gold">${l.length}</span></div><p class="small muted m0">People who tried the live demo and left their details. New ones appear here as they come in.</p>
+ return `<section class="card stack"><div class="row between"><h2>Contacts</h2><span class="pill gold">${l.length}</span></div><p class="small muted m0">People who tried the live demo and left their contact details. New ones appear here as they come in.</p>
  ${l.length?`<div class="stack tight">${l.map(x=>`<div class="plrow"><div class="mw0 grow"><b>${esc(x.name)}</b>${x.type?` <span class="pill">${esc(x.type)}</span>`:""}<div class="small muted plmeta"><span>${x.t?esc(new Date(x.t).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})):""}</span>${x.date?`<span>Event ${esc(plFmtD(x.date)||x.date)}</span>`:""}</div>${x.note?`<div class="small">${esc(x.note)}</div>`:""}
   <div class="row g8 plcontact">${x.email?`<a class="btn sm" href="mailto:${esc(x.email)}">✉️ ${esc(x.email)}</a>`:""}${x.phone?`<a class="btn sm" href="tel:${esc(x.phone.replace(/[^0-9+]/g,""))}">📞 ${esc(x.phone)}</a><a class="btn sm" href="sms:${esc(x.phone.replace(/[^0-9+]/g,""))}">Text</a>`:""}</div></div>
   <button class="btn sm" data-act="leadDel" data-k="${esc(x.k)}">${L.confirm==="ld"+x.k?"Tap again":"Delete"}</button></div>`).join("")}</div>
-  <div class="row"><button class="btn sm" data-act="leadCsv">Download as a spreadsheet</button></div>`:'<p class="small muted m0">No leads yet. Share the demo link: hostmode.github.io/demo.html</p>'}</section>`}
+  <div class="row"><button class="btn sm" data-act="leadCsv">Download as a spreadsheet</button></div>`:'<p class="small muted m0">No contacts yet. Share the demo link: hostmode.github.io/demo.html</p>'}</section>`}
 Object.assign(ACT,{
  leadDel:async el=>{const k=el.dataset.k;if(L.confirm!=="ld"+k){L.confirm="ld"+k;return render(true)}L.confirm=null;await RT("leads/"+k).remove();toast("Deleted")},
- leadCsv:()=>{const rows=[["Name","Email","Phone","Planning","Event date","Note","When"]].concat(leadList().map(x=>[x.name,x.email,x.phone,x.type,x.date,x.note,x.t?new Date(x.t).toLocaleString():""]));download("host-mode-demo-leads.csv",new Blob(["﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n")],{type:"text/csv"}))}
+ leadCsv:()=>{const rows=[["Name","Email","Phone","Planning","Event date","Note","When"]].concat(leadList().map(x=>[x.name,x.email,x.phone,x.type,x.date,x.note,x.t?new Date(x.t).toLocaleString():""]));download("host-mode-contacts.csv",new Blob(["﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n")],{type:"text/csv"}))}
 });
 
 /* ================= WEAK SIGNAL MODE ================= */
