@@ -2,11 +2,11 @@
    Pages: fresh from the network when possible, saved copy when not.
    Libraries and fonts: saved copy first, refreshed in the background.
    Live data (Firebase) is never touched here. */
-const CACHE = "spark-v1";
+const CACHE = "hostmode-v2";
 const LIBS = /^https:\/\/(www\.gstatic\.com\/firebasejs|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(["games.html", "index.html"]).catch(() => {})));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(["games.html", "index.html", "drinks.html"]).catch(() => {})));
   self.skipWaiting();
 });
 self.addEventListener("activate", e => {
