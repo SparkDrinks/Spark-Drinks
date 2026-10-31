@@ -850,6 +850,7 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .clap2{border:1px solid var(--line)}.aphist{margin-top:2px;line-height:1.5}.stack.tight textarea,.clap2 textarea{width:100%}
 .clrow{padding:8px 0;border-bottom:1px solid var(--line)}.clrow.done b{opacity:.6}.clrow a{color:inherit}
 .brandrow{display:flex;align-items:center;gap:10px}.brandlogo{max-height:44px;max-width:120px;object-fit:contain;border-radius:6px}.dayNow{font-size:1.7rem;line-height:1.2}.daybtn{font-size:1.3rem;padding:18px 24px;width:100%}.dayhelp{width:100%;padding:16px;font-size:1.1rem}
+.fbstars .btn{font-size:1.4rem;padding:8px 14px}
 </style>
 </head><body>
 <div class="wrap">
@@ -1068,7 +1069,7 @@ const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: r
 
 const QS=new URLSearchParams(location.search);
 const EV=((QS.get("e")||"").toUpperCase().replace(/[^A-Z0-9-]/g,""))||null;
-const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";if(new URLSearchParams(location.search).has("client"))return "client";return ["host","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
+const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";if(new URLSearchParams(location.search).has("client"))return "client";if(new URLSearchParams(location.search).has("fb"))return "fb";return ["host","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
 const baseURL=()=>location.origin+location.pathname;
 const eventURL=(code,hash)=>baseURL()+"?e="+encodeURIComponent(code)+(hash?"#"+hash:"");
 
@@ -1240,7 +1241,8 @@ function connect(){
  if(VIEW==="new"){L.loaded=true;renderSoon();return}
  if(VIEW==="mate"){mateConnect();return}
  if(VIEW==="client"){clConnect();return}
- if(VIEW==="host"){RT("brand").on("value",s=>{D.brand=s.val();renderSoon()});RT("dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});[["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(p).on("value",s=>{D[k]=s.val()||{};renderSoon()}));RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
+ if(VIEW==="fb"){fbConnect();return}
+ if(VIEW==="host"){RT("feedback").on("value",s=>{D.fbk=s.val()||{};renderSoon()});RT("brand").on("value",s=>{D.brand=s.val();renderSoon()});RT("dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});[["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(p).on("value",s=>{D[k]=s.val()||{};renderSoon()}));RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
  if(!EV){routeWithoutCode();return}
  subscribeEvent();
 }
@@ -1345,6 +1347,7 @@ function render(force){
  else if(VIEW==="new")html=newEventView();
  else if(VIEW==="mate")html=mateView();
  else if(VIEW==="client")html=clientView();
+ else if(VIEW==="fb")html=fbView();
  else if(!EV)html=L.loaded?landing():loadingView();
  else if(L.missing)html=landing(true);
  else if(!L.loaded)html=loadingView();
@@ -1379,8 +1382,8 @@ document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("#rv");if(r){const s=st().reveal;if(s&&now()>s.at+1500){r.classList.remove("on");r.innerHTML=""}}});
 
 function headerView(){
- const c=C();const title=VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"?"Host Mode":(c.title||"Host Mode");
- const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":(c.tagline||"");
+ const c=C();const title=VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"?"Host Mode":(c.title||"Host Mode");
+ const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="fb"?"Quick feedback":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":(c.tagline||"");
  const showAa=VIEW==="guest"||VIEW==="album"||VIEW==="keepsake";
  return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span><button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
 function loadingView(){return `<div class="card muted">${t("Loading…")}</div>`}
@@ -3658,7 +3661,7 @@ const markKind=()=>{const m=C().mark;if(m==="none")return null;if(MARKS[m])retur
 function markSVG(k,size){const m=MARKS[k];if(!m)return "";const id="gm"+k+size;
  return `<svg class="tmark" viewBox="${m.vb}" width="${size}" height="${Math.round(size*(+m.vb.split(" ")[3])/(+m.vb.split(" ")[2]))}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dc83"/><stop offset=".5" style="stop-color:var(--gold)"/><stop offset="1" stop-color="#9c6b00"/></linearGradient></defs><path d="${m.d}" fill="none" stroke="url(#${id})" stroke-width="${size>=40?1.7:1.4}" stroke-linecap="round" stroke-linejoin="round"/>${m.eye?`<circle cx="${m.eye[0]}" cy="${m.eye[1]}" r=".95" fill="url(#${id})"/>`:""}</svg>`}
 const titleMark=size=>{const k=markKind();return k?markSVG(k,size):""};
-const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
+const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
 const _mEventDL=mEvent;mEvent=function(){const cur=markKind()||"none";const b=(k,l)=>`<button class="btn sm ${cur===k?"primary":""}" data-act="setMark" data-k="${k}" aria-pressed="${cur===k}">${k==="none"?"":markSVG(k,22)} ${l}</button>`;
  return _mEventDL()+`<section class="card stack"><h2>Title mark</h2><p class="small muted m0">A small gold drawing beside the event title on guests' phones and the big screen.</p><div class="row">${b("bird","Songbird")}${b("rose","Rose")}${b("none","None")}</div></section>`};
 ACT.setMark=el=>{ER("content/mark").set(el.dataset.k);toast(el.dataset.k==="none"?"Title mark off":"Title mark updated")};
@@ -4413,7 +4416,7 @@ Object.assign(ACT,{
 
 /* ---- Host Mode's own look: the create-event page and the host console wear the brand, not an event's theme ---- */
 const BRAND={colors:{bar:"#0c2147",ground:"#f2f5fa",card:"#ffffff",line:"#d2dbea",ink:"#0c2147",muted:"#4b5b79",hd:"#0f2c5c",hd2:"#b45a00",btn1:"#0f2c5c",btn2:"#1f4f96",rose:"#f7941d",flame:"#f26722",gold:"#f2b134",violet:"#0f2c5c",leaf:"#3dae2b"},fonts:{title:"Montserrat",head:"Montserrat",body:"Figtree",size:15}};
-const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate"||VIEW==="client";
+const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate"||VIEW==="client"||VIEW==="fb";
 const _applyThemeBrand=applyTheme;
 applyTheme=function(){_applyThemeBrand();const on=brandView();document.documentElement.classList.toggle("hmbrand",on);if(!on)return;
  setThemeVars(BRAND.colors,BRAND.fonts,true);if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_")};
@@ -4917,7 +4920,7 @@ Object.assign(ACT,{
    partygames/dayOf = true | false             (planner's switch: teammates see the stripped "do now" view)
    partygames/mates/{id}/help = {t, msg, ok}   (teammate tapped "Need help") */
 D.brand=null;D.dayOf=false;
-const brandOn=(v=VIEW)=>(v==="client"||v==="mate")&&D.brand&&(D.brand.name||D.brand.logo||D.brand.color);
+const brandOn=(v=VIEW)=>(v==="client"||v==="mate"||v==="fb")&&D.brand&&(D.brand.name||D.brand.logo||D.brand.color);
 const brandHex=c=>/^#[0-9a-f]{6}$/i.test(c||"")?c.toLowerCase():"";
 function brandLum(h){const n=parseInt(h.slice(1),16),f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(n>>16)+.7152*f(n>>8&255)+.0722*f(n&255)}
 function brandMix(h,to,p){const a=parseInt(h.slice(1),16),b=parseInt(to.slice(1),16),m=(x,y)=>Math.round(x+(y-x)*p);return "#"+[m(a>>16,b>>16),m(a>>8&255,b>>8&255),m(a&255,b&255)].map(v=>v.toString(16).padStart(2,"0")).join("")}
@@ -4971,6 +4974,59 @@ Object.assign(ACT,{
  mateHelpX:async()=>{await RT("mates/"+mateKey()+"/help").remove()},
  mateHelpOk:async el=>{await RT("mates/"+el.dataset.k+"/help/ok").set(true);toast("Marked as handled")},
  mateFull:()=>{L.mateFull=!L.mateFull;render(true)}
+});
+
+/* ================= STEP 6: after-event feedback =================
+   partygames/feedback/{key}/{id} = {who:"guest"|"client", name, rating:1-5, best, better, ok, quote, t}
+   key = the event code (or the client's id when the client has no event). Guests use games.html?fb=CODE;
+   clients get the same form on their portal Overview. "ok" = the person said we may quote them by name; "quote" = the planner chose to feature it. */
+D.fbk={};D.fbEv=null;
+const fbKeyQ=()=>(new URLSearchParams(location.search).get("fb")||"").toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,40);
+function fbLink(key){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?fb="+encodeURIComponent(key)}
+const fbList=key=>{const o=(D.fbk||{})[key]||{};return Object.keys(o).map(k=>Object.assign({k},o[k])).sort((a,b)=>(b.t||0)-(a.t||0))};
+const fbAvg=l=>l.length?Math.round(l.reduce((n,x)=>n+(+x.rating||0),0)/l.length*10)/10:0;
+const fbStars=n=>"★".repeat(n)+"☆".repeat(5-n);
+function fbConnect(){const k=fbKeyQ();if(!k){L.loaded=true;renderSoon();return}
+ RT("brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
+ RT("index/"+k).once("value").then(s=>{D.fbEv=s.val();L.loaded=true;renderSoon()}).catch(()=>{L.loaded=true;renderSoon()})}
+function fbForm(key,who,name){const r=+dv("fb_rating_"+key,0);
+ return `<div class="stack"><div class="stack tight"><span class="small">How was it?</span><div class="row fbstars" role="group" aria-label="Rating">${[1,2,3,4,5].map(n=>`<button class="btn ${r>=n?"primary":""}" data-act="fbRate" data-key="${esc(key)}" data-v="${n}" aria-label="${n} star${n>1?"s":""}" aria-pressed="${r===n}">★</button>`).join("")}</div></div>
+ <label class="stack tight"><span class="small">What was the best part?</span><textarea rows="2" maxlength="400" data-draft="fb_best_${esc(key)}">${esc(dv("fb_best_"+key,""))}</textarea></label>
+ <label class="stack tight"><span class="small">What could be better? (optional)</span><textarea rows="2" maxlength="400" data-draft="fb_better_${esc(key)}">${esc(dv("fb_better_"+key,""))}</textarea></label>
+ ${who==="guest"?`<label class="stack tight"><span class="small">Your name (optional)</span><input type="text" maxlength="40" data-draft="fb_name_${esc(key)}" value="${esc(dv("fb_name_"+key,""))}"></label>`:""}
+ <label class="row small"><input type="checkbox" data-draft="fb_ok_${esc(key)}" ${dv("fb_ok_"+key,false)?"checked":""}> <span>You may quote my comments${who==="guest"?" with my name":" with my name"}.</span></label>
+ <button class="btn primary" data-act="fbSend" data-key="${esc(key)}" data-who="${who}" data-name="${esc(name||"")}">Send feedback</button></div>`}
+const fbDone=(who,key)=>!!store.get("fbDone_"+who+"_"+key,false);
+const fbKeyOf=(id,me)=>(me&&me.ev)||"c_"+id;
+function fbView(){const k=fbKeyQ();if(!k)return `<section class="card stack narrow"><h2>This link isn't working</h2><p class="muted m0">Ask the host for the feedback link again.</p></section>`;
+ if(!L.loaded)return loadingView();const nm=D.fbEv&&D.fbEv.name||"the event";
+ return `<section class="card stack narrow"><div class="eyebrow">${esc(nm)}</div>${fbDone("guest",k)?`<h2>Thank you!</h2><p class="m0">Your feedback was sent.</p>`:`<h2>How did we do?</h2><p class="small muted m0">It takes about a minute.</p>${fbForm(k,"guest","")}`}</section>`}
+function fbClientCard(id,me){const key=fbKeyOf(id,me);if(fbDone("client",key))return `<section class="card"><p class="m0">Thank you for your feedback! 💛</p></section>`;
+ return `<section class="card stack"><h3>How did we do?</h3><p class="small muted m0">Now that your event is over, tell us how it went.</p>${fbForm(key,"client",me.name)}</section>`}
+const _clHome6=clHome;
+clHome=function(id,me){return _clHome6(id,me)+(me&&(me.askFb||(me.date&&me.date<=mateToday()))?fbClientCard(id,me):"")};
+/* ---- planner: results ---- */
+function fbQuoteText(x){return `\u201c${(x.best||"").trim()}\u201d \u2014 ${x.name||"A happy guest"}`}
+function hFeedbackCard(){const cs=D.clients||{},keys=new Set(Object.keys(D.fbk||{}));Object.keys(cs).forEach(id=>keys.add(fbKeyOf(id,cs[id])));
+ const rows=[...keys].map(k=>{const c0=Object.keys(cs).find(id=>fbKeyOf(id,cs[id])===k),l=fbList(k),evn=((D.events||{})[k]||{}).name||(c0&&(cs[c0].evName||cs[c0].name))||k,q=l.filter(x=>x.quote);
+  return `<div class="stack tight"><div class="row between"><div class="mw0"><b>${esc(evn)}</b><div class="small muted">${l.length?`${fbStars(Math.round(fbAvg(l)))} ${fbAvg(l)} average · ${l.length} response${l.length===1?"":"s"}`:"No responses yet"}</div></div>
+  <span class="row">${k.startsWith("c_")?"":`<button class="btn xs" data-act="copyLink" data-url="${esc(fbLink(k))}">Copy guest link</button>`}${c0?`<button class="btn xs" data-act="fbAsk" data-m="${c0}">Ask the client</button>`:""}${q.length?`<button class="btn xs" data-act="fbCopyQuotes" data-k="${esc(k)}">Copy ${q.length} quote${q.length===1?"":"s"}</button>`:""}</span></div>
+  ${l.map(x=>`<div class="clrow small"><b>${fbStars(+x.rating||0)}</b> <span class="muted">${esc(x.name||(x.who==="client"?"Client":"Guest"))}${x.who==="client"&&x.name?" · client":""} · ${esc(clAgo(x.t))}</span>${x.best?`<div>👍 ${esc(x.best)}</div>`:""}${x.better?`<div class="muted">💡 ${esc(x.better)}</div>`:""}
+  <div class="row">${x.ok&&x.best?`<button class="btn xs ${x.quote?"primary":""}" data-act="fbQuote" data-p="${esc(k)}" data-k="${x.k}" aria-pressed="${!!x.quote}">${x.quote?"★ Featured":"Feature as a quote"}</button>`:`<span class="muted">${x.ok?"":"No permission to quote"}</span>`}<button class="btn xs" data-act="fbDel" data-p="${esc(k)}" data-k="${x.k}" aria-label="Delete">×</button></div></div>`).join("")}</div>`}).join("");
+ return `<section class="card stack"><h2>Feedback</h2><p class="small muted m0">After the event, send guests the link and ask your client. Ratings and comments collect here. You can feature a comment as a testimonial only where the person said you may quote them.</p>${rows||'<span class="small muted">Add a client or an event and its feedback link appears here.</span>'}</section>`}
+const _hClients6=hClients;
+hClients=function(){return hFbPos(_hClients6())};
+function hFbPos(h){const i=h.indexOf("</section>");return i<0?h+hFeedbackCard():h.slice(0,i+10)+hFeedbackCard()+h.slice(i+10)}
+
+Object.assign(ACT,{
+ fbRate:el=>{L.drafts["fb_rating_"+el.dataset.key]=+el.dataset.v;render(true)},
+ fbSend:async el=>{const key=el.dataset.key,who=el.dataset.who,r=+dv("fb_rating_"+key,0);if(!r)return toast("Tap a star first");
+  await RT("feedback/"+key).push().set({who,name:String(who==="client"?el.dataset.name||"":dv("fb_name_"+key,"")).trim().slice(0,40),rating:r,best:dv("fb_best_"+key,"").trim().slice(0,400),better:dv("fb_better_"+key,"").trim().slice(0,400),ok:!!dv("fb_ok_"+key,false),t:Date.now()});
+  store.set("fbDone_"+who+"_"+key,true);["rating","best","better","name","ok"].forEach(f=>delete L.drafts["fb_"+f+"_"+key]);toast("Thank you!");render(true)},
+ fbQuote:async el=>{const p=el.dataset.p,k=el.dataset.k,x=((D.fbk||{})[p]||{})[k]||{};await RT(`feedback/${p}/${k}/quote`).set(!x.quote)},
+ fbDel:async el=>{await RT(`feedback/${el.dataset.p}/${el.dataset.k}`).remove()},
+ fbAsk:async el=>{const id=el.dataset.m,c=(D.clients||{})[id]||{};await RT("clientMsgs/"+id).push().set({from:"planner",text:`Thank you for letting us be part of ${c.evName||"your event"}! When you have a minute, please tell us how it went. The "How did we do?" card is on your Overview page.`,t:Date.now()});await RT(`clients/${id}/plSeen`).set(Date.now());await RT(`clients/${id}/askFb`).set(Date.now());toast("Asked in the client's messages")},
+ fbCopyQuotes:el=>{const k=el.dataset.k;copyText(fbList(k).filter(x=>x.quote&&x.best).map(fbQuoteText).join("\n\n"))}
 });
 
 /* ================= WEAK SIGNAL MODE ================= */
