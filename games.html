@@ -797,6 +797,13 @@ html.hmbrand main a:not(.btn){color:#0f2c5c}
 html.hmbrand .eyebrow{color:#b45a00}
 .hmhero{background:linear-gradient(135deg,#0c2147,#1f4f96);color:#fff;border:0}
 .hmhero h2{color:#fff;font-size:1.6rem}.hmhero p{color:#dbe4f3}.hmhero .eyebrow{color:#f7a440!important}
+
+/* demo bar */
+.demobar{position:sticky;top:0;z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 10px;padding:8px 10px;border-radius:14px;background:#0c2147;color:#fff;font-size:.84rem;box-shadow:0 8px 24px -12px rgba(12,33,71,.6)}
+.demobar .dbt{font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.7rem;color:#0c2147;background:#f7a440;border-radius:999px;padding:3px 9px;margin-right:2px}
+.demobar a,.demobar button{color:#dbe4f3;text-decoration:none;font:inherit;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:none;cursor:pointer}
+.demobar a.on{background:#fff;color:#0c2147;border-color:#fff}
+.demobar button{margin-left:auto}
 </style>
 </head><body>
 <div class="wrap">
@@ -808,6 +815,7 @@ html.hmbrand .eyebrow{color:#b45a00}
 <div id="mo" aria-live="polite"></div><div id="rv" aria-live="assertive"></div><div id="tour"></div><div id="rx" aria-hidden="true"></div><div id="ov" aria-live="polite"></div><div id="cd" role="status" aria-live="assertive"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>if(/[?&]e=demo(&|$)/i.test(location.search))document.write('<script src="demo.js"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
@@ -4303,6 +4311,51 @@ applyTheme=function(){_applyThemeBrand();const on=brandView();document.documentE
 const _newEvBrand=newEventView;
 newEventView=function(){const h=_newEvBrand();if(!L.loaded||L.newInv)return h;
  return `<section class="card stack narrow hmhero"><div class="eyebrow">Welcome to Host Mode</div><h2>Run your whole event from your phone</h2><p class="m0">Plan the weeks before, check guests in at the door, and run games, big moments and the big screen on the day. Baby showers, weddings, birthdays, reunions and company events.</p></section>`+h.replace(`data-act="nwCheck">Continue</button>`,`data-act="nwCheck">Continue</button><p class="small muted m0">No code yet? Ask your host for one. Already have an event? Open the link your host sent you. Hosts sign in on the <a href="games.html#host">host console</a>.</p>`)};
+
+/* ================= DEMO EVENT (?e=DEMO) =================
+   demo.js swaps in a pretend database kept in this browser only. The first visit fills it with a
+   ready-made birthday party so visitors can see every screen; "Start the demo over" resets it. */
+const DEMO_V=3;
+const demoOn=()=>!!window.__HMDEMO&&EV==="DEMO";
+function demoSeed(){const dbr=firebase.database();const cur=JSON.parse(localStorage.getItem("hm_demo_db")||"{}");
+ if(cur.demoV===DEMO_V&&cur.partygames)return;
+ const iso=n=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+n);return plIso(d)};
+ const date=iso(14);
+ const content=Object.assign(templateFor("birthday","Jordan's 30th"),{title:"Jordan's 30th",honorees:"Jordan",date,tagline:"Thirty, flirty and thriving"});
+ content.ros={};[["18:30","Doors open, check-in at the welcome table",""],["19:00","Welcome and the first game",""],["19:45","Dinner is served",""],["20:30","Toasts and the birthday slideshow",""],["21:00","Cake and candles",""],["21:30","Team trivia finale and crowning the winners",""]].forEach((r,i)=>content.ros["r"+i]={time:r[0],title:r[1],note:r[2],who:"",t:1+i});
+ const names=[["Alicia R","🦋",3,4],["Marcus T","🌻",7,19],["Tasha W","🌸",1,22],["Devon K","⭐",9,2],["Priya S","🍓",4,30],["Andre M","🎈",11,11],["Keisha L","🌙",2,14],["Omar J","🐝",8,8],["Lauren B","🦄",5,5],["Chris P","🧸",10,27]];
+ const players={},scores={},pods={};names.forEach(([n,e,m,d],i)=>{const id="p"+i;players[id]={name:n,m,d,fq:i%6,fa:i%3,word:n[0],t:1000+i,av:{e},bot:true};scores[id]=[18,15,14,12,11,10,9,8,7,6][i]});
+ const guests={};names.concat([["Maya B"],["Jordan's mom"],["Uncle Ray"]]).forEach((x,i)=>guests["g"+i]={name:x[0],rsvp:"yes",t:i,...(i<6?{arrived:{t:Date.now()-6e5,by:"Alicia"}}:{})});
+ guests.gw1={name:"Kendra F",rsvp:"maybe",t:40};guests.gw2={name:"Luis O",rsvp:"maybe",t:41};
+ const now=Date.now(),album={},albumFull={};(window.HM_DEMO_PHOTOS||[]).forEach((p,i)=>{album["a"+i]={thumb:p.thumb,t:now-i*6e4,name:names[[6,1,4][i]][0]};albumFull["a"+i]=p.full});
+ const plan={budgetTotal:2500,capacity:60,
+  tasks:{t1:{title:"Book the venue",due:iso(-30),done:true,t:1},t2:{title:"Send invitations",due:iso(-21),done:true,t:2},t3:{title:"Order the cake",due:iso(3),who:"m2",t:3},t4:{title:"Make the birthday slideshow",due:iso(9),t:4},t5:{title:"Pick up balloons",due:iso(13),who:"m2",time:"17:00",t:5},t6:{title:"Buy candles and party favors",due:iso(11),t:6},t7:{title:"Set up the photo corner",due:iso(14),time:"18:00",t:7}},
+  vendors:{v1:{name:"The Loft on Main",kind:"Venue",status:"Booked",contact:"Dana",phone:"555-0142",cost:900,deposit:300,depPaid:true,balDue:iso(10),arrive:"16:00",t:1},v2:{name:"Sugar & Spoon Bakery",kind:"Cake & desserts",status:"Booked",phone:"555-0188",cost:220,deposit:60,depDue:iso(2),t:2},v3:{name:"DJ Nova",kind:"DJ & music",status:"Contacted",cost:450,t:3}},
+  budget:{b1:{item:"Balloon arch",cat:"Decor",est:180,spent:0,t:1},b2:{item:"Party favors",cat:"Favors & gifts",est:90,spent:35,t:2}},
+  shop:{s1:{item:"Candles (3 and 0)",who:"Alicia",cost:8,t:1},s2:{item:"Paper plates",qty:"80",who:"Marcus",cost:16,t:2},s3:{item:"Confetti cannons",qty:"6",who:"Alicia",cost:30,got:true,t:3}},
+  dishes:{f1:{dish:"Sliders",course:"Mains",from:"Caterer",serves:40,t:1},f2:{dish:"Mac and cheese",course:"Sides",from:"Tasha",serves:30,contains:"dairy, gluten",t:2},f3:{dish:"Birthday cake",course:"Desserts",from:"Sugar & Spoon Bakery",serves:50,contains:"dairy, eggs, gluten",t:3}},
+  diet:{d1:{name:"Priya S",need:"Vegetarian",t:1}},
+  colors:["#7b3fb8","#e8338f","#f6892f","#ffd166"],
+  notes:"Surprise toast from Jordan's college friends at 8:30. Venue says no open flames except the cake candles."};
+ const ev={meta:{name:"Jordan's 30th",created:now,demo:true,setup:{details:true,content:true,moments:true,menu:true,pin:true,practice:true,share:true}},
+  mods:{m1:{name:"You",pinHash:"demo",owner:true},m2:{name:"Alicia",pinHash:"demo-helper"}},
+  content,players,scores,team:{A:64,B:51},state:{teamNames:{A:"Team Cake",B:"Team Candles"}},guests,album,albumFull,plan};
+ const all={demoV:DEMO_V,partygames:{admin:{defaultEvent:"DEMO"},index:{DEMO:{name:"Jordan's 30th",created:now}},events:{DEMO:ev}}};
+ localStorage.setItem("hm_demo_db",JSON.stringify(all));dbr.ref("demoV").set(DEMO_V);
+ Object.keys(localStorage).filter(k=>/^pg_.*DEMO/.test(k)).forEach(k=>localStorage.removeItem(k));
+ store.set("mod_DEMO",{h:"demo",id:"m1",r:"mod"})}
+function demoReset(){try{localStorage.removeItem("hm_demo_db");Object.keys(localStorage).filter(k=>/^pg_.*DEMO/.test(k)).forEach(k=>localStorage.removeItem(k))}catch(e){}location.reload()}
+if(demoOn()&&window.top!==window)L.tourAuto=true;
+const _connectDemo=connect;
+connect=function(){if(demoOn()){try{demoSeed()}catch(e){console.warn("demo seed",e)}if(!store.get("mod_DEMO",null))store.set("mod_DEMO",{h:"demo",id:"m1",r:"mod"})}_connectDemo()};
+/* a bar on every demo screen: switch views, start over */
+function demoBar(){if(!demoOn()||window.top!==window)return "";const v=(h,l)=>`<a class="${(VIEW===(h||"guest"))?"on":""}" href="games.html?e=DEMO${h?"#"+h:""}">${l}</a>`;
+ return `<div class="demobar"><span class="dbt">Demo</span>${v("moderator","Host")}${v("screen","Big screen")}${v("","Guest")}<a href="demo.html">All three</a><button data-act="demoReset">Start over</button></div>`}
+const _hvDemo=headerView;headerView=function(){return demoBar()+_hvDemo()};
+ACT.demoReset=()=>demoReset();
+/* typing DEMO as an invite code opens the demo */
+const _nwCheckDemo=ACT.nwCheck;ACT.nwCheck=function(){const box=document.querySelector('[data-draft="nw_inv"]');const code=String((box&&box.value)||dv("nw_inv",QS.get("invite")||"")).trim().toUpperCase();if(code==="DEMO"){location.href="demo.html";return}return _nwCheckDemo.apply(this,arguments)};
+if(VIEW==="new"&&QS.get("invite"))setTimeout(()=>{if(!L.newInv)ACT.nwCheck()},900);
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
