@@ -4258,6 +4258,34 @@ render=function(force){_renderPlan(force);if(VIEW==="moderator"&&L.modOK&&L.plan
 
 TOUR.splice(Math.max(0,TOUR.findIndex(x=>/k=live/.test(x.sel))+1),0,{sel:'[data-act=mtab][data-k=plan]',title:"Plan",text:"Everything for the weeks before: a countdown, to-dos with due dates, budget and payments, vendors, seating, food, shopping, documents and reminders. Helpers see the to-dos you give them."});
 
+/* ---- event setup files: save an event's whole setup to a file, or load one into another event ---- */
+const SETUP_SKIP_PLAN=["docs","seats","notesBy","notesT","share"];
+function setupData(){const c=clone(C());const p=clone(D.plan||{});SETUP_SKIP_PLAN.forEach(k=>delete p[k]);
+ if(p.board)Object.keys(p.board).forEach(k=>{if(p.board[k]&&p.board[k].img)delete p.board[k]});
+ return {hostmode:1,kind:"event-setup",saved:new Date().toISOString(),type:evType(),content:c,plan:p}}
+function setupCheck(o){if(!o||typeof o!=="object"||o.kind!=="event-setup"||!o.content||typeof o.content!=="object")return "That isn't a Host Mode setup file.";
+ if(o.content.image&&!/^data:image\/(jpeg|png|webp);base64,/.test(o.content.image))return "The picture in that file can't be used.";return ""}
+function setupCard(){const can=L.isAdmin||L.isOwner;if(!can)return "";const s=L.setupFile;
+ return `<section class="card stack"><h2>Setup file</h2><p class="small muted m0">Save this event's details, colors, games, run of show and plan to a file. Load it into another event to start from it. Guests, photos and scores aren't included.</p>
+ <div class="row"><button class="btn sm" data-act="setupSave">Save the setup to a file</button><label class="btn sm upl">Load a setup file<input type="file" accept=".json,application/json" data-act="setupPick"></label></div>
+ ${s?`<div class="banner soft stack tight"><span><b>${esc(s.content.title||"Untitled")}</b>${s.content.date?" · "+esc(plFmtD(s.content.date)):""} · ${esc((EVENT_TYPES[s.content.eventType]||{}).label||"Event")}</span>
+  <span class="small">This replaces this event's details, colors, games and run of show${s.plan&&Object.keys(s.plan).length?", and adds the file's plan (to-dos, vendors, budget and more)":""}. Guests, photos and scores stay.</span>
+  <div class="row"><button class="btn sm primary" data-act="setupLoad">Load it</button><button class="btn sm" data-act="setupCancel">Cancel</button></div></div>`:""}</section>`}
+const _mEvSetup=mEvent;mEvent=function(){return _mEvSetup()+setupCard()};
+Object.assign(ACT,{
+ setupSave:()=>{const d=setupData();download(`${(C().title||"event").replace(/[^a-z0-9]+/gi,"-").toLowerCase()}.hostmode.json`,new Blob([JSON.stringify(d)],{type:"application/json"}));toast("Setup saved")},
+ setupPick:el=>{const f=el.files&&el.files[0];el.value="";if(!f)return;if(f.size>9e6)return toast("That file is too big");const fr=new FileReader();
+  fr.onload=()=>{let o=null;try{o=JSON.parse(String(fr.result||""))}catch(e){}const bad=setupCheck(o);if(bad)return toast(bad);L.setupFile=o;render(true)};fr.readAsText(f)},
+ setupCancel:()=>{L.setupFile=null;render(true)},
+ setupLoad:async()=>{const o=L.setupFile;if(!o||setupCheck(o))return;if(!(L.isAdmin||L.isOwner))return toast("Only the host can do this");
+  const c=Object.assign(templateFor(o.content.eventType||o.type||"other"),o.content);
+  await ER("content").set(c);
+  if(o.plan&&typeof o.plan==="object"){const u={};Object.keys(o.plan).forEach(k=>{if(SETUP_SKIP_PLAN.includes(k))return;const v=o.plan[k];
+   if(v&&typeof v==="object"&&!Array.isArray(v))Object.keys(v).forEach(id=>{u[k+"/"+id]=v[id]});else u[k]=v});
+   if(Object.keys(u).length)await ER("plan").update(u)}
+  L.setupFile=null;Object.keys(L.drafts).filter(k=>/^ev_|^ed_/.test(k)).forEach(k=>delete L.drafts[k]);toast("Setup loaded");render(true)}
+});
+
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
    This shows a small pill so nobody thinks it's broken, warns before closing with unsent changes,
