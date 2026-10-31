@@ -588,6 +588,39 @@ body:has(.phone){background-image:radial-gradient(900px 440px at 50% -170px,colo
 .glrows .evrow{display:flex;align-items:center;gap:10px;padding:8px 10px}.glrows .evrow .mw0{flex:1;min-width:0}.glrows .evrow .gnum{width:16px}
 .glrows .pill:not(.ok):not(.live){background:color-mix(in srgb,var(--muted) 12%,transparent);color:var(--muted)}
 textarea{font:inherit;color:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card)}
+/* ===== Design: ribbons, title mark, moods ===== */
+@property --mood-a{syntax:'<color>';inherits:true;initial-value:transparent}
+@property --mood-b{syntax:'<color>';inherits:true;initial-value:transparent}
+:root{--mood-a:color-mix(in srgb,var(--violet) 8%,transparent);--mood-b:color-mix(in srgb,var(--leaf) 6%,transparent);transition:--mood-a 2.6s ease,--mood-b 2.6s ease}
+:root[data-mood="warm"]{--mood-a:color-mix(in srgb,var(--flame) 26%,transparent);--mood-b:color-mix(in srgb,var(--gold) 20%,transparent)}
+:root[data-mood="bright"]{--mood-a:color-mix(in srgb,var(--rose) 22%,transparent);--mood-b:color-mix(in srgb,var(--sky) 14%,transparent)}
+:root[data-mood="gold"]{--mood-a:color-mix(in srgb,var(--gold) 30%,transparent);--mood-b:color-mix(in srgb,var(--rose) 12%,transparent)}
+#ribbons{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  background:radial-gradient(120% 70% at 50% 0%,var(--mood-a),transparent 70%),radial-gradient(90% 60% at 50% 105%,var(--mood-b),transparent 70%)}
+#ribbons .rb{position:absolute;inset:-6%}
+#ribbons svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+@media print{#ribbons{display:none}}
+/* big screen: slow drift */
+.drift #ribbons .rb{animation:rbdrift 46s ease-in-out infinite alternate}
+.drift #ribbons .rb1{animation-duration:58s;animation-direction:alternate-reverse}
+.drift #ribbons .rb2{animation-duration:52s}
+.drift #ribbons .rb3{animation-duration:38s;animation-direction:alternate-reverse}
+.drift #ribbons .rb4{animation-duration:64s}
+@keyframes rbdrift{from{transform:translate3d(-2.5%,-1.5%,0)}to{transform:translate3d(2.5%,1.8%,0)}}
+/* big screen: ribbons sweep in, then the welcome appears */
+.opening #ribbons svg{-webkit-mask-image:linear-gradient(90deg,#000 45%,transparent 55%);mask-image:linear-gradient(90deg,#000 45%,transparent 55%);-webkit-mask-size:300% 100%;mask-size:300% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;animation:rbsweep 2.4s cubic-bezier(.55,.05,.3,1) both}
+.opening #ribbons .rb1 svg{animation-delay:.25s}.opening #ribbons .rb2 svg{animation-delay:.5s}.opening #ribbons .rb3 svg{animation-delay:.15s}.opening #ribbons .rb4 svg{animation-delay:.8s;animation-duration:2.6s}
+@keyframes rbsweep{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0 0;mask-position:0 0}}
+.opening .wrap{animation:openin 1.2s 1.5s ease both}
+@keyframes openin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.drift #ribbons .rb,.opening #ribbons svg,.opening .wrap{animation:none}}
+/* the page's own background lets the ribbons show */
+body{background-attachment:fixed}
+/* title mark */
+.brand h1 .tline{display:inline-flex;align-items:flex-end;gap:.18em}
+.brand h1 .tmark{flex:none;margin-bottom:.12em;filter:drop-shadow(0 1px 1px rgba(120,80,0,.18))}
+.tv-mark{display:flex;justify-content:center}
+.gdiv{width:120px;height:1px;margin:2px auto 4px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 </style>
 </head><body>
 <div class="wrap">
@@ -3293,6 +3326,67 @@ Object.assign(ACT,{
 const _guestNamesBase=guestNames;
 guestNames=function(){return _guestNamesBase().concat(glList().flatMap(g=>{const m=glMembers(g);return m.length>1?m:[g.name]}))};
 mTonight=function(){return rosSection()+glSection()+rafSection()+giftSection()};
+
+/* ================= DESIGN: ribbons, title mark, sweep-in, moods, gold ribbon confetti ================= */
+/* 1. The flyer stays on the Event page only. The guest home and big-screen welcome no longer show it. */
+const _pHomeDL=pHome;pHome=function(){const h=_pHomeDL();const img=C().image;return img?h.replace(`<img class="ev-art" src="${img}" alt="">`,""):h};
+const _bsDL=bigscreen;bigscreen=function(){const h=_bsDL();const img=C().image;let out=img?h.replace(`<img class="ev-art big" src="${img}" alt="">`,""):h;
+ return out.replace('<div class="winner">Welcome!</div>',`${titleMark(72)?`<div class="tv-mark">${titleMark(72)}</div>`:""}<div class="eyebrow">${esc(C().title||"")}</div><div class="winner">Welcome!</div><div class="gdiv"></div>`)};
+
+/* 2 + 4. Flowing ribbons in the event's own colors, drawn to fit the screen. Still on phones; they drift on the big screen
+   and sweep in when it first opens. */
+const RIBBONS=[ /* centerline from p0 to p3 (fractions of the screen), max thickness (fraction of the short side), colors, opacity */
+ {p:[[-.1,.2],[.25,-.04],[.68,.98],[1.1,.62]],w:.11,c:["--rose","--flame"],o:.2},
+ {p:[[-.1,.74],[.3,1.04],[.72,-.06],[1.1,.18]],w:.085,c:["--violet","--rose"],o:.15},
+ {p:[[-.1,.92],[.34,.72],[.7,1.12],[1.1,.84]],w:.07,c:["--leaf","--gold"],o:.15},
+ {p:[[-.1,.4],[.32,.66],[.7,.08],[1.1,.46]],w:.035,c:["--flame","--gold"],o:.22},
+ {p:[[-.1,.56],[.3,.26],[.7,.84],[1.1,.34]],line:true,c:["--gold","--gold"],o:.75}];
+const bez=(p,t)=>{const u=1-t;return [0,1].map(i=>u*u*u*p[0][i]+3*u*u*t*p[1][i]+3*u*t*t*p[2][i]+t*t*t*p[3][i])};
+const bezD=(p,t)=>{const u=1-t;return [0,1].map(i=>3*u*u*(p[1][i]-p[0][i])+6*u*t*(p[2][i]-p[1][i])+3*t*t*(p[3][i]-p[2][i]))};
+function ribbonSVG(r,i,W,H){const S=Math.min(W,H),p=r.p.map(q=>[q[0]*W,q[1]*H]),g="rg"+i;
+ const grad=`<defs><linearGradient id="${g}" x1="0" x2="1" y1="0" y2="0"><stop offset="0" style="stop-color:var(${r.c[0]});stop-opacity:0"/><stop offset=".22" style="stop-color:var(${r.c[0]})"/><stop offset=".78" style="stop-color:var(${r.c[1]})"/><stop offset="1" style="stop-color:var(${r.c[1]});stop-opacity:0"/></linearGradient></defs>`;
+ if(r.line){let d="";for(let k=0;k<=60;k++){const q=bez(p,k/60);d+=(k?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)}
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${grad}<path d="${d}" fill="none" stroke="url(#${g})" stroke-width="${Math.max(1.2,S*.0022).toFixed(2)}" opacity="${r.o}"/></svg>`}
+ const top=[],bot=[],N=80;for(let k=0;k<=N;k++){const t=k/N,q=bez(p,t),dv=bezD(p,t),len=Math.hypot(dv[0],dv[1])||1,nx=-dv[1]/len,ny=dv[0]/len;
+  const w=S*r.w*Math.pow(Math.sin(Math.PI*t),.7)*(.55+.45*Math.sin(2*Math.PI*t*1.4+i));top.push([q[0]+nx*w/2,q[1]+ny*w/2]);bot.push([q[0]-nx*w/2,q[1]-ny*w/2])}
+ const d="M"+top.map(q=>q[0].toFixed(1)+" "+q[1].toFixed(1)).join("L")+"L"+bot.reverse().map(q=>q[0].toFixed(1)+" "+q[1].toFixed(1)).join("L")+"Z";
+ return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${grad}<path d="${d}" fill="url(#${g})" opacity="${r.o}"/></svg>`}
+function drawRibbons(){let el=document.getElementById("ribbons");if(!el){el=document.createElement("div");el.id="ribbons";el.setAttribute("aria-hidden","true");document.body.prepend(el)}
+ if(VIEW==="print"){el.innerHTML="";return}const W=Math.round(Math.max(320,innerWidth)*1.12),H=Math.round(Math.max(480,innerHeight)*1.12);
+ el.innerHTML=RIBBONS.map((r,i)=>`<div class="rb rb${i}">${ribbonSVG(r,i,W,H)}</div>`).join("")}
+let ribT=null,ribW=0;addEventListener("resize",()=>{if(Math.abs(innerWidth-ribW)<40&&VIEW!=="screen")return;clearTimeout(ribT);ribT=setTimeout(()=>{ribW=innerWidth;drawRibbons()},250)});
+ribW=innerWidth;drawRibbons();
+if(VIEW==="screen"&&!reduceMotion()){document.documentElement.classList.add("drift","opening");setTimeout(()=>document.documentElement.classList.remove("opening"),4600)}
+
+/* 3. A small gold mark by the event title: songbird, rose or none, chosen on the Event tab. */
+const MARKS={bird:{label:"Songbird",vb:"0 0 48 32",d:"M5 23 L11 20.5 C12 15 17 11.5 23 11.5 C25 9 29 8.5 31.5 10.5 L35.5 11.2 L32 12.8 C33 17 30 22.5 23 24 C17 25.3 12 24.5 9 23.5 Z M14 19 C17 15.5 22 15 25 17 C22 18 18.5 20 16 22.5 M20 24.3 L19.5 26.8 M23.5 23.8 L23.5 26.6 M8 27.8 C17 26.3 28 26.6 42 25.2 M36 25.6 C38 22.5 41.5 22 43 23 C41.5 25 39 26 36 25.6 Z",eye:[29.6,11.3]},
+ rose:{label:"Rose",vb:"0 0 32 32",d:"M16 9 C19.5 9 21 11.5 20 14 C19 16.5 15.5 16.8 14 15 C12.5 13.2 13.5 11 15.5 11 C17 11 17.6 12.4 16.8 13.4 M11 11.5 C9.5 15 11 19.5 16 19.5 C21 19.5 23 15.5 21.5 11.5 M12.5 8.5 C14 6.5 18 6.5 19.5 8.5 M16 19.5 C16 23 15.5 26 14.5 29.5 M15.6 24 C18 22 21.5 22.5 22.5 23.5 C20.5 25.5 18 25.5 15.6 24 Z"}};
+const markKind=()=>{const m=C().mark;if(m==="none")return null;if(MARKS[m])return m;const ty=evType();return ty==="baby"?"bird":["wedding","engagement","anniversary"].includes(ty)?"rose":null};
+function markSVG(k,size){const m=MARKS[k];if(!m)return "";const id="gm"+k+size;
+ return `<svg class="tmark" viewBox="${m.vb}" width="${size}" height="${Math.round(size*(+m.vb.split(" ")[3])/(+m.vb.split(" ")[2]))}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dc83"/><stop offset=".5" style="stop-color:var(--gold)"/><stop offset="1" stop-color="#9c6b00"/></linearGradient></defs><path d="${m.d}" fill="none" stroke="url(#${id})" stroke-width="${size>=40?1.7:1.4}" stroke-linecap="round" stroke-linejoin="round"/>${m.eye?`<circle cx="${m.eye[0]}" cy="${m.eye[1]}" r=".95" fill="url(#${id})"/>`:""}</svg>`}
+const titleMark=size=>{const k=markKind();return k?markSVG(k,size):""};
+const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
+const _mEventDL=mEvent;mEvent=function(){const cur=markKind()||"none";const b=(k,l)=>`<button class="btn sm ${cur===k?"primary":""}" data-act="setMark" data-k="${k}" aria-pressed="${cur===k}">${k==="none"?"":markSVG(k,22)} ${l}</button>`;
+ return _mEventDL()+`<section class="card stack"><h2>Title mark</h2><p class="small muted m0">A small gold drawing beside the event title on guests' phones and the big screen.</p><div class="row">${b("bird","Songbird")}${b("rose","Rose")}${b("none","None")}</div></section>`};
+ACT.setMark=el=>{ER("content/mark").set(el.dataset.k);toast(el.dataset.k==="none"?"Title mark off":"Title mark updated")};
+
+/* 5. Guests' screens shift color through the night: warm for dinner and moments, bright for games, gold for winners. */
+const WARM_MOMENTS=/dinner|cake|toast|firstdance|gifts|story|years/;
+function moodNow(){const s=st();if(s.ended||s.showWinner||(s.raffle&&s.raffle.show)||s.reveal&&now()<(s.reveal.at||0)+15000)return "gold";
+ if(s.moment&&WARM_MOMENTS.test(s.moment.id||""))return "warm";if(s.live)return "bright";return "calm"}
+const _renderDL=render;render=function(f){_renderDL(f);if(["guest","screen","album","keepsake"].includes(VIEW)){const m=moodNow();if(document.documentElement.dataset.mood!==m)document.documentElement.dataset.mood=m}};
+
+/* 6. Gold ribbon confetti: curling streamers, mostly gold, with a few in the event colors. */
+confetti=function(n){if(reduceMotion())return;const c=document.createElement("canvas");c.className="confetti";document.body.appendChild(c);const dpr=Math.min(2,window.devicePixelRatio||1);
+ const W=c.width=innerWidth*dpr,H=c.height=innerHeight*dpr;const x=c.getContext("2d");const cs=getComputedStyle(document.documentElement);
+ const gold=[cs.getPropertyValue("--gold").trim()||"#e0a826","#f6dc83","#c98f12","#fff1c2"],col=["--rose","--flame","--violet","--leaf"].map(k=>cs.getPropertyValue(k).trim()||"#e8338f");
+ const ps=[...Array(Math.round((n||140)*.8))].map(()=>{const rib=Math.random()<.7;return {x:W*(.15+Math.random()*.7),y:H*.62,vx:(Math.random()-.5)*15*dpr,vy:-(Math.random()*16+12)*dpr,
+  c:Math.random()<.72?gold[rnd(gold.length)]:col[rnd(col.length)],a:Math.random()*6,va:(Math.random()-.5)*.25,ph:Math.random()*6,len:(Math.random()*18+16)*dpr,wd:(Math.random()*2.2+2.4)*dpr,rib,r:(Math.random()*5+4)*dpr}});
+ const t0=performance.now();(function f(tm){x.clearRect(0,0,W,H);const k=(tm-t0)/1000;
+  ps.forEach(p=>{p.vy+=.4*dpr;p.vx*=.984;if(p.vy>0)p.vy*=.965;p.x+=p.vx+Math.sin(k*3+p.ph)*.8*dpr;p.y+=p.vy;p.a+=p.va;x.save();x.translate(p.x,p.y);x.rotate(p.a);
+   if(p.rib){x.strokeStyle=p.c;x.lineWidth=p.wd;x.lineCap="round";x.beginPath();for(let s=0;s<=10;s++){const u=s/10,yy=(u-.5)*p.len,xx=Math.sin(u*Math.PI*2+k*7+p.ph)*p.len*.18;s?x.lineTo(xx,yy):x.moveTo(xx,yy)}x.stroke()}
+   else{x.fillStyle=p.c;x.beginPath();x.ellipse(0,0,p.r*.6,p.r*Math.abs(Math.cos(k*6+p.ph))*.6+.5,0,0,7);x.fill()}x.restore()});
+  if(tm-t0<3800)requestAnimationFrame(f);else c.remove()})(t0)};
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
