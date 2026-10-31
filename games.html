@@ -839,6 +839,10 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .tbar.n{display:flex;flex-wrap:wrap}.tbar.n>div{flex:1 1 92px;min-width:0}
 .seg.wrap{display:flex;flex-wrap:wrap;border-radius:18px}
 .pill.c{background:color-mix(in srgb,#3aa56b 22%,transparent)}.pill.d{background:color-mix(in srgb,#8a5cc9 22%,transparent)}.pill.e{background:color-mix(in srgb,#d9578a 22%,transparent)}.pill.f{background:color-mix(in srgb,#2aa6a6 22%,transparent)}.pill.g{background:color-mix(in srgb,#c9a227 24%,transparent)}.pill.h{background:color-mix(in srgb,#6b7a8f 22%,transparent)}.pill.i{background:color-mix(in srgb,#b5533c 22%,transparent)}.pill.j{background:color-mix(in srgb,#5a9a2a 22%,transparent)}.pill.k{background:color-mix(in srgb,#3b5bdb 22%,transparent)}.pill.l{background:color-mix(in srgb,#a0522d 22%,transparent)}
+.mbar{height:10px;border-radius:99px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden}.mbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#f7941d,#3dae2b);transition:width .4s}
+.mrow{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;min-height:56px}
+.mrow input{width:26px;height:26px;flex:none;margin:0;accent-color:#3dae2b}.mrow.done b{text-decoration:line-through;opacity:.55}.mrow.late{border-color:#e08a8a}
+.mrow2{flex-wrap:nowrap!important;gap:8px;align-items:flex-start}.mrow2 .btn.xs{flex:none}.mrow2.done b{text-decoration:line-through;opacity:.55}
 </style>
 </head><body>
 <div class="wrap">
@@ -1057,7 +1061,7 @@ const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: r
 
 const QS=new URLSearchParams(location.search);
 const EV=((QS.get("e")||"").toUpperCase().replace(/[^A-Z0-9-]/g,""))||null;
-const VIEW=(()=>{const h=location.hash.slice(1);return ["host","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
+const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";return ["host","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
 const baseURL=()=>location.origin+location.pathname;
 const eventURL=(code,hash)=>baseURL()+"?e="+encodeURIComponent(code)+(hash?"#"+hash:"");
 
@@ -1227,7 +1231,8 @@ function connect(){
  db.ref(".info/serverTimeOffset").on("value",s=>{L.offset=s.val()||0});
  hashPin(DEFAULT_MASTER_PIN).then(h=>{L.defaultHash=h;RT("admin").on("value",s=>{D.admin=s.val()||{};L.masterHash=D.admin.pinHash||L.defaultHash;checkAuth();renderSoon()})});
  if(VIEW==="new"){L.loaded=true;renderSoon();return}
- if(VIEW==="host"){RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
+ if(VIEW==="mate"){mateConnect();return}
+ if(VIEW==="host"){RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
  if(!EV){routeWithoutCode();return}
  subscribeEvent();
 }
@@ -1330,6 +1335,7 @@ function render(force){
  if(L.offline)html=`<div class="card stack"><h2>${t("Can't reach the game server")}</h2><p class="muted">${t("Check the internet connection, then reload this page.")}</p></div>`;
  else if(VIEW==="host")html=hostView();
  else if(VIEW==="new")html=newEventView();
+ else if(VIEW==="mate")html=mateView();
  else if(!EV)html=L.loaded?landing():loadingView();
  else if(L.missing)html=landing(true);
  else if(!L.loaded)html=loadingView();
@@ -1364,8 +1370,8 @@ document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("#rv");if(r){const s=st().reveal;if(s&&now()>s.at+1500){r.classList.remove("on");r.innerHTML=""}}});
 
 function headerView(){
- const c=C();const title=VIEW==="host"||VIEW==="new"?"Host Mode":(c.title||"Host Mode");
- const sub=VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":(c.tagline||"");
+ const c=C();const title=VIEW==="host"||VIEW==="new"||VIEW==="mate"?"Host Mode":(c.title||"Host Mode");
+ const sub=VIEW==="mate"?"Your tasks":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":(c.tagline||"");
  const showAa=VIEW==="guest"||VIEW==="album"||VIEW==="keepsake";
  return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span><button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
 function loadingView(){return `<div class="card muted">${t("Loading…")}</div>`}
@@ -1751,8 +1757,8 @@ function hostView(){
  if(!L.loaded)return loadingView();
  if(!L.hostOK)return `<section class="card stack narrow"><div class="eyebrow">Administrator</div><h2>Enter the host PIN</h2><p class="small muted m0">The host PIN is the administrator PIN. It opens every event. It starts as 0102 until you change it.</p><input type="password" inputmode="numeric" id="hpin" data-draft="hpin" value="${esc(dv("hpin",""))}"><button class="btn primary" data-act="hostPin">Open</button></section>`;
  const tab=(k,l)=>`<button data-act="hostTab" data-k="${k}" aria-pressed="${(L.hostTab||"events")===k}">${l}</button>`;
- const body={events:hEvents,invites:hInvites,leads:hLeads,archives:hArchives,themes:hThemes,library:hLibrary,settings:hSettings}[L.hostTab||"events"]();
- return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("leads","Contacts"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
+ const body={events:hEvents,invites:hInvites,team:hTeam,leads:hLeads,archives:hArchives,themes:hThemes,library:hLibrary,settings:hSettings}[L.hostTab||"events"]();
+ return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("team","Teammates"+(mateBehind()?` <span class="pill warn">${mateBehind()}</span>`:""))}${tab("leads","Contacts"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
 function hEvents(){const ev=D.events||{},def=D.admin.defaultEvent;const keys=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));const th=D.themes||{};
  return `<section class="card stack"><h2>Your events</h2>${keys.length?keys.map(k=>`<div class="gamerow evrow"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}</div></div>
  <div class="row">${L.confirm==="del:"+k?`<span class="small">Delete everything?</span><button class="btn sm gold" data-act="delEvent" data-k="${k}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm primary" data-act="openMod" data-k="${k}">Console</button><a class="btn sm" href="${esc(eventURL(k))}" target="_blank" rel="noopener">Guest view</a><a class="btn sm" href="${esc(eventURL(k,"screen"))}" target="_blank" rel="noopener">Big screen</a>${def===k?"":`<button class="btn sm" data-act="setMain" data-k="${k}">Make main</button>`}<button class="btn sm" data-act="askDel" data-k="${k}">Delete</button>`}</div></div>`).join(""):'<p class="small muted m0">No events yet.</p>'}</section>
@@ -3246,7 +3252,7 @@ Object.assign(HINTS,{
 function setupSteps(){const s=(D.meta&&D.meta.setup)||{},c=C();
  return [
   {k:"details",done:!!s.details,label:"Add the event details",go:"event",tip:"Event tab: title, guests of honor and date, then Save details."},
-  {k:"pin",done:!!s.pin||!s.reset&&!!Object.keys(D.mods||{}).length,label:"Add your moderators",go:"event",tip:"Event tab → Moderators. Give each helper their own PIN. You can remove anyone at any time."},
+  {k:"pin",done:!!s.pin||!s.reset&&!!Object.keys(D.mods||{}).length,label:"Add your moderators",go:"event",tip:"Event tab → Moderators. Give each teammate their own PIN. You can remove anyone at any time."},
   {k:"content",done:!!s.content,label:"Review the games and questions",go:"content",tip:"Content tab. Edit questions or use Get ideas with AI."},
   {k:"moments",done:!!s.moments,label:"Plan the moments",go:"moments",tip:"Moments tab. Add photos and songs, set up the reveal and check the evening order."},
   {k:"menu",done:!!s.menu,label:"Set up the menu (optional)",go:"menu",tip:"Menu tab. Type it or upload a picture, and choose a fixed menu or let guests choose."},
@@ -3437,19 +3443,19 @@ function rosRow(x,i,next){const done=(D.rosDone||{})[x.k],late=rosLate(x),ed=L.r
   <label class="stack tight"><span class="small">Note (optional)</span><input type="text" data-draft="re_note" value="${esc(dv("re_note",x.note||""))}"></label></div>
   <div class="row"><button class="btn sm primary" data-act="rosSave" data-k="${x.k}">Save</button><button class="btn sm" data-act="rosCancel">Cancel</button><button class="btn sm" data-act="rosDel" data-k="${x.k}">Delete</button></div></div>`;
  return `<div class="gamerow evrow ${done?"dim":""} ${next?"on":""}"><span class="gnum rostime">${esc(fmtTime(x.time))||"·"}</span><div class="mw0"><b>${esc(x.title||"")}</b> ${done?`<span class="pill ok">✓ Done</span>`:late?'<span class="pill warn">Running late</span>':next?'<span class="pill live">Up next</span>':""}
-  <div class="small muted">${esc(helperName(x.who))}${x.note?" · "+esc(x.note):""}${done?` · checked off by ${esc(done.by||"a helper")}`:""}</div></div>
+  <div class="small muted">${esc(helperName(x.who))}${x.note?" · "+esc(x.note):""}${done?` · checked off by ${esc(done.by||"a teammate")}`:""}</div></div>
   <div class="row"><button class="btn sm ${done?"":"primary"}" data-act="rosDone" data-k="${x.k}">${done?"Undo":"Done"}</button><button class="btn sm" data-act="rosEditOpen" data-k="${x.k}" aria-label="Edit ${esc(x.title||"")}">Edit</button></div></div>`}
 function rosWhoOpts(sel){const m=D.mods||{};return `<option value="">Everyone</option>${Object.keys(m).map(id=>`<option value="${id}" ${sel===id?"selected":""}>${esc(m[id].name)}</option>`).join("")}`}
 function rosSection(){const items=rosItems(),nextI=items.findIndex(x=>!(D.rosDone||{})[x.k]);const done=items.filter(x=>(D.rosDone||{})[x.k]).length;
  const mine=L.modId?items.filter(x=>x.who===L.modId&&!(D.rosDone||{})[x.k]):[];
  return `<section class="card stack gilt"><div class="row between"><h2>Run of show</h2>${items.length?`<span class="pill">${done} of ${items.length} done</span>`:""}</div>
  ${mine.length?`<div class="nudge"><b>Your jobs:</b> ${mine.map(x=>`${esc(fmtTime(x.time))} ${esc(x.title)}`).join(" · ")}</div>`:""}
- ${items.length?`<div class="stack tight">${items.map((x,i)=>rosRow(x,i,i===nextI)).join("")}</div>`:`<p class="small muted m0">Plan the evening hour by hour and give each job to a helper. Start from the suggested plan and change anything.</p><button class="btn primary as" data-act="rosStarter">Use the suggested plan</button>`}
+ ${items.length?`<div class="stack tight">${items.map((x,i)=>rosRow(x,i,i===nextI)).join("")}</div>`:`<p class="small muted m0">Plan the evening hour by hour and give each job to a teammate. Start from the suggested plan and change anything.</p><button class="btn primary as" data-act="rosStarter">Use the suggested plan</button>`}
  <details class="stack"><summary class="small"><b>Add a step</b></summary><div class="grid2 g8"><label class="stack tight"><span class="small">Time</span><input type="time" data-draft="rn_time" value="${esc(dv("rn_time",""))}"></label>
   <label class="stack tight"><span class="small">Who</span><select data-draft="rn_who">${rosWhoOpts(dv("rn_who",""))}</select></label>
   <label class="stack tight"><span class="small">What</span><input type="text" data-draft="rn_title" value="${esc(dv("rn_title",""))}" placeholder="Cut the cake"></label>
   <label class="stack tight"><span class="small">Note (optional)</span><input type="text" data-draft="rn_note" value="${esc(dv("rn_note",""))}"></label></div><button class="btn sm primary as" data-act="rosAdd">Add step</button></details>
- ${Object.keys(D.mods||{}).length?"":`<p class="small muted m0">Add helpers on the Event tab, then assign them steps here. Each helper sees their own jobs when they sign in.</p>`}</section>`}
+ ${Object.keys(D.mods||{}).length?"":`<p class="small muted m0">Add teammates on the Event tab, then assign them steps here. Each teammate sees their own jobs when they sign in.</p>`}</section>`}
 
 /* ---- diaper raffle ---- */
 /* Baby showers start with the diaper raffle on. Every other event gets a general raffle, off until someone turns it on. */
@@ -3459,7 +3465,7 @@ function rafCfg(){const r=C().raffle||{},baby=evType()==="baby",min=+(C().raffle
 const rafList=()=>Object.keys(D.raf||{}).map(k=>Object.assign({k},D.raf[k])).sort((a,b)=>(a.t||0)-(b.t||0));
 const rafWon=()=>Object.keys(D.rafWins||{}).map(k=>D.rafWins[k]).sort((a,b)=>(a.t||0)-(b.t||0));
 function rafSection(){const cfg=rafCfg();
- if(!cfg.on)return `<section class="card row between"><div><h2>Raffle</h2><p class="small muted m0">Optional. Helpers enter guests by name, one entry each, and you draw the winner on the big screen.</p></div><button class="btn sm" data-act="rafOn">Add a raffle</button></section>`;
+ if(!cfg.on)return `<section class="card row between"><div><h2>Raffle</h2><p class="small muted m0">Optional. Teammates enter guests by name, one entry each, and you draw the winner on the big screen.</p></div><button class="btn sm" data-act="rafOn">Add a raffle</button></section>`;
  const list=rafList(),won=rafWon(),wonSet=new Set(won.map(w=>normName(w.name))),left=list.filter(x=>!wonSet.has(normName(x.name))).length;const r=st().raffle,onTv=r&&typeof r==="object"&&r.show;
  return `<section class="card stack gilt"><div class="row between"><h2>${esc(cfg.name)}</h2><span class="pill gold">${list.length} entered</span></div>
  ${cfg.rule?`<p class="small muted m0">${esc(cfg.rule)}</p>`:""}
@@ -3470,7 +3476,7 @@ function rafSection(){const cfg=rafCfg();
  ${won.length?`<p class="m0">Winner${won.length>1?"s":""}: ${won.map(w=>`<b>${esc(w.name)}</b>`).join(", ")}</p>`:""}
  <details><summary class="small">Raffle settings</summary><div class="stack tight">
   <label class="stack tight"><span class="small">Name</span><input type="text" data-draft="rs_name" value="${esc(dv("rs_name",cfg.name))}" placeholder="Raffle"></label>
-  <label class="stack tight"><span class="small">Who can enter (shown to helpers)</span><input type="text" data-draft="rs_rule" value="${esc(dv("rs_rule",cfg.rule))}" placeholder="One entry per guest."></label>
+  <label class="stack tight"><span class="small">Who can enter (shown to teammates)</span><input type="text" data-draft="rs_rule" value="${esc(dv("rs_rule",cfg.rule))}" placeholder="One entry per guest."></label>
   <label class="stack tight"><span class="small">Also log as a gift (optional)</span><input type="text" data-draft="rs_gift" value="${esc(dv("rs_gift",cfg.giftSet))}" placeholder="Leave blank to skip"></label>${giftOn()?"":`<span class="small muted">Turn on the gift log to use this.</span>`}
   <div class="row"><button class="btn sm primary" data-act="rafCfgSave">Save</button><button class="btn sm" data-act="rafOff">Turn the raffle off</button></div></div></details></section>`}
 const RAF_MS=5200;
@@ -3486,7 +3492,7 @@ if(VIEW==="screen")setInterval(()=>{const r=st().raffle;if(!r||typeof r!=="objec
 /* ---- gift log ---- */
 const giftList=()=>Object.keys(D.gifts||{}).map(k=>Object.assign({k},D.gifts[k])).sort((a,b)=>(a.t||0)-(b.t||0));
 const giftOn=()=>{const c=C().giftLog||{};return c.on!=null?!!c.on:Object.keys(D.gifts||{}).length>0};
-function giftSection(){if(!giftOn())return `<section class="card row between"><div><h2>Gift log</h2><p class="small muted m0">Optional. Helpers note who gave what as gifts are opened, and you get a list for thank-you notes.</p></div><button class="btn sm" data-act="gfOn">Add a gift log</button></section>`;
+function giftSection(){if(!giftOn())return `<section class="card row between"><div><h2>Gift log</h2><p class="small muted m0">Optional. Teammates note who gave what as gifts are opened, and you get a list for thank-you notes.</p></div><button class="btn sm" data-act="gfOn">Add a gift log</button></section>`;
  const g=giftList(),thanked=g.filter(x=>x.thanked).length;const hon=C().honorees||"the guests of honor";
  return `<section class="card stack"><div class="row between"><h2>Gift log</h2><span class="pill">${g.length} gift${g.length===1?"":"s"}</span></div>
  <p class="small muted m0">Jot down each gift as it's opened. ${esc(hon)} gets a tidy list for the thank-you notes.</p>
@@ -3507,7 +3513,7 @@ Object.assign(ACT,{
  rosCancel:()=>{L.rosEdit=null;render(true)},
  rosSave:async el=>{const k=el.dataset.k,x=(C().ros||{})[k]||{};const title=dv("re_title",x.title||"").trim();if(!title)return toast("Say what happens");await ER("content/ros/"+k).update({time:dv("re_time",x.time||""),title:title.slice(0,80),note:dv("re_note",x.note||"").trim().slice(0,140),who:dv("re_who",x.who||"")});L.rosEdit=null;render(true)},
  rosDel:async el=>{await ER("content/ros/"+el.dataset.k).remove();await ER("rosDone/"+el.dataset.k).remove();L.rosEdit=null;render(true)},
- rosDone:el=>{const k=el.dataset.k;if((D.rosDone||{})[k])ER("rosDone/"+k).remove();else{ER("rosDone/"+k).set({by:L.modName||"A helper",t:Date.now()});buzz(30)}},
+ rosDone:el=>{const k=el.dataset.k;if((D.rosDone||{})[k])ER("rosDone/"+k).remove();else{ER("rosDone/"+k).set({by:L.modName||"A teammate",t:Date.now()});buzz(30)}},
  rafAdd:async()=>{const cfg=rafCfg();const name=dv("raf_name","").trim().slice(0,40);if(!name)return toast("Type the guest's name");
   const n=normName(name);if(rafList().some(x=>normName(x.name)===n))return toast(name+" is already in. One entry per guest.");
   const pid=ids().find(i=>normName(P(i).name)===n)||null;const tm=Date.now();
@@ -3536,7 +3542,7 @@ Object.assign(ACT,{
 const _mScoresTonight=mScores;
 mScores=function(){return _mScoresTonight().replace(/<section class="card stack"><h3>Prizes<\/h3>[\s\S]*?<\/section>/,`<section class="card row between"><span class="small">The raffle and gift log are on the <b>Tonight</b> tab.</span><button class="btn sm" data-act="mtab" data-k="tonight">Open Tonight</button></section>`)};
 
-/* helpers see their next job on the Live tab */
+/* teammates see their next job on the Live tab */
 const _mLiveTonight=mLive;
 mLive=function(){const items=rosItems().filter(x=>!(D.rosDone||{})[x.k]);const nx=items.find(rosMine);
  const card=nx?`<section class="card row between gilt"><div><span class="eyebrow">${L.modId&&nx.who===L.modId?"Your next job":"Up next"}</span><div><b>${esc(fmtTime(nx.time))}</b> ${esc(nx.title)}${rosLate(nx)?' <span class="pill warn">Running late</span>':""}</div></div><div class="row"><button class="btn sm primary" data-act="rosDone" data-k="${nx.k}">Done</button><button class="btn sm" data-act="mtab" data-k="tonight">Run of show</button></div></section>`:"";
@@ -3643,7 +3649,7 @@ const markKind=()=>{const m=C().mark;if(m==="none")return null;if(MARKS[m])retur
 function markSVG(k,size){const m=MARKS[k];if(!m)return "";const id="gm"+k+size;
  return `<svg class="tmark" viewBox="${m.vb}" width="${size}" height="${Math.round(size*(+m.vb.split(" ")[3])/(+m.vb.split(" ")[2]))}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dc83"/><stop offset=".5" style="stop-color:var(--gold)"/><stop offset="1" stop-color="#9c6b00"/></linearGradient></defs><path d="${m.d}" fill="none" stroke="url(#${id})" stroke-width="${size>=40?1.7:1.4}" stroke-linecap="round" stroke-linejoin="round"/>${m.eye?`<circle cx="${m.eye[0]}" cy="${m.eye[1]}" r=".95" fill="url(#${id})"/>`:""}</svg>`}
 const titleMark=size=>{const k=markKind();return k?markSVG(k,size):""};
-const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
+const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||VIEW==="mate"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
 const _mEventDL=mEvent;mEvent=function(){const cur=markKind()||"none";const b=(k,l)=>`<button class="btn sm ${cur===k?"primary":""}" data-act="setMark" data-k="${k}" aria-pressed="${cur===k}">${k==="none"?"":markSVG(k,22)} ${l}</button>`;
  return _mEventDL()+`<section class="card stack"><h2>Title mark</h2><p class="small muted m0">A small gold drawing beside the event title on guests' phones and the big screen.</p><div class="row">${b("bird","Songbird")}${b("rose","Rose")}${b("none","None")}</div></section>`};
 ACT.setMark=el=>{ER("content/mark").set(el.dataset.k);toast(el.dataset.k==="none"?"Title mark off":"Title mark updated")};
@@ -3783,7 +3789,7 @@ function parseNotes(txt,count){txt=String(txt||"").replace(/\r/g,"");const out=[
 /* --- who's presenting --- */
 function whoOptions(sel){const mods=D.mods||{},pl=ids().filter(i=>!P(i).bot).sort((a,b)=>String(P(a).name).localeCompare(String(P(b).name)));
  const o=(v,l)=>`<option value="${esc(v)}" ${sel===v?"selected":""}>${esc(l)}</option>`;
- return o("me","Me, on this phone")+(Object.keys(mods).filter(k=>k!==L.modId).length?`<optgroup label="Helpers">${Object.keys(mods).filter(k=>k!==L.modId).map(k=>o("m:"+k,mods[k].name)).join("")}</optgroup>`:"")+(pl.length?`<optgroup label="Guests in the games">${pl.map(i=>o("p:"+i,P(i).name)).join("")}</optgroup>`:"")}
+ return o("me","Me, on this phone")+(Object.keys(mods).filter(k=>k!==L.modId).length?`<optgroup label="Teammates">${Object.keys(mods).filter(k=>k!==L.modId).map(k=>o("m:"+k,mods[k].name)).join("")}</optgroup>`:"")+(pl.length?`<optgroup label="Guests in the games">${pl.map(i=>o("p:"+i,P(i).name)).join("")}</optgroup>`:"")}
 function whoObj(v){if(v&&v.startsWith("m:")){const m=(D.mods||{})[v.slice(2)];if(m)return {mid:v.slice(2),pid:null,name:m.name}}
  if(v&&v.startsWith("p:")&&D.players[v.slice(2)])return {pid:v.slice(2),mid:null,name:P(v.slice(2)).name};
  return {mid:L.modId||"admin",pid:null,name:L.modName||"Moderator"}}
@@ -4028,7 +4034,7 @@ function plHandoff(){const sent=new Set(Object.values(C().ros||{}).map(x=>x&&x.s
  return out.map(x=>Object.assign(x,{sent:sent.has(x.src)})).sort((a,b)=>(a.time||"99")<(b.time||"99")?-1:1)}
 function plHandoffCard(){const h=plHandoff(),todo=h.filter(x=>!x.sent);
  return `<section class="card stack"><div class="row between"><h3 class="m0">Day-of handoff</h3><span class="pill ${todo.length?"warn":"ok"}">${h.length-todo.length} of ${h.length} in the run of show</span></div>
- <p class="small muted m0">To-dos with a time on the day, and vendor arrival times, become steps in the night's run of show on the Tonight tab, with the same helper assigned.</p>
+ <p class="small muted m0">To-dos with a time on the day, and vendor arrival times, become steps in the night's run of show on the Tonight tab, with the same teammate assigned.</p>
  ${h.length?`<div class="stack tight">${h.map(x=>`<div class="plrow ${x.sent?"dim":""}"><span class="gnum">${x.sent?"✓":"·"}</span><div class="mw0 grow"><b>${esc(fmtTime(x.time)||"Any time")}</b> ${esc(x.title)}${x.who?` <span class="pill">${esc(plHelperName(x.who))}</span>`:""}</div></div>`).join("")}</div>
  <div class="row">${todo.length?`<button class="btn sm primary" data-act="plHand">Send ${todo.length} to the run of show</button>`:""}<button class="btn sm" data-act="mtab" data-k="tonight">Open the run of show</button></div>`:'<p class="small muted m0">Nothing timed yet. Give a to-do a time on the day, or a vendor an arrival time.</p>'}</section>`}
 
@@ -4110,7 +4116,7 @@ function plOverview(){const c=C(),n=plEvDays(),host=plHost(),mine=!host&&L.modId
  return cd+today+start+remCard+my+tiles+hand}
 
 function plTaskRow(x){const n=x.due?plDays(x.due):null;const late=!x.done&&n!=null&&n<0,soon=!x.done&&n!=null&&n>=0&&n<=3;
- return plRow("tasks",x,`<b>${esc(x.title)}</b><div class="small muted plmeta">${x.due?`<span class="${late?"bad":soon?"plsoon":""}">${late?"Overdue · ":""}${esc(plWhen(x.due))}</span>`:""}${x.who?`<span class="pill">${esc(plHelperName(x.who)||"Helper")}</span>`:""}${x.time?`<span>On the day at ${esc(fmtTime(x.time))}</span>`:""}${x.note?`<span>${esc(x.note)}</span>`:""}</div>`)}
+ return plRow("tasks",x,`<b>${esc(x.title)}</b><div class="small muted plmeta">${x.due?`<span class="${late?"bad":soon?"plsoon":""}">${late?"Overdue · ":""}${esc(plWhen(x.due))}</span>`:""}${x.who?`<span class="pill">${esc(plHelperName(x.who)||"Teammate")}</span>`:""}${x.time?`<span>On the day at ${esc(fmtTime(x.time))}</span>`:""}${x.note?`<span>${esc(x.note)}</span>`:""}</div>`)}
 
 function plTimeline(){const host=plHost(),all=plItems("tasks");const f=L.plTF||(!host&&L.modId?"mine":"open");
  const show=all.filter(x=>f==="all"||f==="open"&&!x.done||f==="done"&&x.done||f==="mine"&&x.who===L.modId);
@@ -4153,7 +4159,7 @@ function plBudget(){if(!plMoneyOK())return `<section class="card"><p class="m0">
  ${t.budget?`<span class="bar ${t.planned>t.budget?"warnbar":""}"><i style="width:${Math.min(100,t.spent/t.budget*100)}%"></i></span>`:""}
  ${Object.keys(byCat).length?`<div class="stack tight">${Object.keys(byCat).sort((a,b)=>byCat[b].p-byCat[a].p).map(c=>`<div class="plcat"><span class="small">${esc(c)}</span><span class="bar"><i style="width:${byCat[c].p/max*100}%"></i></span><span class="small"><b>${plMoney(byCat[c].p)}</b></span></div>`).join("")}</div>`:""}
  <p class="small muted m0">Vendors you've contacted or booked, shopping and rentals count here automatically. Add anything else below.</p>
- ${plHost()?`<label class="row small plshare"><input type="checkbox" data-act="plShareMoney" ${(PLN().share||{}).money?"checked":""}> Let helpers see the budget, payments and documents</label>`:""}</section>`;
+ ${plHost()?`<label class="row small plshare"><input type="checkbox" data-act="plShareMoney" ${(PLN().share||{}).money?"checked":""}> Let teammates see the budget, payments and documents</label>`:""}</section>`;
  const payCard=`<section class="card stack"><div class="row between"><h3 class="m0">Payments</h3><span class="pill">${pays.filter(p=>p.paid).length} of ${pays.length} paid</span></div>
  ${pays.length?`<div class="stack tight">${pays.map(p=>{const n=p.due?plDays(p.due):null,late=!p.paid&&n!=null&&n<0;return `<div class="plrow ${p.paid?"dim":""}"><input type="checkbox" class="plbox" data-act="plTog" data-l="vendors" data-k="${p.v.k}" data-f="${p.f}" ${p.paid?"checked":""} aria-label="Paid"><div class="mw0 grow"><b>${esc(p.v.name)}</b> · ${p.kind}${p.amt?` <b>${plMoney(p.amt)}</b>`:""}<div class="small ${late?"bad":"muted"}">${p.paid?"Paid":p.due?(late?"Overdue · ":"Due ")+esc(plWhen(p.due)):"No due date"}</div></div></div>`}).join("")}</div>`:'<p class="small muted m0">Add a vendor with a cost, deposit or due date and their payments show up here.</p>'}
  <button class="btn sm as" data-act="plGo" data-k="vend">Go to vendors</button></section>`;
@@ -4233,7 +4239,7 @@ function plBoard(){const items=plItems("board"),cols=(PLN().colors||[]).filter(B
  ${L.plBusy?`<p class="small muted m0">${esc(L.plBusy)}</p>`:""}</section>`;
  const grid=items.length?`<div class="plboard">${items.map(x=>{if(L.plEd&&L.plEd.l==="board"&&L.plEd.k===x.k)return `<div class="pltile2 card">${plEditBox("board",x)}</div>`;
   return `<figure class="pltile2">${x.img?`<button class="plimg" data-act="plImgOpen" data-k="${x.k}">${x.th?`<img src="${esc(x.th)}" alt="${esc(x.caption||"Inspiration photo")}" loading="lazy">`:""}</button>`:x.url?`<a class="pllink" href="${esc(x.url)}" target="_blank" rel="noopener">🔗 ${esc(x.url.replace(/^https?:\/\/(www\.)?/,"").slice(0,40))}</a>`:'<div class="plnote">📝</div>'}
-   <figcaption class="row between"><span class="small mw0">${esc(x.caption||"")}</span><button class="btn sm" data-act="plEdOpen" data-l="board" data-k="${x.k}">Edit</button></figcaption></figure>`}).join("")}</div>`:`<section class="card"><p class="small muted m0">Save photos of cakes, balloon arches and tablescapes you love, links to ideas, and your colors, so helpers and vendors see the same vision.</p></section>`;
+   <figcaption class="row between"><span class="small mw0">${esc(x.caption||"")}</span><button class="btn sm" data-act="plEdOpen" data-l="board" data-k="${x.k}">Edit</button></figcaption></figure>`}).join("")}</div>`:`<section class="card"><p class="small muted m0">Save photos of cakes, balloon arches and tablescapes you love, links to ideas, and your colors, so teammates and vendors see the same vision.</p></section>`;
  const lb=L.plLB?`<button class="lb pllb" data-act="plLBClose" aria-label="Close">${PLI.full&&PLI.full.k===L.plLB?`<img src="${esc(PLI.full.src)}" alt="">`:'<span style="color:#fff">Loading…</span>'}</button>`:"";
  return pal+grid+lb}
 
@@ -4267,10 +4273,10 @@ function plThanksAll(){const out=[];if(giftOn()||Object.keys(D.gifts||{}).length
 function plThanks(){const all=plThanksAll(),d=all.filter(x=>x.done).length,gifts=all.filter(x=>x.src==="gift"),others=plItems("thanks");
  return `<section class="card stack"><div class="row between"><h2 class="m0">Thank-yous</h2><span class="pill gold">${d} of ${all.length} sent</span></div>
  ${all.length?`<span class="bar"><i style="width:${d/all.length*100}%"></i></span>`:""}
- <p class="small muted m0">Gifts from the gift log show up here automatically. Add helpers, vendors and anyone else you want to thank.</p>
+ <p class="small muted m0">Gifts from the gift log show up here automatically. Add teammates, vendors and anyone else you want to thank.</p>
  ${gifts.length?`<div class="stack tight"><div class="eyebrow">Gifts · ${gifts.length}</div>${gifts.map(g=>`<div class="plrow ${g.done?"dim":""}"><input type="checkbox" class="plbox" data-act="gfThank" data-k="${g.k}" ${g.done?"checked":""} aria-label="Thanked"><div class="mw0 grow"><b>${esc(g.name)}</b><div class="small muted">${esc(g.for)}</div></div></div>`).join("")}</div>`:""}
  ${others.length?`<div class="stack tight"><div class="eyebrow">Others · ${others.length}</div>${others.map(x=>plRow("thanks",x,`<b>${esc(x.name)}</b>${x.for?`<div class="small muted">${esc(x.for)}</div>`:""}`)).join("")}</div>`:""}
- <div class="row">${plAddBox("thanks","Add someone")}<button class="btn sm" data-act="plThanksHelpers">Add helpers and booked vendors</button></div>
+ <div class="row">${plAddBox("thanks","Add someone")}<button class="btn sm" data-act="plThanksHelpers">Add teammates and booked vendors</button></div>
  ${all.length?`<div class="row"><button class="btn sm" data-act="plThanksCsv">Download the list</button>${giftOn()?"":`<span class="small muted">Turn on the gift log on the Tonight tab to track gifts.</span>`}</div>`:""}</section>`}
 
 /* ================= actions ================= */
@@ -4366,7 +4372,7 @@ Object.assign(ACT,{
 const _renderPlan=render;
 render=function(force){_renderPlan(force);if(VIEW==="moderator"&&L.modOK&&L.planLoaded&&!L.plNudged&&L.mtab!=="plan"){L.plNudged=true;const n=plBadge();if(n)setTimeout(()=>toast(`${n} planning reminder${n===1?" needs":"s need"} attention. See the Plan tab.`),1200)}};
 
-TOUR.splice(Math.max(0,TOUR.findIndex(x=>/k=live/.test(x.sel))+1),0,{sel:'[data-act=mtab][data-k=plan]',title:"Plan",text:"Everything for the weeks before: a countdown, to-dos with due dates, budget and payments, vendors, seating, food, shopping, documents and reminders. Helpers see the to-dos you give them."});
+TOUR.splice(Math.max(0,TOUR.findIndex(x=>/k=live/.test(x.sel))+1),0,{sel:'[data-act=mtab][data-k=plan]',title:"Plan",text:"Everything for the weeks before: a countdown, to-dos with due dates, budget and payments, vendors, seating, food, shopping, documents and reminders. Teammates see the to-dos you give them."});
 
 /* ---- event setup files: save an event's whole setup to a file, or load one into another event ---- */
 const SETUP_SKIP_PLAN=["docs","seats","notesBy","notesT","share"];
@@ -4398,7 +4404,7 @@ Object.assign(ACT,{
 
 /* ---- Host Mode's own look: the create-event page and the host console wear the brand, not an event's theme ---- */
 const BRAND={colors:{bar:"#0c2147",ground:"#f2f5fa",card:"#ffffff",line:"#d2dbea",ink:"#0c2147",muted:"#4b5b79",hd:"#0f2c5c",hd2:"#b45a00",btn1:"#0f2c5c",btn2:"#1f4f96",rose:"#f7941d",flame:"#f26722",gold:"#f2b134",violet:"#0f2c5c",leaf:"#3dae2b"},fonts:{title:"Montserrat",head:"Montserrat",body:"Figtree",size:15}};
-const brandView=()=>VIEW==="new"||VIEW==="host";
+const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate";
 const _applyThemeBrand=applyTheme;
 applyTheme=function(){_applyThemeBrand();const on=brandView();document.documentElement.classList.toggle("hmbrand",on);if(!on)return;
  setThemeVars(BRAND.colors,BRAND.fonts,true);if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_")};
@@ -4504,6 +4510,76 @@ Object.assign(ACT,{
  leadDel:async el=>{const k=el.dataset.k;if(L.confirm!=="ld"+k){L.confirm="ld"+k;return render(true)}L.confirm=null;await RT("leads/"+k).remove();toast("Deleted")},
  leadCsv:()=>{const rows=[["Name","Email","Phone","Planning","Event date","Note","When"]].concat(leadList().map(x=>[x.name,x.email,x.phone,x.type,x.date,x.note,x.t?new Date(x.t).toLocaleString():""]));download("host-mode-contacts.csv",new Blob(["﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n")],{type:"text/csv"}))}
 });
+
+/* ================= TEAMMATES: a planner's own team, working across all of her events =================
+   partygames/mates/{id} = {name, t, nudge:{t,msg}}     (the id is the invite link: games.html?mate=ID)
+   partygames/mateTasks/{id}/{taskId} = {title, ev, evName, due, note, done, doneAt, by, t}
+   A teammate sees only their own tasks. The planner sees every teammate's progress and can send reminders. */
+D.mates={};D.mtasks={};D.mateMe=null;
+function mateKey(){return new URLSearchParams(location.search).get("mate")||""}
+function mateConnect(){const id=mateKey();if(!id){L.loaded=true;renderSoon();return}
+ RT("mates/"+id).on("value",s=>{D.mateMe=s.val();L.loaded=true;renderSoon()});
+ RT("mateTasks/"+id).on("value",s=>{D.mtasks=Object.assign({},D.mtasks,{[id]:s.val()||{}});renderSoon()})}
+const mateTasksOf=id=>{const t=(D.mtasks||{})[id]||{};return Object.keys(t).map(k=>Object.assign({k},t[k])).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||String(a.due||"9999").localeCompare(String(b.due||"9999"))||(a.t||0)-(b.t||0))};
+const mateStats=id=>{const l=mateTasksOf(id),d=l.filter(x=>x.done).length;return {total:l.length,done:d,open:l.length-d,pct:l.length?Math.round(d/l.length*100):0}};
+const mateToday=()=>new Date().toISOString().slice(0,10);
+const mateLate=x=>!x.done&&x.due&&x.due<mateToday();
+const mateBehind=()=>Object.keys(D.mates||{}).filter(id=>mateTasksOf(id).some(mateLate)).length;
+const mateDue=d=>{if(!d)return "";const t=new Date(d+"T12:00:00");return isNaN(t)?d:t.toLocaleDateString(undefined,{month:"short",day:"numeric"})};
+const mateBar=pct=>`<div class="mbar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>`;
+function mateLink(id){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?mate="+encodeURIComponent(id)}
+
+/* ---- the teammate's own portal ---- */
+function mateView(){
+ const id=mateKey();
+ if(!id||(L.loaded&&!D.mateMe))return `<section class="card stack narrow"><h2>This link isn't working</h2><p class="muted m0">Ask your planner to send you your personal link again.</p></section>`;
+ if(!L.loaded)return loadingView();
+ const me=D.mateMe,l=mateTasksOf(id),st2=mateStats(id),nz=me.nudge||{};
+ const seen=+(store.get("mateSeen_"+id,0)||0),showNudge=nz.t&&nz.t>seen&&st2.open>0;
+ const groups={};l.forEach(x=>{const g=x.evName||x.ev||"General";(groups[g]=groups[g]||[]).push(x)});
+ const row=x=>`<label class="mrow ${x.done?"done":""} ${mateLate(x)?"late":""}"><input type="checkbox" data-act="mateTick" data-k="${x.k}" ${x.done?"checked":""} aria-label="Done: ${esc(x.title)}"><span class="mw0"><b>${esc(x.title)}</b>${x.note?`<span class="small muted db">${esc(x.note)}</span>`:""}${x.due?`<span class="small ${mateLate(x)?"bad":"muted"} db">${mateLate(x)?"Overdue · ":"Due "}${esc(mateDue(x.due))}</span>`:""}</span></label>`;
+ return `${showNudge?`<section class="banner"><span><b>Reminder from your planner:</b> ${esc(nz.msg||"You have open tasks.")}</span><button class="btn xs" data-act="mateSeen">Got it</button></section>`:""}
+ <section class="card stack"><div class="eyebrow">Teammate</div><h2>Hi ${esc(me.name||"there")}</h2>
+ ${st2.total?`<div class="row between small"><span>${st2.done} of ${st2.total} done</span><span class="muted">${st2.open?st2.open+" to go":"All done. Thank you!"}</span></div>${mateBar(st2.pct)}`:`<p class="muted m0">No tasks yet. Your planner will add them here.</p>`}</section>
+ ${Object.keys(groups).map(g=>`<section class="card stack"><h3>${esc(g)}</h3><div class="stack tight">${groups[g].map(row).join("")}</div></section>`).join("")}
+ <p class="small muted tc">You only see your own tasks. Ticking a box tells your planner right away.</p>`}
+
+/* ---- the planner's Teammates tab ---- */
+function hTeam(){
+ const ms=D.mates||{},ids2=Object.keys(ms).sort((a,b)=>(ms[a].t||0)-(ms[b].t||0)),ev=D.events||{};
+ const evOpts=`<option value="">No event (general)</option>${Object.keys(ev).map(k=>`<option value="${esc(k)}" ${dv("mt_ev","")===k?"selected":""}>${esc(ev[k].name||k)}</option>`).join("")}`;
+ const card=id=>{const m=ms[id],s2=mateStats(id),open=L.mateOpen===id,l=mateTasksOf(id);const late=l.filter(mateLate).length;
+  return `<section class="card stack"><div class="row between"><div class="mw0"><h3>${esc(m.name)}</h3><div class="small muted">${s2.total?`${s2.done} of ${s2.total} done${late?` · <span class="bad">${late} overdue</span>`:""}`:"No tasks yet"}</div></div>
+  <div class="row"><button class="btn sm" data-act="copyLink" data-url="${esc(mateLink(id))}">Copy link</button><button class="btn sm" data-act="mateRemind" data-k="${id}" ${s2.open?"":"disabled"}>Remind</button><button class="btn sm" data-act="mateOpen" data-k="${id}" aria-expanded="${open}">${open?"Hide":"Tasks"}</button></div></div>
+  ${s2.total?mateBar(s2.pct):""}
+  ${open?`<div class="stack tight">${l.map(x=>`<div class="row between small mrow2 ${x.done?"done":""}"><span class="mw0"><button class="btn xs" data-act="matePlanTick" data-m="${id}" data-k="${x.k}" aria-label="${x.done?"Mark open":"Mark done"}">${x.done?"✓":"○"}</button> <b>${esc(x.title)}</b>${x.evName?` <span class="muted">· ${esc(x.evName)}</span>`:""}${x.due?` <span class="${mateLate(x)?"bad":"muted"}">· ${mateLate(x)?"overdue ":""}${esc(mateDue(x.due))}</span>`:""}${x.done&&x.by==="mate"?' <span class="pill ok">checked by '+esc(m.name)+'</span>':""}</span><button class="btn xs" data-act="mateTaskDel" data-m="${id}" data-k="${x.k}" aria-label="Delete task">×</button></div>`).join("")||'<span class="small muted">Nothing assigned yet.</span>'}
+  <div class="row small"><button class="btn xs" data-act="mateDelete" data-k="${id}">${L.confirm==="md"+id?"Tap again to remove "+esc(m.name):"Remove teammate"}</button></div></div>`:""}</section>`};
+ const behind=ids2.filter(id=>mateStats(id).open>0&&mateTasksOf(id).some(mateLate));
+ return `<section class="card stack"><div class="row between"><h2>Your teammates</h2>${behind.length?`<button class="btn sm gold" data-act="mateRemindBehind">Remind everyone behind (${behind.length})</button>`:""}</div>
+ <p class="small muted m0">Build your team once. Each teammate gets their own link with a personal checklist, and can work across all your events. They only see their own tasks.</p>
+ <div class="row"><input type="text" class="grow" data-draft="mt_name" maxlength="40" value="${esc(dv("mt_name",""))}" placeholder="Teammate's name"><button class="btn primary" data-act="mateAdd">Add teammate</button></div></section>
+ ${ids2.length?`<section class="card stack"><h3>Give someone a task</h3><div class="grid2 g8"><label class="stack tight"><span class="small">Who</span><select data-draft="mt_who"><option value="">Choose a teammate</option>${ids2.map(id=>`<option value="${id}" ${dv("mt_who","")===id?"selected":""}>${esc(ms[id].name)}</option>`).join("")}<option value="*" ${dv("mt_who","")==="*"?"selected":""}>Everyone</option></select></label>
+ <label class="stack tight"><span class="small">Event</span><select data-draft="mt_ev">${evOpts}</select></label>
+ <label class="stack tight" style="grid-column:1/-1"><span class="small">Task</span><input type="text" data-draft="mt_title" maxlength="120" value="${esc(dv("mt_title",""))}" placeholder="Set up the welcome table"></label>
+ <label class="stack tight"><span class="small">Due date (optional)</span><input type="date" data-draft="mt_due" value="${esc(dv("mt_due",""))}"></label>
+ <label class="stack tight"><span class="small">Note (optional)</span><input type="text" data-draft="mt_note" maxlength="160" value="${esc(dv("mt_note",""))}" placeholder="Bring the extension cords"></label></div>
+ <button class="btn primary as" data-act="mateTaskAdd">Add task</button></section>`:""}
+ ${ids2.map(card).join("")||'<section class="card"><p class="small muted m0">No teammates yet. Add the first one above, then copy their link and text it to them.</p></section>'}`}
+
+Object.assign(ACT,{
+ mateAdd:async()=>{const n=dv("mt_name","").trim().slice(0,40);if(!n)return toast("Type a name first");const r=RT("mates").push();await r.set({name:n,t:Date.now()});L.drafts.mt_name="";L.mateOpen=r.key;toast("Added. Copy their link and send it.");render(true)},
+ mateOpen:el=>{L.mateOpen=L.mateOpen===el.dataset.k?null:el.dataset.k;render(true)},
+ mateDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="md"+id){L.confirm="md"+id;return render(true)}L.confirm=null;await RT("mateTasks/"+id).remove();await RT("mates/"+id).remove();toast("Removed")},
+ mateTaskAdd:async()=>{const who=dv("mt_who",""),title=dv("mt_title","").trim().slice(0,120);if(!who)return toast("Choose who it's for");if(!title)return toast("Type the task");
+  const evc=dv("mt_ev",""),evn=evc&&(D.events||{})[evc]?(D.events[evc].name||evc):"";const base={title,ev:evc||"",evName:evn,due:dv("mt_due",""),note:dv("mt_note","").trim().slice(0,160),done:false,t:Date.now()};
+  const targets=who==="*"?Object.keys(D.mates||{}):[who];const u={};targets.forEach((id,i)=>{u[id+"/"+RT("mateTasks/"+id).push().key]=base});
+  await RT("mateTasks").update(u);["mt_title","mt_note","mt_due"].forEach(k=>delete L.drafts[k]);toast(targets.length>1?"Task added for everyone":"Task added");render(true)},
+ matePlanTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.mtasks||{})[m]||{})[k]||{};await RT(`mateTasks/${m}/${k}`).update({done:!x.done,doneAt:x.done?null:Date.now(),by:x.done?null:"planner"})},
+ mateTaskDel:async el=>{await RT(`mateTasks/${el.dataset.m}/${el.dataset.k}`).remove()},
+ mateRemind:async el=>{const id=el.dataset.k,s2=mateStats(id);await RT("mates/"+id+"/nudge").set({t:Date.now(),msg:`You have ${s2.open} open task${s2.open===1?"":"s"}.`});toast("Reminder sent to "+((D.mates[id]||{}).name||"them"))},
+ mateRemindBehind:async()=>{const u={};Object.keys(D.mates||{}).forEach(id=>{if(mateStats(id).open&&mateTasksOf(id).some(mateLate))u[id+"/nudge"]={t:Date.now(),msg:`You have ${mateTasksOf(id).filter(mateLate).length} overdue task(s).`}});await RT("mates").update(u);toast("Reminders sent")},
+ mateTick:async el=>{const id=mateKey(),k=el.dataset.k,on=el.checked;await RT(`mateTasks/${id}/${k}`).update({done:on,doneAt:on?Date.now():null,by:on?"mate":null});buzz(20)},
+ mateSeen:()=>{store.set("mateSeen_"+mateKey(),Date.now());render(true)}});
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
