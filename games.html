@@ -843,6 +843,10 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .mrow{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;min-height:56px}
 .mrow input{width:26px;height:26px;flex:none;margin:0;accent-color:#3dae2b}.mrow.done b{text-decoration:line-through;opacity:.55}.mrow.late{border-color:#e08a8a}
 .mrow2{flex-wrap:nowrap!important;gap:8px;align-items:flex-start}.mrow2 .btn.xs{flex:none}.mrow2.done b{text-decoration:line-through;opacity:.55}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;padding:2px}.bub{max-width:86%;padding:9px 12px;border-radius:16px;background:var(--card);border:1px solid var(--line);white-space:pre-wrap;word-break:break-word}
+.bub.me{align-self:flex-end;background:color-mix(in srgb,#f7941d 16%,var(--card));border-color:color-mix(in srgb,#f7941d 40%,var(--line))}.bub.them{align-self:flex-start}
+.clfile{padding:8px 0;border-bottom:1px solid var(--line)}.clic{font-size:1.5rem;width:44px;text-align:center;flex:none}.clthumb{width:44px;height:44px;border-radius:10px;object-fit:cover;display:block}
+.clapp{border:1.5px dashed #f7941d;background:color-mix(in srgb,#f7941d 8%,var(--card));margin:6px 0}
 </style>
 </head><body>
 <div class="wrap">
@@ -1061,7 +1065,7 @@ const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: r
 
 const QS=new URLSearchParams(location.search);
 const EV=((QS.get("e")||"").toUpperCase().replace(/[^A-Z0-9-]/g,""))||null;
-const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";return ["host","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
+const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";if(new URLSearchParams(location.search).has("client"))return "client";return ["host","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
 const baseURL=()=>location.origin+location.pathname;
 const eventURL=(code,hash)=>baseURL()+"?e="+encodeURIComponent(code)+(hash?"#"+hash:"");
 
@@ -1232,7 +1236,8 @@ function connect(){
  hashPin(DEFAULT_MASTER_PIN).then(h=>{L.defaultHash=h;RT("admin").on("value",s=>{D.admin=s.val()||{};L.masterHash=D.admin.pinHash||L.defaultHash;checkAuth();renderSoon()})});
  if(VIEW==="new"){L.loaded=true;renderSoon();return}
  if(VIEW==="mate"){mateConnect();return}
- if(VIEW==="host"){RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
+ if(VIEW==="client"){clConnect();return}
+ if(VIEW==="host"){RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});[["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"]].forEach(([p,k])=>RT(p).on("value",s=>{D[k]=s.val()||{};renderSoon()}));RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
  if(!EV){routeWithoutCode();return}
  subscribeEvent();
 }
@@ -1336,6 +1341,7 @@ function render(force){
  else if(VIEW==="host")html=hostView();
  else if(VIEW==="new")html=newEventView();
  else if(VIEW==="mate")html=mateView();
+ else if(VIEW==="client")html=clientView();
  else if(!EV)html=L.loaded?landing():loadingView();
  else if(L.missing)html=landing(true);
  else if(!L.loaded)html=loadingView();
@@ -1370,8 +1376,8 @@ document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("#rv");if(r){const s=st().reveal;if(s&&now()>s.at+1500){r.classList.remove("on");r.innerHTML=""}}});
 
 function headerView(){
- const c=C();const title=VIEW==="host"||VIEW==="new"||VIEW==="mate"?"Host Mode":(c.title||"Host Mode");
- const sub=VIEW==="mate"?"Your tasks":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":(c.tagline||"");
+ const c=C();const title=VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"?"Host Mode":(c.title||"Host Mode");
+ const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":(c.tagline||"");
  const showAa=VIEW==="guest"||VIEW==="album"||VIEW==="keepsake";
  return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span><button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
 function loadingView(){return `<div class="card muted">${t("Loading…")}</div>`}
@@ -1757,8 +1763,8 @@ function hostView(){
  if(!L.loaded)return loadingView();
  if(!L.hostOK)return `<section class="card stack narrow"><div class="eyebrow">Administrator</div><h2>Enter the host PIN</h2><p class="small muted m0">The host PIN is the administrator PIN. It opens every event. It starts as 0102 until you change it.</p><input type="password" inputmode="numeric" id="hpin" data-draft="hpin" value="${esc(dv("hpin",""))}"><button class="btn primary" data-act="hostPin">Open</button></section>`;
  const tab=(k,l)=>`<button data-act="hostTab" data-k="${k}" aria-pressed="${(L.hostTab||"events")===k}">${l}</button>`;
- const body={events:hEvents,invites:hInvites,team:hTeam,leads:hLeads,archives:hArchives,themes:hThemes,library:hLibrary,settings:hSettings}[L.hostTab||"events"]();
- return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("team","Teammates"+(mateBehind()?` <span class="pill warn">${mateBehind()}</span>`:""))}${tab("leads","Contacts"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
+ const body={events:hEvents,invites:hInvites,team:hTeam,clients:hClients,leads:hLeads,archives:hArchives,themes:hThemes,library:hLibrary,settings:hSettings}[L.hostTab||"events"]();
+ return `<div class="console"><nav class="side">${tab("events","Events")}${tab("invites","Invite codes")}${tab("team","Teammates"+(mateBehind()?` <span class="pill warn">${mateBehind()}</span>`:""))}${tab("clients","Clients"+(clAttention()?` <span class="pill warn">${clAttention()}</span>`:""))}${tab("leads","Contacts"+(Object.keys(D.leads||{}).length?` <span class="pill gold">${Object.keys(D.leads).length}</span>`:""))}${tab("archives","Archives")}${tab("themes","Themes")}${tab("library","Game inventory")}${tab("settings","Host settings")}</nav><div class="stack mw0">${body}</div></div>`}
 function hEvents(){const ev=D.events||{},def=D.admin.defaultEvent;const keys=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));const th=D.themes||{};
  return `<section class="card stack"><h2>Your events</h2>${keys.length?keys.map(k=>`<div class="gamerow evrow"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}</div></div>
  <div class="row">${L.confirm==="del:"+k?`<span class="small">Delete everything?</span><button class="btn sm gold" data-act="delEvent" data-k="${k}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm primary" data-act="openMod" data-k="${k}">Console</button><a class="btn sm" href="${esc(eventURL(k))}" target="_blank" rel="noopener">Guest view</a><a class="btn sm" href="${esc(eventURL(k,"screen"))}" target="_blank" rel="noopener">Big screen</a>${def===k?"":`<button class="btn sm" data-act="setMain" data-k="${k}">Make main</button>`}<button class="btn sm" data-act="askDel" data-k="${k}">Delete</button>`}</div></div>`).join(""):'<p class="small muted m0">No events yet.</p>'}</section>
@@ -3649,7 +3655,7 @@ const markKind=()=>{const m=C().mark;if(m==="none")return null;if(MARKS[m])retur
 function markSVG(k,size){const m=MARKS[k];if(!m)return "";const id="gm"+k+size;
  return `<svg class="tmark" viewBox="${m.vb}" width="${size}" height="${Math.round(size*(+m.vb.split(" ")[3])/(+m.vb.split(" ")[2]))}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dc83"/><stop offset=".5" style="stop-color:var(--gold)"/><stop offset="1" stop-color="#9c6b00"/></linearGradient></defs><path d="${m.d}" fill="none" stroke="url(#${id})" stroke-width="${size>=40?1.7:1.4}" stroke-linecap="round" stroke-linejoin="round"/>${m.eye?`<circle cx="${m.eye[0]}" cy="${m.eye[1]}" r=".95" fill="url(#${id})"/>`:""}</svg>`}
 const titleMark=size=>{const k=markKind();return k?markSVG(k,size):""};
-const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||VIEW==="mate"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
+const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
 const _mEventDL=mEvent;mEvent=function(){const cur=markKind()||"none";const b=(k,l)=>`<button class="btn sm ${cur===k?"primary":""}" data-act="setMark" data-k="${k}" aria-pressed="${cur===k}">${k==="none"?"":markSVG(k,22)} ${l}</button>`;
  return _mEventDL()+`<section class="card stack"><h2>Title mark</h2><p class="small muted m0">A small gold drawing beside the event title on guests' phones and the big screen.</p><div class="row">${b("bird","Songbird")}${b("rose","Rose")}${b("none","None")}</div></section>`};
 ACT.setMark=el=>{ER("content/mark").set(el.dataset.k);toast(el.dataset.k==="none"?"Title mark off":"Title mark updated")};
@@ -4404,7 +4410,7 @@ Object.assign(ACT,{
 
 /* ---- Host Mode's own look: the create-event page and the host console wear the brand, not an event's theme ---- */
 const BRAND={colors:{bar:"#0c2147",ground:"#f2f5fa",card:"#ffffff",line:"#d2dbea",ink:"#0c2147",muted:"#4b5b79",hd:"#0f2c5c",hd2:"#b45a00",btn1:"#0f2c5c",btn2:"#1f4f96",rose:"#f7941d",flame:"#f26722",gold:"#f2b134",violet:"#0f2c5c",leaf:"#3dae2b"},fonts:{title:"Montserrat",head:"Montserrat",body:"Figtree",size:15}};
-const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate";
+const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate"||VIEW==="client";
 const _applyThemeBrand=applyTheme;
 applyTheme=function(){_applyThemeBrand();const on=brandView();document.documentElement.classList.toggle("hmbrand",on);if(!on)return;
  setThemeVars(BRAND.colors,BRAND.fonts,true);if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_")};
@@ -4580,6 +4586,166 @@ Object.assign(ACT,{
  mateRemindBehind:async()=>{const u={};Object.keys(D.mates||{}).forEach(id=>{if(mateStats(id).open&&mateTasksOf(id).some(mateLate))u[id+"/nudge"]={t:Date.now(),msg:`You have ${mateTasksOf(id).filter(mateLate).length} overdue task(s).`}});await RT("mates").update(u);toast("Reminders sent")},
  mateTick:async el=>{const id=mateKey(),k=el.dataset.k,on=el.checked;await RT(`mateTasks/${id}/${k}`).update({done:on,doneAt:on?Date.now():null,by:on?"mate":null});buzz(20)},
  mateSeen:()=>{store.set("mateSeen_"+mateKey(),Date.now());render(true)}});
+
+/* ================= CLIENT PORTALS: one private link per client, no account needed =================
+   partygames/clients/{id}      = {name, ev, evName, t, plSeen}      (the id is the link: games.html?client=ID)
+   partygames/clientTasks/{id}/{tid} = {title, owner:"client"|"planner", due, note, show, done, doneAt, by, t}
+   partygames/clientMsgs/{id}/{mid}  = {from:"client"|"planner", text, t}
+   partygames/clientFiles/{id}/{fid} = {name, kind:"photo"|"guests"|"doc", size, by, t, thumb?, share?, count?, status?}
+   partygames/clientBlobs/{id}/{fid} = the file itself as a data URL (kept apart so lists stay light) */
+D.clients={};D.ctasks={};D.cmsgs={};D.cfiles={};D.cliMe=null;
+const CL_MAX=10*1024*1024;
+function clKey(){return new URLSearchParams(location.search).get("client")||""}
+function clConnect(){const id=clKey();if(!id){L.loaded=true;renderSoon();return}
+ RT("clients/"+id).on("value",s=>{D.cliMe=s.val();L.loaded=true;renderSoon()});
+ RT("clientTasks/"+id).on("value",s=>{D.ctasks=Object.assign({},D.ctasks,{[id]:s.val()||{}});renderSoon()});
+ RT("clientMsgs/"+id).on("value",s=>{D.cmsgs=Object.assign({},D.cmsgs,{[id]:s.val()||{}});renderSoon()});
+ RT("clientFiles/"+id).on("value",s=>{D.cfiles=Object.assign({},D.cfiles,{[id]:s.val()||{}});renderSoon()})}
+const clList=(src,id)=>{const o=(D[src]||{})[id]||{};return Object.keys(o).map(k=>Object.assign({k},o[k]))};
+const clVisible=x=>x.owner==="client"||!!x.show;
+const clTasksOf=(id,all)=>clList("ctasks",id).filter(x=>all||clVisible(x)).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||String(a.due||"9999").localeCompare(String(b.due||"9999"))||(a.t||0)-(b.t||0));
+const clStats=(id,all)=>{const l=clTasksOf(id,all),d=l.filter(x=>x.done).length;return {total:l.length,done:d,open:l.length-d,pct:l.length?Math.round(d/l.length*100):0}};
+const clMsgsOf=id=>clList("cmsgs",id).sort((a,b)=>(a.t||0)-(b.t||0));
+const clFilesOf=(id,forClient)=>clList("cfiles",id).filter(f=>!forClient||f.by==="client"||f.share).sort((a,b)=>(b.t||0)-(a.t||0));
+const clUnread=id=>{const c=(D.clients||{})[id]||{};return clMsgsOf(id).filter(m=>m.from==="client"&&(m.t||0)>(c.plSeen||0)).length};
+const clPending=id=>clFilesOf(id).filter(f=>f.kind==="guests"&&f.status==="pending").length;
+const clAttention=()=>Object.keys(D.clients||{}).reduce((n,id)=>n+clUnread(id)+clPending(id),0);
+const clLate=x=>!x.done&&x.due&&x.due<mateToday();
+function clLink(id){return location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?client="+encodeURIComponent(id)}
+const clMB=n=>n<1048576?Math.max(1,Math.round(n/1024))+" KB":(n/1048576).toFixed(n>=10485760?0:1)+" MB";
+const clAgo=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<60?"just now":s<3600?Math.floor(s/60)+" min ago":s<86400?Math.floor(s/3600)+" hr ago":new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"})};
+
+/* ---- reading and shrinking files ---- */
+const clUnesc=s=>String(s).replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&");
+async function clXlsxToCsv(file){if(!window.JSZip)throw new Error("nozip");const z=await JSZip.loadAsync(await file.arrayBuffer());const strs=[];const ss=z.file("xl/sharedStrings.xml");
+ if(ss){const x=await ss.async("string");(x.match(/<si[\s\S]*?<\/si>/g)||[]).forEach(si=>strs.push(clUnesc((si.match(/<t[^>]*>[\s\S]*?<\/t>/g)||[]).map(t=>t.replace(/<[^>]+>/g,"")).join(""))))}
+ const sh=z.file("xl/worksheets/sheet1.xml");if(!sh)throw new Error("nosheet");const x=await sh.async("string");const rows=[];
+ (x.match(/<row[\s\S]*?<\/row>/g)||[]).forEach(r=>{const cells=[];(r.match(/<c [^>]*?(?:\/>|>[\s\S]*?<\/c>)/g)||[]).forEach(c=>{const ref=(c.match(/ r="([A-Z]+)\d+"/)||[])[1]||"A",col=ref.split("").reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0)-1;
+  const t=(c.match(/ t="(\w+)"/)||[])[1],v=(c.match(/<v>([\s\S]*?)<\/v>/)||[])[1],is=(c.match(/<is>[\s\S]*?<\/is>/)||[])[0];cells[col]=t==="s"?strs[+v]||"":is?clUnesc(is.replace(/<[^>]+>/g,"")):clUnesc(v||"")});rows.push(Array.from(cells,c=>c==null?"":c))});
+ return rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(",")).join("\n")}
+function clShrink(file,max,q){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error("read"));fr.onload=()=>{const img=new Image();img.onerror=()=>rej(new Error("img"));img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext("2d").drawImage(img,0,0,c.width,c.height);res({data:c.toDataURL("image/jpeg",q),w:c.width,h:c.height})};img.src=fr.result};fr.readAsDataURL(file)})}
+const clReadURL=f=>new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error("read"));fr.onload=()=>res(String(fr.result));fr.readAsDataURL(f)});
+async function clSave(id,meta,data){const k=RT("clientFiles/"+id).push().key;await RT(`clientBlobs/${id}/${k}`).set(data);await RT(`clientFiles/${id}/${k}`).set(Object.assign({t:Date.now()},meta));return k}
+async function clGetBlob(id,k){const s=await RT(`clientBlobs/${id}/${k}`).once("value");return s.val()||""}
+async function clOpen(id,k,name,kind){toast("Opening…");const d=await clGetBlob(id,k);if(!d)return toast("That file is no longer there");
+ try{let url=d,rev=false;if(d.startsWith("data:")){const b=await (await fetch(d)).blob();url=URL.createObjectURL(b);rev=true}
+  if(kind==="guests"){const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove()}else{const w=window.open(url,"_blank");if(!w){const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove()}}
+  if(rev)setTimeout(()=>URL.revokeObjectURL(url),60000)}catch(e){toast("Couldn't open that file")}}
+
+/* ---- the client's portal ---- */
+function clientView(){
+ const id=clKey();
+ if(!id||(L.loaded&&!D.cliMe))return `<section class="card stack narrow"><h2>This link isn't working</h2><p class="muted m0">Ask your planner to send you your personal link again.</p></section>`;
+ if(!L.loaded)return loadingView();
+ const me=D.cliMe,tab=L.clTab||"home",ms=clMsgsOf(id),seen=+(store.get("clSeen_"+id,0)||0),newMsgs=ms.filter(m=>m.from==="planner"&&(m.t||0)>seen).length;
+ const nav=(k,l,b)=>`<button data-act="clTab" data-k="${k}" aria-pressed="${tab===k}">${l}${b?` <span class="pill warn">${b}</span>`:""}</button>`;
+ const head=`<section class="card stack"><div class="eyebrow">${esc(me.evName||"Your event")}</div><h2>Hi ${esc(me.name||"there")}</h2><div class="seg wrap" role="group" aria-label="Sections">${nav("home","Overview")}${nav("todo","To-do")}${nav("files","Uploads")}${nav("chat","Messages",newMsgs)}</div></section>`;
+ const err=L.clErr?`<section class="banner"><span><b>${esc(L.clErr.title)}</b> ${esc(L.clErr.text)}</span><span class="row"><button class="btn xs primary" data-act="clHelp">Message my planner</button><button class="btn xs" data-act="clErrX">Close</button></span></section>`:"";
+ return head+err+({home:clHome,todo:clTodo,files:clFilesView,chat:clChat}[tab]||clHome)(id,me)}
+const clRow=(x,mine)=>`<label class="mrow ${x.done?"done":""} ${clLate(x)?"late":""}"><input type="checkbox" data-act="clTick" data-k="${x.k}" ${x.done?"checked":""} ${mine?"":"disabled"} aria-label="${esc(x.title)}"><span class="mw0"><b>${esc(x.title)}</b>${x.note?`<span class="small muted db">${esc(x.note)}</span>`:""}${x.due?`<span class="small ${clLate(x)?"bad":"muted"} db">${clLate(x)?"Overdue · ":"Due "}${esc(mateDue(x.due))}</span>`:""}</span></label>`;
+function clHome(id){const s2=clStats(id),l=clTasksOf(id),mine=l.filter(x=>x.owner==="client"&&!x.done),soon=l.filter(x=>!x.done&&x.due).slice(0,3);
+ return `<section class="card stack"><h3>Where things stand</h3>${s2.total?`<div class="row between small"><span>${s2.done} of ${s2.total} done</span><span class="muted">${s2.open?s2.open+" to go":"All done. Nice work!"}</span></div>${mateBar(s2.pct)}`:`<p class="muted m0">Your planner will add your checklist here soon.</p>`}</section>
+ ${mine.length?`<section class="card stack"><h3>Waiting on you</h3><div class="stack tight">${mine.slice(0,5).map(x=>clRow(x,true)).join("")}</div>${mine.length>5?`<button class="btn sm as" data-act="clTab" data-k="todo">See all ${mine.length}</button>`:""}</section>`:s2.total?`<section class="card"><p class="m0">Nothing is waiting on you right now. 🎉</p></section>`:""}
+ ${soon.length?`<section class="card stack"><h3>Coming up</h3><div class="stack tight">${soon.map(x=>`<div class="row between small"><span>${esc(x.title)}${x.owner==="planner"?' <span class="muted">· your planner</span>':""}</span><span class="${clLate(x)?"bad":"muted"}">${esc(mateDue(x.due))}</span></div>`).join("")}</div></section>`:""}
+ <section class="card stack"><h3>Send something to your planner</h3><div class="row"><button class="btn" data-act="clTab" data-k="files">Upload photos, a guest list or a PDF</button><button class="btn" data-act="clTab" data-k="chat">Ask a question</button></div></section>`}
+function clTodo(id){const l=clTasksOf(id),mine=l.filter(x=>x.owner==="client"),pl=l.filter(x=>x.owner==="planner");
+ return `<section class="card stack"><h3>Yours to do</h3>${mine.length?`<div class="stack tight">${mine.map(x=>clRow(x,true)).join("")}</div>`:'<p class="small muted m0">Nothing yet.</p>'}</section>
+ ${pl.length?`<section class="card stack"><h3>Your planner is handling</h3><div class="stack tight">${pl.map(x=>clRow(x,false)).join("")}</div></section>`:""}`}
+function clFilesView(id){const fs=clFilesOf(id,true);
+ return `<section class="card stack"><h3>Upload</h3><p class="small muted m0">Photos you'd like printed, your guest list, a contract or a floor plan. Files can be up to 10 MB.</p>
+ <div class="row"><label class="btn upl">📷 Photos<input type="file" accept="image/*" multiple data-act="clFile" data-kind="photo"></label><label class="btn upl">📄 PDF or document<input type="file" accept=".pdf,.doc,.docx,.txt,application/pdf" data-act="clFile" data-kind="doc"></label><label class="btn upl">👥 Guest list<input type="file" accept=".csv,.txt,.xlsx,text/csv" data-act="clFile" data-kind="guests"></label></div>
+ <details><summary class="small">Or type or paste guest names</summary><div class="stack tight"><textarea data-draft="cl_names" rows="5" placeholder="One name per line">${esc(dv("cl_names",""))}</textarea><button class="btn sm primary as" data-act="clNames">Send this guest list</button></div></details></section>
+ <section class="card stack"><h3>Your files</h3>${fs.length?`<div class="stack tight">${fs.map(f=>clFileRow(id,f,"client")).join("")}</div>`:'<p class="small muted m0">Nothing uploaded yet.</p>'}</section>`}
+function clFileRow(id,f,who){const icon=f.kind==="photo"?(f.thumb?`<img class="clthumb" src="${f.thumb}" alt="">`:"🖼"):f.kind==="guests"?"👥":"📄";
+ const st3=f.kind==="guests"?(f.status==="imported"?'<span class="pill ok">Added to the guest list</span>':f.status==="dismissed"?'<span class="pill">Not used</span>':'<span class="pill warn">Waiting for your planner</span>'):"";
+ const mineF=(who==="client"&&f.by==="client")||who==="planner";
+ return `<div class="row between clfile"><span class="row mw0"><span class="clic">${icon}</span><span class="mw0"><b class="db">${esc(f.name)}</b><span class="small muted">${f.kind==="guests"&&f.count!=null?f.count+" names · ":""}${clMB(f.size||0)} · ${who==="planner"?(f.by==="client"?"from the client":"you"):(f.by==="planner"?"from your planner":"you")} · ${clAgo(f.t||0)} ${st3}</span></span></span>
+  <span class="row"><button class="btn xs" data-act="clOpen" data-m="${id}" data-k="${f.k}">${f.kind==="guests"?"Download":"Open"}</button>${mineF&&!(who==="client"&&f.kind==="guests"&&f.status==="imported")?`<button class="btn xs" data-act="clFileDel" data-m="${id}" data-k="${f.k}" aria-label="Delete ${esc(f.name)}">×</button>`:""}</span></div>`}
+function clChat(id){store.set("clSeen_"+id,Date.now());const ms=clMsgsOf(id);
+ return `<section class="card stack"><h3>Messages</h3><div class="chat">${ms.length?ms.map(m=>`<div class="bub ${m.from==="client"?"me":"them"}"><span class="small muted db">${m.from==="client"?"You":"Your planner"} · ${clAgo(m.t||0)}</span>${esc(m.text)}</div>`).join(""):'<p class="small muted m0">Ask anything here. Your planner will reply in this thread.</p>'}</div>
+ <div class="row"><textarea class="grow" rows="2" data-draft="cl_msg" maxlength="1000" placeholder="Type a message">${esc(dv("cl_msg",""))}</textarea><button class="btn primary" data-act="clSend" data-from="client">Send</button></div></section>`}
+
+/* ---- the planner's Clients tab ---- */
+function hClients(){
+ const cs=D.clients||{},ids3=Object.keys(cs).sort((a,b)=>(cs[b].t||0)-(cs[a].t||0)),ev=D.events||{};
+ const evSel=(cur,act,extra)=>`<select ${act?`data-act="${act}" ${extra||""}`:'data-draft="cl_ev"'} aria-label="Event"><option value="">No event yet</option>${Object.keys(ev).map(k=>`<option value="${esc(k)}" ${cur===k?"selected":""}>${esc(ev[k].name||k)}</option>`).join("")}</select>`;
+ const card=id=>{const c=cs[id],open=L.cliOpen===id,tab=L.cliTab||"list",s2=clStats(id,true),un=clUnread(id),pd=clPending(id);
+  const sub=(k,l,b)=>`<button class="btn sm ${tab===k?"primary":""}" data-act="cliSub" data-k="${k}">${l}${b?` <span class="pill warn">${b}</span>`:""}</button>`;
+  let body="";
+  if(open&&tab==="list"){const l=clTasksOf(id,true);body=`<div class="stack tight">${l.map(x=>`<div class="row between small mrow2 ${x.done?"done":""}"><span class="mw0"><button class="btn xs" data-act="clPlanTick" data-m="${id}" data-k="${x.k}">${x.done?"✓":"○"}</button> <b>${esc(x.title)}</b> <span class="pill ${x.owner==="client"?"gold":""}">${x.owner==="client"?"client":"you"}</span>${x.owner==="planner"?`<button class="btn xs" data-act="clShow" data-m="${id}" data-k="${x.k}">${x.show?"👁 shown":"hidden"}</button>`:""}${x.due?` <span class="${clLate(x)?"bad":"muted"}">${clLate(x)?"overdue ":""}${esc(mateDue(x.due))}</span>`:""}${x.done&&x.by==="client"?' <span class="pill ok">ticked by client</span>':""}</span><button class="btn xs" data-act="clTaskDel" data-m="${id}" data-k="${x.k}" aria-label="Delete">×</button></div>`).join("")||'<span class="small muted">No items yet.</span>'}</div>
+   <div class="grid2 g8"><label class="stack tight" style="grid-column:1/-1"><span class="small">New checklist item</span><input type="text" data-draft="clt_title" maxlength="120" value="${esc(dv("clt_title",""))}" placeholder="Book the caterer"></label>
+   <label class="stack tight"><span class="small">Whose job</span><select data-draft="clt_owner"><option value="client" ${dv("clt_owner","client")==="client"?"selected":""}>The client</option><option value="planner" ${dv("clt_owner","client")==="planner"?"selected":""}>Me</option></select></label>
+   <label class="stack tight"><span class="small">Due (optional)</span><input type="date" data-draft="clt_due" value="${esc(dv("clt_due",""))}"></label>
+   <label class="stack tight" style="grid-column:1/-1"><span class="small">Note (optional)</span><input type="text" data-draft="clt_note" maxlength="160" value="${esc(dv("clt_note",""))}" placeholder="Get three quotes first"></label></div>
+   <label class="row small"><input type="checkbox" data-act="cltShow" ${dv("clt_show","")==="1"?"checked":""}> If it's my job, show it to the client</label><button class="btn primary as" data-act="clTaskAdd" data-m="${id}">Add item</button>`}
+  if(open&&tab==="chat"){const ms=clMsgsOf(id);body=`<div class="chat">${ms.map(m=>`<div class="bub ${m.from==="planner"?"me":"them"}"><span class="small muted db">${m.from==="planner"?"You":esc(c.name)} · ${clAgo(m.t||0)}</span>${esc(m.text)}</div>`).join("")||'<p class="small muted m0">No messages yet.</p>'}</div>
+   <div class="row"><textarea class="grow" rows="2" data-draft="cl_msg_${id}" maxlength="1000" placeholder="Reply to ${esc(c.name)}">${esc(dv("cl_msg_"+id,""))}</textarea><button class="btn primary" data-act="clSend" data-from="planner" data-m="${id}">Send</button></div>`}
+  if(open&&tab==="files"){const fs=clFilesOf(id);body=`${fs.length?`<div class="stack tight">${fs.map(f=>`${clFileRow(id,f,"planner")}${f.kind==="guests"&&f.status==="pending"?clGuestApprove(id,f,c):""}${f.by==="planner"?`<div class="small muted">${f.share?"Visible to the client":"Private"} · <button class="btn xs" data-act="clFileShare" data-m="${id}" data-k="${f.k}">${f.share?"Make private":"Share with client"}</button></div>`:""}`).join("")}</div>`:'<p class="small muted m0">No files yet.</p>'}
+   <div class="row"><label class="btn sm upl">Upload for the client<input type="file" data-act="clPlanFile"></label><span class="small muted">PDFs and photos, up to 10 MB. Private until you share.</span></div>`}
+  return `<section class="card stack"><div class="row between"><div class="mw0"><h3>${esc(c.name)}</h3><div class="small muted">${esc(c.evName||"No event linked")} · ${s2.total?`${s2.done} of ${s2.total} done`:"no checklist yet"}</div></div>
+  <div class="row">${un?`<span class="pill warn">${un} new</span>`:""}${pd?`<span class="pill gold">${pd} guest list${pd===1?"":"s"}</span>`:""}<button class="btn sm" data-act="copyLink" data-url="${esc(clLink(id))}">Copy link</button><button class="btn sm" data-act="cliOpen" data-k="${id}" aria-expanded="${open}">${open?"Hide":"Open"}</button></div></div>
+  ${s2.total?mateBar(s2.pct):""}
+  ${open?`<div class="row">${sub("list","Checklist")}${sub("chat","Messages",un)}${sub("files","Files",pd)}</div><div class="row small"><span>Event:</span>${evSel(c.ev||"","clSetEv",`data-m="${id}"`)}</div>${body}<div class="row small"><button class="btn xs" data-act="clDelete" data-k="${id}">${L.confirm==="cd"+id?"Tap again to remove "+esc(c.name):"Remove client"}</button></div>`:""}</section>`};
+ return `<section class="card stack"><h2>Your clients</h2><p class="small muted m0">Each client gets a private link to a simple portal: a checklist, uploads, and a message thread with you. No account or app needed.</p>
+ <div class="grid2 g8"><label class="stack tight"><span class="small">Client name</span><input type="text" data-draft="cl_name" maxlength="40" value="${esc(dv("cl_name",""))}" placeholder="Maya and Jordan"></label><label class="stack tight"><span class="small">Event</span>${evSel(dv("cl_ev",""))}</label></div>
+ <button class="btn primary as" data-act="clAdd">Add client</button></section>
+ ${ids3.map(card).join("")||'<section class="card"><p class="small muted m0">No clients yet. Add the first one above, then copy their link and send it.</p></section>'}`}
+function clGuestApprove(id,f,c){const open=L.clPrev===f.k,pv=L.clPrevList||[];
+ return `<div class="card stack tight clapp"><b>Guest list from ${esc(c.name)}: ${f.count||0} names</b>${c.ev?"":`<span class="small bad">Link this client to an event above first.</span>`}
+  <div class="row"><button class="btn xs" data-act="clPreview" data-m="${id}" data-k="${f.k}">${open?"Hide preview":"Preview"}</button><button class="btn xs primary" data-act="clImport" data-m="${id}" data-k="${f.k}" data-mode="merge" ${c.ev?"":"disabled"}>Add to guest list</button><button class="btn xs" data-act="clImport" data-m="${id}" data-k="${f.k}" data-mode="replace" ${c.ev?"":"disabled"}>${L.confirm==="rp"+f.k?"Tap again: replace the list":"Replace the list"}</button><button class="btn xs" data-act="clDismiss" data-m="${id}" data-k="${f.k}">Don't use</button></div>
+  ${open?`<div class="small muted">${pv.slice(0,12).map(g=>esc(g.name)).join(", ")}${pv.length>12?` and ${pv.length-12} more`:""}</div>`:""}
+  <span class="small muted">Adding keeps your current list and skips duplicates. Replacing clears check-ins you've already made.</span></div>`}
+async function clGuestText(id,k){const d=await clGetBlob(id,k);if(!d)return "";return d.startsWith("data:")?await (await fetch(d)).text():d}
+async function clDoImport(id,k,mode){const c=(D.clients||{})[id];if(!c||!c.ev)return toast("Link this client to an event first");const txt=await clGuestText(id,k);const list=parseGuests(txt);if(!list.length)return toast("No names found in that file");
+ const snap=(await ER("guests",c.ev).once("value")).val()||{};const base=mode==="replace"?{}:snap;const have={};Object.keys(base).forEach(g=>{const n=normName(base[g].name);have[n]=(have[n]||0)+1});
+ const seen={},u={},tm=Date.now();let added=0;list.forEach((g,i)=>{const n=normName(g.name);seen[n]=(seen[n]||0)+1;if(seen[n]<=(have[n]||0))return;const e={name:g.name,t:tm+i};if(g.rsvp)e.rsvp=g.rsvp;if(g.invited!=null)e.invited=g.invited;if(g.plusOf)e.plusOf=g.plusOf;u["g"+tm.toString(36)+i]=e;added++});
+ if(mode==="replace")await ER("guests",c.ev).set(u);else if(added)await ER("guests",c.ev).update(u);
+ await RT(`clientFiles/${id}/${k}/status`).set("imported");toast(mode==="replace"?`Guest list replaced with ${added} names`:added?`${added} guest${added===1?"":"s"} added`:"Everyone was already on the list");render(true)}
+
+Object.assign(ACT,{
+ /* planner */
+ clAdd:async()=>{const n=dv("cl_name","").trim().slice(0,40);if(!n)return toast("Type the client's name");const ev=dv("cl_ev",""),en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";const r=RT("clients").push();await r.set({name:n,ev,evName:en,t:Date.now()});delete L.drafts.cl_name;L.cliOpen=r.key;L.cliTab="list";toast("Added. Copy their link and send it.");render(true)},
+ cliOpen:el=>{L.cliOpen=L.cliOpen===el.dataset.k?null:el.dataset.k;L.cliTab="list";L.clPrev=null;render(true)},
+ cliSub:async el=>{L.cliTab=el.dataset.k;L.clPrev=null;if(L.cliTab==="chat"&&L.cliOpen)await RT(`clients/${L.cliOpen}/plSeen`).set(Date.now());render(true)},
+ clSetEv:async el=>{const id=el.dataset.m,ev=el.value,en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";await RT("clients/"+id).update({ev,evName:en});toast(ev?"Linked to "+en:"Unlinked")},
+ clDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="cd"+id){L.confirm="cd"+id;return render(true)}L.confirm=null;await Promise.all(["clientTasks","clientMsgs","clientFiles","clientBlobs","clients"].map(p=>RT(p+"/"+id).remove()));L.cliOpen=null;toast("Removed")},
+ cltShow:el=>{L.drafts.clt_show=el.checked?"1":"0"},
+ clTaskAdd:async el=>{const id=el.dataset.m,title=dv("clt_title","").trim().slice(0,120);if(!title)return toast("Type the item first");const owner=dv("clt_owner","client");
+  await RT(`clientTasks/${id}`).push().set({title,owner,due:dv("clt_due",""),note:dv("clt_note","").trim().slice(0,160),show:owner==="client"?true:dv("clt_show","")==="1",done:false,t:Date.now()});["clt_title","clt_note","clt_due"].forEach(k=>delete L.drafts[k]);toast("Item added");render(true)},
+ clPlanTick:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.ctasks||{})[m]||{})[k]||{};await RT(`clientTasks/${m}/${k}`).update({done:!x.done,doneAt:x.done?null:Date.now(),by:x.done?null:"planner"})},
+ clShow:async el=>{const m=el.dataset.m,k=el.dataset.k,x=((D.ctasks||{})[m]||{})[k]||{};await RT(`clientTasks/${m}/${k}/show`).set(!x.show)},
+ clTaskDel:async el=>{await RT(`clientTasks/${el.dataset.m}/${el.dataset.k}`).remove()},
+ clFileShare:async el=>{const m=el.dataset.m,k=el.dataset.k,f=((D.cfiles||{})[m]||{})[k]||{};await RT(`clientFiles/${m}/${k}/share`).set(!f.share)},
+ clFileDel:async el=>{const m=el.dataset.m,k=el.dataset.k;await RT(`clientBlobs/${m}/${k}`).remove();await RT(`clientFiles/${m}/${k}`).remove();toast("Deleted")},
+ clOpen:el=>{const m=el.dataset.m,k=el.dataset.k,f=((D.cfiles||{})[m]||{})[k]||{};clOpen(m,k,f.name||"file",f.kind)},
+ clPreview:async el=>{const m=el.dataset.m,k=el.dataset.k;if(L.clPrev===k){L.clPrev=null;return render(true)}L.clPrev=k;L.clPrevList=parseGuests(await clGuestText(m,k));render(true)},
+ clImport:async el=>{const m=el.dataset.m,k=el.dataset.k,mode=el.dataset.mode;if(mode==="replace"&&L.confirm!=="rp"+k){L.confirm="rp"+k;return render(true)}L.confirm=null;await clDoImport(m,k,mode)},
+ clDismiss:async el=>{await RT(`clientFiles/${el.dataset.m}/${el.dataset.k}/status`).set("dismissed");toast("Won't be used")},
+ clPlanFile:async el=>{const id=L.cliOpen,f=el.files&&el.files[0];if(!f||!id)return;if(f.size>CL_MAX)return toast("That file is over 10 MB");toast("Uploading…");
+  try{const isImg=/^image\//.test(f.type);let data,thumb;if(isImg){const r=await clShrink(f,1800,.82);data=r.data;thumb=(await clShrink(f,160,.7)).data}else data=await clReadURL(f);
+   await clSave(id,Object.assign({name:f.name.slice(0,80),kind:isImg?"photo":"doc",size:f.size,by:"planner",share:false},thumb?{thumb}:{}),data);toast("Uploaded. It's private until you share it.")}catch(e){toast("Couldn't upload that file")}el.value=""},
+ /* both sides */
+ clSend:async el=>{const from=el.dataset.from,id=from==="client"?clKey():el.dataset.m,key=from==="client"?"cl_msg":"cl_msg_"+id,text=dv(key,"").trim().slice(0,1000);if(!text)return toast("Type a message first");
+  await RT("clientMsgs/"+id).push().set({from,text,t:Date.now()});delete L.drafts[key];if(from==="planner")await RT(`clients/${id}/plSeen`).set(Date.now());render(true)},
+ /* client */
+ clTab:el=>{L.clTab=el.dataset.k;render(true)},
+ clTick:async el=>{const id=clKey(),k=el.dataset.k,on=el.checked;await RT(`clientTasks/${id}/${k}`).update({done:on,doneAt:on?Date.now():null,by:on?"client":null});buzz(20)},
+ clErrX:()=>{L.clErr=null;render(true)},
+ clHelp:()=>{const e=L.clErr||{};L.drafts.cl_msg=`Hi! I tried to upload "${e.file||"a file"}"${e.size?` (${clMB(e.size)})`:""} but it didn't work${e.size>CL_MAX?" because it was too large":""}. Can you help?`;L.clErr=null;L.clTab="chat";render(true)},
+ clNames:async()=>{const id=clKey(),txt=dv("cl_names","").trim();if(!txt)return toast("Type or paste some names first");const n=parseGuests(txt).length;if(!n)return toast("No names found");
+  await clSave(id,{name:"Typed guest list.txt",kind:"guests",size:txt.length,by:"client",count:n,status:"pending"},txt);delete L.drafts.cl_names;toast("Sent. Your planner will review it.");render(true)},
+ clFile:async el=>{const id=clKey(),kind=el.dataset.kind,files=[...(el.files||[])];el.value="";if(!files.length)return;
+  for(const f of files){
+   if(f.size>CL_MAX){L.clErr={title:"This file is too big.",text:`"${f.name}" is ${clMB(f.size)}. The limit is 10 MB. Try a smaller version, or message your planner to send it another way.`,file:f.name,size:f.size};render(true);continue}
+   toast("Uploading "+f.name+"…");
+   try{
+    if(kind==="photo"){const r=await clShrink(f,1800,.82),th=await clShrink(f,160,.7);await clSave(id,{name:f.name.slice(0,80),kind:"photo",size:Math.round(r.data.length*.75),by:"client",thumb:th.data},r.data)}
+    else if(kind==="guests"){let txt;if(/\.xlsx$/i.test(f.name)){try{txt=await clXlsxToCsv(f)}catch(e){L.clErr={title:"Couldn't read that spreadsheet.",text:'Please save it as a CSV file ("Download as .csv" in Google Sheets or "Save As" in Excel), or paste the names instead.',file:f.name};render(true);continue}}else txt=await new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>res(String(fr.result||""));fr.readAsText(f)});
+     const n=parseGuests(txt).length;if(!n){L.clErr={title:"No names found in that file.",text:"Use one name per line, or a spreadsheet with a Name column.",file:f.name};render(true);continue}
+     await clSave(id,{name:f.name.slice(0,80),kind:"guests",size:f.size,by:"client",count:n,status:"pending"},txt)}
+    else await clSave(id,{name:f.name.slice(0,80),kind:"doc",size:f.size,by:"client"},await clReadURL(f));
+    toast("Uploaded "+f.name)}catch(e){L.clErr={title:"That upload didn't go through.",text:"Check your connection and try again, or message your planner.",file:f.name,size:f.size};render(true)}}}
+});
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
