@@ -6,7 +6,7 @@ const CACHE = "hostmode-v4";
 const LIBS = /^https:\/\/(www\.gstatic\.com\/firebasejs|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(["games.html", "index.html", "drinks.html", "demo.html"]).catch(() => {})));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(["games.html", "index.html", "hosts.html", "planners.html", "drinks.html", "demo.html"]).catch(() => {})));
   self.skipWaiting();
 });
 self.addEventListener("activate", e => {

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fffaf3">
+<link rel="icon" href="img/icon.svg" type="image/svg+xml">
+<title>Host Mode · For hosts</title>
+<meta name="description" content="Plan your event with guided checklists, welcome guests with one scan, run games and big-screen moments, and keep every memory. All from your phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0c2147;--navy-2:#13306a;--blue:#1f4f96;--sky:#3f74d6;--orange:#f7941d;--flame:#e8650f;--amber:#f7a440;--gold:#f2b134;--green:#3dae2b;--leaf:#2b8a1e;
+ --paper:#fffaf3;--paper-2:#f6f1e8;--card:#ffffff;--ink:#0c2147;--body:#33415c;--soft:#5d6b86;--line:#e7e0d4;--line-2:#d9d0c1;--shadow:0 24px 60px -30px rgba(12,33,71,.35),0 2px 6px -2px rgba(12,33,71,.08)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper);line-height:1.5;overflow-x:hidden}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+.wrap{width:min(1180px,100% - 32px);margin:0 auto}
+h1,h2,h3{font-family:Montserrat,system-ui,sans-serif;letter-spacing:-.03em;margin:0;color:var(--navy)}
+.grad{background:linear-gradient(95deg,#e2600c,var(--orange) 50%,#e8a10e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{font-family:Montserrat,sans-serif;font-weight:800;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#b45a00;display:inline-flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--orange) 60%,var(--green) 60%)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;font-family:Montserrat,sans-serif;font-weight:800;font-size:16px;text-decoration:none;border:1.5px solid var(--line-2);background:#fff;color:var(--navy);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.btn:hover{transform:translateY(-2px);border-color:var(--navy);box-shadow:0 12px 26px -16px rgba(12,33,71,.5)}
+.btn.hot{background:linear-gradient(135deg,var(--orange),var(--flame));border-color:transparent;color:#fff;box-shadow:0 14px 30px -14px rgba(232,101,15,.9);text-shadow:0 1px 1px rgba(120,40,0,.25)}
+.btn.navy{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn svg{flex:none}
+
+/* logo: an H whose crossbar is a switch turned on */
+.logo{display:flex;align-items:center;gap:10px;font-family:Montserrat,sans-serif;font-weight:900;font-size:21px;letter-spacing:-.03em;text-decoration:none;color:var(--navy)}
+.logo svg{width:36px;height:36px;flex:none;filter:drop-shadow(0 6px 10px rgba(12,33,71,.22))}
+.logo span b{color:var(--flame);font-weight:900}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(255,250,243,.82);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:68px}
+.nav nav{display:flex;align-items:center;gap:6px}
+.nav nav a.lnk{padding:10px 14px;border-radius:999px;text-decoration:none;font-weight:600;color:var(--body);font-size:15px}
+.nav nav a.lnk:hover{color:var(--navy);background:var(--paper-2)}
+.nav .btn{min-height:42px;padding:0 18px;font-size:14px}
+@media (max-width:760px){.nav nav a.lnk{display:none}}
+
+/* hero */
+.hero{position:relative;padding:72px 0 48px;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:-120px 0 0;z-index:-2;background:
+ radial-gradient(640px 480px at 82% 22%,rgba(63,116,214,.22),transparent 70%),
+ radial-gradient(560px 420px at 96% 78%,rgba(247,148,29,.24),transparent 70%),
+ radial-gradient(620px 480px at 4% 6%,rgba(242,177,52,.22),transparent 70%),
+ radial-gradient(520px 380px at 30% 100%,rgba(61,174,43,.12),transparent 70%),var(--paper)}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;opacity:.55;background-image:radial-gradient(rgba(12,33,71,.13) 1px,transparent 1.3px);background-size:24px 24px;-webkit-mask-image:radial-gradient(680px 420px at 28% 40%,#000,transparent 72%);mask-image:radial-gradient(680px 420px at 28% 40%,#000,transparent 72%)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:40px;align-items:center}
+.hero h1{font-weight:900;font-size:clamp(44px,6.4vw,82px);line-height:.98;margin:18px 0 22px}
+.hero p.lead{font-size:clamp(18px,1.6vw,21px);color:var(--body);max-width:540px;margin:0 0 30px}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.proof{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:30px;color:var(--soft);font-size:14px;font-weight:600}
+.proof span{display:inline-flex;align-items:center;gap:8px}
+.proof span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(61,174,43,.16)}
+
+/* device composition */
+.scene{position:relative;height:640px}
+.tvf{position:absolute;right:0;top:34px;width:88%;background:#0b1630;border-radius:18px;padding:10px;box-shadow:0 50px 90px -40px rgba(12,33,71,.6),0 0 0 1px rgba(12,33,71,.1);transform:perspective(1400px) rotateY(-9deg) rotateX(3deg);transform-origin:70% 50%}
+.tvf img{border-radius:9px;width:100%;aspect-ratio:16/9;object-fit:cover}
+.tvf::after{content:"";position:absolute;left:50%;bottom:-30px;width:120px;height:30px;transform:translateX(-50%);background:linear-gradient(#22345c,#0b1630);clip-path:polygon(38% 0,62% 0,80% 100%,20% 100%)}
+.phf{position:absolute;width:210px;background:#0b1630;border-radius:34px;padding:8px;box-shadow:0 40px 70px -28px rgba(12,33,71,.65),0 0 0 1px rgba(12,33,71,.1)}
+.phf img{border-radius:27px;width:100%;aspect-ratio:390/844;object-fit:cover;object-position:top}
+.ph1{left:0;top:120px;transform:rotate(-6deg)}
+.ph2{right:4%;top:200px;width:190px;transform:rotate(5deg)}
+.chip{position:absolute;display:flex;align-items:center;gap:10px;background:#fff;color:var(--navy);border-radius:16px;padding:10px 14px;font-weight:700;font-size:14px;box-shadow:0 18px 40px -18px rgba(12,33,71,.55),0 0 0 1px rgba(12,33,71,.06)}
+.chip b{font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;color:var(--flame)}
+.chip small{display:block;font-weight:600;color:var(--soft);font-size:12px}
+.c1{left:28%;top:0}.c2{left:6%;bottom:6px}
+.float{animation:float 7s ease-in-out infinite}.float.d2{animation-delay:-2.5s}.float.d3{animation-delay:-4.6s}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -10px}}
+@media (max-width:980px){.hero .wrap{grid-template-columns:1fr}.scene{height:auto;max-width:600px;width:100%;margin:10px auto 0}
+ .scene{aspect-ratio:1/1.08}.tvf{width:86%;top:6%}.phf{width:34%}.ph1{top:19%}.ph2{width:31%;top:29%}.chip{font-size:12px;padding:8px 11px}.chip b{font-size:16px}}
+
+/* event types marquee */
+.types{border-block:1px solid var(--line);background:#fff;overflow:hidden;padding:18px 0}
+.track{display:flex;gap:14px;width:max-content;animation:slide 38s linear infinite}
+.types:hover .track{animation-play-state:paused}
+@keyframes slide{to{transform:translateX(-50%)}}
+.tag{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;background:var(--paper);border:1px solid var(--line);font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;white-space:nowrap;color:var(--navy)}
+.tag i{width:9px;height:9px;border-radius:50%;background:var(--orange)}
+.tag:nth-child(3n+2) i{background:var(--green)}.tag:nth-child(3n) i{background:var(--sky)}
+
+/* sections */
+section.sec{padding:96px 0}
+.head{max-width:720px;margin-bottom:46px}
+.head h2{font-weight:900;font-size:clamp(32px,4.2vw,52px);line-height:1.04;margin:14px 0 14px}
+.head p{color:var(--body);font-size:19px;margin:0}
+.tint{background:linear-gradient(180deg,var(--paper),#f3ede3 40%,var(--paper))}
+
+/* three screens */
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.scr{position:relative;border-radius:26px;padding:26px 26px 0;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:520px}
+.scr::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--orange)}
+.scr:nth-child(2)::before{background:var(--sky)}.scr:nth-child(3)::before{background:var(--green)}
+.scr .num{font-family:Montserrat,sans-serif;font-weight:900;font-size:14px;color:#fff;background:var(--flame);width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
+.scr:nth-child(2) .num{background:var(--blue)}.scr:nth-child(3) .num{background:var(--leaf)}
+.scr h3{font-size:24px;font-weight:800;margin:16px 0 8px}
+.scr p{color:var(--body);margin:0 0 22px}
+.scr .shot{margin-top:auto;align-self:center;width:78%;border-radius:22px 22px 0 0;border:8px solid #0b1630;border-bottom:0;box-shadow:0 -10px 30px -16px rgba(12,33,71,.5);overflow:hidden}
+.scr .shot img{aspect-ratio:390/600;object-fit:cover;object-position:top;width:100%}
+.scr .shot.tv{width:100%;border-radius:14px;border-bottom:8px solid #0b1630;margin-bottom:14px}
+.scr .shot.tv+.shot.tv{margin-top:0;border-radius:14px 14px 0 0;border-bottom:0;margin-bottom:0}
+.scr .shot.tv img{aspect-ratio:16/9}
+@media (max-width:900px){.three{grid-template-columns:1fr}.scr{min-height:0}.scr .shot{width:62%}.scr .shot.tv{width:100%}}
+
+/* bento features */
+.bento{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.cell{border-radius:24px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow);padding:26px;position:relative;overflow:hidden}
+.cell h3{font-size:21px;font-weight:800;margin:14px 0 8px}
+.cell p{color:var(--body);margin:0;font-size:16px}
+.ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#fff1e1;color:#c25a05}
+.ic.g{background:#e6f5e2;color:var(--leaf)}.ic.b{background:#e5eefb;color:var(--blue)}
+.span3{grid-column:span 3}.span2{grid-column:span 2}.span4{grid-column:span 4}
+@media (max-width:980px){.cell.big{grid-row:auto}}
+.cell.big{grid-row:span 2;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:22px;align-items:end;padding-bottom:0;background:linear-gradient(135deg,#0c2147,#1f4f96);border-color:transparent}
+.cell.big h3{color:#fff}.cell.big p,.cell.big .list li{color:#dbe4f3}.cell.big .ic{background:rgba(247,164,64,.18);color:var(--amber)}
+.cell.big .txt{padding-bottom:26px}
+.cell.big img{border-radius:18px 18px 0 0;border:7px solid #0b1630;border-bottom:0;aspect-ratio:390/520;object-fit:cover;object-position:top}
+.list{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:8px}
+.list li{display:flex;gap:10px;color:var(--body);font-size:15px}
+.list li::before{content:"";flex:none;width:18px;height:18px;margin-top:2px;border-radius:50%;background:rgba(61,174,43,.25) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237fdc6c' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat}
+.games{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.games span{font-size:13px;font-weight:700;padding:6px 11px;border-radius:999px;background:var(--paper);border:1px solid var(--line);color:var(--navy)}
+.moment{background:url(img/shot-moment.jpg) 50% 30%/cover;min-height:340px;display:flex;flex-direction:column;justify-content:flex-end;border-color:transparent}
+.moment::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 36%,rgba(255,255,255,.9) 60%,#fff)}
+.moment>*{position:relative}
+@media (max-width:980px){.bento{grid-template-columns:1fr}.span3,.span2,.span4{grid-column:auto}.cell.big{grid-template-columns:1fr}.cell.big img{width:70%;margin:0 auto}}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.step{background:#fff;border:1px solid var(--line);border-top:4px solid var(--orange);border-radius:20px;padding:24px 24px 26px;box-shadow:var(--shadow)}
+.step:nth-child(2){border-top-color:var(--gold)}.step:nth-child(3){border-top-color:var(--green)}
+.step b{font-family:Montserrat,sans-serif;font-weight:900;font-size:56px;line-height:1;color:#efe6d7;display:block}
+.step h3{font-size:22px;font-weight:800;margin:8px 0 8px}
+.step p{color:var(--body);margin:0}
+@media (max-width:860px){.steps{grid-template-columns:1fr}}
+
+/* create: the one dark band on the page */
+.create{position:relative;border-radius:34px;padding:clamp(28px,5vw,64px);overflow:hidden;color:#fff;background:
+ radial-gradient(520px 320px at 100% 0%,rgba(247,148,29,.45),transparent 70%),
+ radial-gradient(520px 360px at 0% 100%,rgba(61,174,43,.28),transparent 70%),linear-gradient(135deg,var(--blue),var(--navy));display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:36px;align-items:center;box-shadow:0 40px 80px -40px rgba(12,33,71,.7)}
+.create h2{color:#fff;font-weight:900;font-size:clamp(32px,4vw,50px);line-height:1.04;margin:14px 0 12px}
+.create .grad{background:linear-gradient(95deg,var(--amber),var(--gold) 55%,#ffe08a);-webkit-background-clip:text;background-clip:text}
+.create .eyebrow{color:var(--amber)}
+.create p{color:#e0e8f6;font-size:18px;margin:0}
+form.inv{background:#fff;color:var(--navy);border-radius:24px;padding:22px;display:grid;gap:12px;box-shadow:0 20px 50px -24px rgba(0,0,0,.5)}
+form.inv label{font-weight:700;font-size:15px}
+form.inv input{width:100%;min-height:56px;border-radius:16px;border:1.5px solid var(--line-2);background:var(--paper);color:var(--navy);font:700 20px Montserrat,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:0 18px}
+form.inv input::placeholder{color:#8a94a8;letter-spacing:.06em;text-transform:none;font-weight:500}
+form.inv input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 4px rgba(247,148,29,.22)}
+form.inv small{color:var(--soft);font-size:14px}
+form.inv small a{color:#b45a00;font-weight:700}
+@media (max-width:860px){.create{grid-template-columns:1fr}}
+
+footer{padding:48px 0 60px;color:var(--soft);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:28px}
+footer nav{display:flex;gap:18px;flex-wrap:wrap}
+footer a{text-decoration:none}footer a:hover{color:var(--navy)}
+.rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.float,.track{animation:none}.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+
+/* two doors + planner section */
+.doors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:6px}
+.door{display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:22px;background:#fff;border:1.5px solid var(--line-2);text-decoration:none;box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
+.door:hover{transform:translateY(-3px);border-color:var(--navy)}
+.door b{font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;line-height:1.15;color:var(--navy)}
+.door span{color:var(--body);font-size:15px}.door span.eyebrow{color:#b45a00;font-size:11px}
+.door i{font-style:normal;font-weight:800;color:var(--flame);margin-top:6px}
+.door.hot{border-color:var(--orange);background:linear-gradient(180deg,#fff,#fff6ea)}
+@media (max-width:640px){.doors{grid-template-columns:1fr}}
+.pts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pt{background:#fff;border:1px solid var(--line);border-top:4px solid var(--orange);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.pt:nth-child(2){border-top-color:var(--sky)}.pt:nth-child(3){border-top-color:var(--gold)}.pt:nth-child(4){border-top-color:var(--green)}
+.pt b{font-family:Montserrat,sans-serif;font-weight:800;font-size:19px;line-height:1.2;color:var(--navy);display:block;margin-bottom:8px}.pt p{margin:0;color:var(--body);font-size:15px}
+@media (max-width:980px){.pts{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.pts{grid-template-columns:1fr}}
+.auto{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+
+.talk{margin-top:28px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:32px;align-items:start;background:#fff;border:1px solid var(--line);border-top:4px solid var(--orange);border-radius:24px;padding:clamp(22px,4vw,36px);box-shadow:var(--shadow)}
+.talk h3{font-size:clamp(24px,3vw,32px);font-weight:900;margin:12px 0 10px}.talk p{color:var(--body);margin:0}
+.pform{display:grid;gap:12px}.pform[hidden],.pdone[hidden],.perr[hidden]{display:none!important}.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pgrid .wide{grid-column:1/-1}
+.pform label{display:grid;gap:6px;font-weight:700;font-size:14px;color:var(--navy)}
+.pform input,.pform select,.pform textarea{width:100%;min-height:48px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--paper);color:var(--navy);font:500 16px Figtree,sans-serif;padding:10px 14px}
+.pform textarea{min-height:0;resize:vertical}
+.pform input:focus,.pform select:focus,.pform textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 4px rgba(247,148,29,.22)}
+.pform small{color:var(--soft)}.perr{margin:0;color:#b42318;font-weight:700}
+.pdone{grid-column:2;align-self:center}.pdone h3{margin-top:0}
+@media (max-width:860px){.talk{grid-template-columns:1fr}.pdone{grid-column:auto}}@media (max-width:520px){.pgrid{grid-template-columns:1fr}}
+.herodemo{align-items:center;margin-bottom:22px}.demohint{color:var(--soft);font-size:14px;font-weight:600}
+.pageh{font-weight:900;font-size:clamp(36px,5.4vw,66px);line-height:1.02;margin:14px 0 14px}
+</style></head><body>
+
+<header class="nav"><div class="wrap">
+ <a class="logo" href="./" aria-label="Host Mode home"><svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#0c2147"/><rect x="11" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="30.5" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="13" y="19.5" width="22" height="9" rx="4.5" fill="#f7941d"/><circle cx="30.5" cy="24" r="3.4" fill="#fff"/><circle cx="39.5" cy="8.5" r="2.6" fill="#f2b134"/><circle cx="8.5" cy="40" r="1.8" fill="#3dae2b"/></svg><span>Host <b>Mode</b></span></a>
+ <nav><a class="lnk" href="hosts.html">For hosts</a><a class="lnk" href="planners.html">For planners &amp; venues</a><a class="lnk" href="demo.html">Live demo</a><a class="btn hot" href="#create">Create your event</a></nav>
+</div></header>
+
+<main>
+<section class="sec" id="host" style="padding-bottom:10px;padding-top:64px"><div class="wrap">
+ <div class="head rv"><div class="eyebrow">For hosts</div><h1 class="pageh">Be a guest at <span class="grad">your own event.</span></h1><p>Host Mode takes care of the planning, the welcome and the entertainment, so you can be present for the moments that matter most.</p><div class="ctas" style="margin-top:22px"><a class="btn hot" href="demo.html">Try the live demo</a><a class="btn" href="#create">Create your event</a></div></div>
+ <div class="pts">
+  <article class="pt rv"><b>Plan with confidence</b><p>Guided checklists, a budget, guest counts, a seating chart and timely reminders keep every detail organized well before the day.</p></article>
+  <article class="pt rv"><b>A warm, seamless welcome</b><p>Import your guest list in minutes. Guests join with a single scan, and arrivals are checked in with one tap.</p></article>
+  <article class="pt rv"><b>Entertainment, perfectly paced</b><p>Games, toasts, reveals and the evening's schedule play on the big screen and every guest's phone, all guided from yours.</p></article>
+  <article class="pt rv"><b>Memories that last</b><p>A shared photo album, a live slideshow and a beautiful keepsake afterwards, so the celebration lives on.</p></article>
+ </div>
+</div></section>
+
+<section class="sec tint" id="screens"><div class="wrap">
+ <div class="head rv"><div class="eyebrow">How it works</div><h2>One phone. <span class="grad">The whole room.</span></h2><p>Your phone guides the event, the TV sets the stage, and every guest takes part from their own phone, all perfectly in sync.</p></div>
+ <div class="three">
+  <article class="scr rv"><div class="num">1</div><h3>The host console</h3><p>The run of show, check-in, games, moments, raffles and scores in one place, with separate sign-ins for your team.</p><div class="shot"><img src="img/shot-host.jpg" alt="The host console showing the next step and the games to go live with" loading="lazy" width="390" height="844"></div></article>
+  <article class="scr rv"><div class="num">2</div><h3>The big screen</h3><p>Any TV with a web browser becomes the stage for questions, countdowns, a live leaderboard, photo slideshows and a confetti finale.</p><div class="shot tv"><img src="img/shot-tv.jpg" alt="The big screen showing a trivia question and the leaderboard" loading="lazy" width="1280" height="720"></div><div class="shot tv"><img src="img/shot-moment.jpg" alt="The big screen showing a Make a wish moment" loading="lazy" width="1280" height="720"></div></article>
+  <article class="scr rv"><div class="num">3</div><h3>Every guest's phone</h3><p>One scan and guests are in, straight from their browser. They play, vote, hunt and share photos all evening.</p><div class="shot"><img src="img/shot-guest.jpg" alt="A guest's phone answering a trivia question" loading="lazy" width="390" height="844"></div></article>
+ </div>
+</div></section>
+
+<section class="sec" id="features" style="padding-top:20px"><div class="wrap">
+ <div class="head rv"><div class="eyebrow">The complete toolkit</div><h2>From the first to-do to the <span class="grad">final thank-you.</span></h2></div>
+ <div class="bento">
+  <article class="cell big span4 rv"><div class="txt"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><h3>Planning, simplified</h3><p>A live countdown and timely reminders keep the next step clear at every stage.</p>
+   <ul class="list"><li>Ready-made checklists for every type of event</li><li>Budget, vendors and payment schedules</li><li>Guest counts, seating, menus and dietary needs</li><li>Shopping, rentals, documents and the forecast</li></ul></div>
+   <img src="img/shot-plan.jpg" alt="The planning overview with a countdown and upcoming reminders" loading="lazy" width="390" height="844"></article>
+  <article class="cell span2 rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg></div><h3>Effortless check-in</h3><p>Import your guest list from Partiful or a spreadsheet, then check guests in with a tap as they arrive.</p></article>
+  <article class="cell span2 rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8c-2-4-6-4-6-1s6 1 6 1 6 2 6-1-4-3-6 1"/></svg></div><h3>Raffles and gift log</h3><p>Draw winners on the big screen and keep an organized gift list for thank-you notes.</p></article>
+  <article class="cell span3 rv"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1"/><circle cx="18" cy="13" r="1"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg></div><h3>Games for the whole room</h3><p>Team games with points, a live leaderboard and a champion crowned on the big screen.</p>
+   <div class="games"><span>Trivia</span><span>Scavenger hunt</span><span>Crossword</span><span>Bingo</span><span>Superlatives</span><span>Team splitter</span><span>Long word wins</span><span>Two-player games</span><span>Custom games</span></div></article>
+  <article class="cell span3 moment rv"><div class="ic b"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg></div><h3>Big-screen moments</h3><p>The welcome, the cake, the toasts and the big reveal, with guests' photos playing as a live slideshow.</p></article>
+  <article class="cell span3 rv"><div class="ic b"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><h3>Presentations</h3><p>Show your slides on the TV and advance them from your phone, with speaker notes in hand.</p></article>
+  <article class="cell span3 rv"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg></div><h3>A keepsake to share</h3><p>Photos, wishes and the night's highlights gathered into one album for everyone to enjoy.</p></article>
+ </div>
+</div></section>
+
+<section class="sec" style="padding-top:30px"><div class="wrap">
+ <div class="head rv"><div class="eyebrow">Getting started</div><h2>Up and running <span class="grad">in three steps.</span></h2></div>
+ <div class="steps">
+  <div class="step rv"><b>01</b><h3>Get your invite code</h3><p>Your planner or the Host Mode team provides a code that opens your event.</p></div>
+  <div class="step rv"><b>02</b><h3>Choose your event type</h3><p>Start from a complete template with games, moments and an evening schedule. Upload your flyer and the colors match automatically.</p></div>
+  <div class="step rv"><b>03</b><h3>Share one code</h3><p>Display the QR code on the TV and the tables. Guests scan in and the celebration begins.</p></div>
+ </div>
+</div></section>
+
+<section class="sec" id="create" style="padding-top:20px"><div class="wrap">
+ <div class="create rv">
+  <div><div class="eyebrow">Create your event</div><h2>Ready when <span class="grad">you are.</span></h2><p>Enter your invite code to set up your event, or explore the live demo: a birthday celebration already in full swing.</p></div>
+  <form class="inv" id="inv" action="games.html" method="get">
+   <label for="code">Invite code</label>
+   <input id="code" name="invite" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Enter your code" required>
+   <button class="btn hot" type="submit">Create my event <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+   <a class="btn navy" href="demo.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>Try the live demo</a>
+   <small>No code yet? Type <b>DEMO</b> to explore. Hosts sign in on the <a href="games.html#host">host console</a>.</small>
+  </form>
+ </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+ <a class="logo" href="./"><svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#0c2147"/><rect x="11" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="30.5" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="13" y="19.5" width="22" height="9" rx="4.5" fill="#f7941d"/><circle cx="30.5" cy="24" r="3.4" fill="#fff"/><circle cx="39.5" cy="8.5" r="2.6" fill="#f2b134"/><circle cx="8.5" cy="40" r="1.8" fill="#3dae2b"/></svg><span>Host <b>Mode</b></span></a>
+ <nav><a href="demo.html">Live demo</a><a href="games.html#host">Host console</a><a href="drinks.html">Order a drink</a></nav>
+ <span>Plan it. Run it. Remember it.</span>
+</div></footer>
+
+<script>
+document.getElementById("inv")&&document.getElementById("inv").addEventListener("submit",e=>{e.preventDefault();const c=document.getElementById("code").value.trim().toUpperCase().replace(/[^A-Z0-9-]/g,"");if(!c)return;
+ location.href=c==="DEMO"?"demo.html":"games.html?invite="+encodeURIComponent(c)+"#new"});
+
+/* planner/venue "talk to us" form: saved to the Contacts tab of the host console */
+(function(){const f=document.getElementById("pform");if(!f)return;const DBURL="https://spark-drinks-2d185-default-rtdb.firebaseio.com/partygames/leads.json",err=f.querySelector(".perr"),done=document.querySelector(".pdone");
+ const send=o=>fetch(DBURL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(r=>{if(!r.ok)throw 0});
+ try{const p=JSON.parse(localStorage.getItem("hm_pro_pending")||"null");if(p)send(p).then(()=>localStorage.removeItem("hm_pro_pending")).catch(()=>{})}catch(e){}
+ f.addEventListener("submit",async e=>{e.preventDefault();const v=k=>String(f.elements[k].value||"").trim();
+  const o={name:v("name").slice(0,80),biz:v("biz").slice(0,80),email:v("email").slice(0,120),phone:v("phone").slice(0,40),type:v("type").slice(0,60),size:v("size").slice(0,30),note:v("note").slice(0,600),t:{".sv":"timestamp"},src:"landing",pro:true};
+  const bad=m=>{err.textContent=m;err.hidden=false};
+  if(!o.name)return bad("Please add your name.");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(o.email))return bad("Please check your email address.");
+  err.hidden=true;const b=f.querySelector("button[type=submit]");b.disabled=true;b.textContent="Sending…";
+  try{await send(o)}catch(x){try{localStorage.setItem("hm_pro_pending",JSON.stringify(o))}catch(y){}}
+  f.hidden=true;done.hidden=false;done.focus&&done.setAttribute("tabindex","-1");done.focus()})})();
+const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add("in");io.unobserve(x.target)}}),{rootMargin:"0px 0px -8% 0px"}):null;
+document.querySelectorAll(".rv").forEach(el=>io?io.observe(el):el.classList.add("in"));
+</script>
+</body></html>
