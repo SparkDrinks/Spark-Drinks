@@ -186,6 +186,17 @@ footer a{text-decoration:none}footer a:hover{color:var(--navy)}
 .honest h3{font-size:22px;font-weight:800;margin-bottom:14px}.honest .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
 .list.nope li::before{background:rgba(232,101,15,.2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e8650f' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='m7 7 10 10M17 7 7 17'/%3E%3C/svg%3E") center/11px no-repeat}
 @media (max-width:700px){.honest .two{grid-template-columns:1fr}}
+
+.talk{margin-top:28px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:32px;align-items:start;background:#fff;border:1px solid var(--line);border-top:4px solid var(--orange);border-radius:24px;padding:clamp(22px,4vw,36px);box-shadow:var(--shadow)}
+.talk h3{font-size:clamp(24px,3vw,32px);font-weight:900;margin:12px 0 10px}.talk p{color:var(--body);margin:0}
+.pform{display:grid;gap:12px}.pform[hidden],.pdone[hidden],.perr[hidden]{display:none!important}.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pgrid .wide{grid-column:1/-1}
+.pform label{display:grid;gap:6px;font-weight:700;font-size:14px;color:var(--navy)}
+.pform input,.pform select,.pform textarea{width:100%;min-height:48px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--paper);color:var(--navy);font:500 16px Figtree,sans-serif;padding:10px 14px}
+.pform textarea{min-height:0;resize:vertical}
+.pform input:focus,.pform select:focus,.pform textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 4px rgba(247,148,29,.22)}
+.pform small{color:var(--soft)}.perr{margin:0;color:#b42318;font-weight:700}
+.pdone{grid-column:2;align-self:center}.pdone h3{margin-top:0}
+@media (max-width:860px){.talk{grid-template-columns:1fr}.pdone{grid-column:auto}}@media (max-width:520px){.pgrid{grid-template-columns:1fr}}
 </style></head><body>
 
 <header class="nav"><div class="wrap">
@@ -270,7 +281,25 @@ footer a{text-decoration:none}footer a:hover{color:var(--navy)}
  <div class="honest rv"><h3>What it does, and what it doesn't</h3>
   <div class="two"><div><b>Does</b><ul class="list"><li>Keeps vendors, payments, dates, files and approvals in one place</li><li>Shows clients and teammates exactly what you decide to share</li><li>Shows reminders and weekly summaries inside each portal</li></ul></div>
   <div><b>Doesn't</b><ul class="list nope"><li>Book vendors for you</li><li>Take or send money. Payments are tracked, not processed</li><li>Email reminders yet. They show inside the portal for now</li></ul></div></div></div>
- <div class="ctas rv" style="margin-top:28px"><a class="btn hot" href="demo.html">Try the live demo</a><a class="btn navy" href="#create">I have an invite code</a></div>
+ <div class="talk rv" id="talk">
+  <div><div class="eyebrow">Talk to us</div><h3>Run events for clients?</h3><p>Tell us a little about your business and we'll get back to you with an invite code and help setting up your first client.</p>
+   <div class="ctas" style="margin-top:18px"><a class="btn" href="demo.html">Try the live demo</a><a class="btn" href="#create">I have an invite code</a></div></div>
+  <form class="pform" id="pform" novalidate>
+   <div class="pgrid">
+    <label>Your name<input name="name" autocomplete="name" maxlength="80" required></label>
+    <label>Business name<input name="biz" autocomplete="organization" maxlength="80"></label>
+    <label>Email<input name="email" type="email" autocomplete="email" maxlength="120" required></label>
+    <label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
+    <label>I'm a…<select name="type"><option value="Event planner">Event planner</option><option value="Venue">Venue</option><option value="Caterer or vendor">Caterer or vendor</option><option value="Something else">Something else</option></select></label>
+    <label>Events a year<select name="size"><option value="">Choose one</option><option>1–10</option><option>11–30</option><option>31–100</option><option>More than 100</option></select></label>
+    <label class="wide">Anything else? (optional)<textarea name="note" rows="3" maxlength="600"></textarea></label>
+   </div>
+   <p class="perr" role="alert" hidden></p>
+   <button class="btn hot" type="submit">Send</button>
+   <small>We only use this to reply to you.</small>
+  </form>
+  <div class="pdone" hidden role="status"><h3>Thank you!</h3><p>We got your details and will be in touch soon.</p></div>
+ </div>
 </div></section>
 
 <section class="sec" style="padding-top:30px"><div class="wrap">
@@ -305,6 +334,19 @@ footer a{text-decoration:none}footer a:hover{color:var(--navy)}
 <script>
 document.getElementById("inv").addEventListener("submit",e=>{e.preventDefault();const c=document.getElementById("code").value.trim().toUpperCase().replace(/[^A-Z0-9-]/g,"");if(!c)return;
  location.href=c==="DEMO"?"demo.html":"games.html?invite="+encodeURIComponent(c)+"#new"});
+
+/* planner/venue "talk to us" form: saved to the Contacts tab of the host console */
+(function(){const f=document.getElementById("pform");if(!f)return;const DBURL="https://spark-drinks-2d185-default-rtdb.firebaseio.com/partygames/leads.json",err=f.querySelector(".perr"),done=document.querySelector(".pdone");
+ const send=o=>fetch(DBURL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(r=>{if(!r.ok)throw 0});
+ try{const p=JSON.parse(localStorage.getItem("hm_pro_pending")||"null");if(p)send(p).then(()=>localStorage.removeItem("hm_pro_pending")).catch(()=>{})}catch(e){}
+ f.addEventListener("submit",async e=>{e.preventDefault();const v=k=>String(f.elements[k].value||"").trim();
+  const o={name:v("name").slice(0,80),biz:v("biz").slice(0,80),email:v("email").slice(0,120),phone:v("phone").slice(0,40),type:v("type").slice(0,60),size:v("size").slice(0,30),note:v("note").slice(0,600),t:{".sv":"timestamp"},src:"landing",pro:true};
+  const bad=m=>{err.textContent=m;err.hidden=false};
+  if(!o.name)return bad("Please add your name.");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(o.email))return bad("Please check your email address.");
+  err.hidden=true;const b=f.querySelector("button[type=submit]");b.disabled=true;b.textContent="Sending…";
+  try{await send(o)}catch(x){try{localStorage.setItem("hm_pro_pending",JSON.stringify(o))}catch(y){}}
+  f.hidden=true;done.hidden=false;done.focus&&done.setAttribute("tabindex","-1");done.focus()})})();
 const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add("in");io.unobserve(x.target)}}),{rootMargin:"0px 0px -8% 0px"}):null;
 document.querySelectorAll(".rv").forEach(el=>io?io.observe(el):el.classList.add("in"));
 </script>
