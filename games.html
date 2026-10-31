@@ -3262,7 +3262,7 @@ function glImport(list){const have={};glList().forEach(g=>{const n=normName(g.na
 const glConfirmed=g=>g.rsvp==="yes"||!g.rsvp||!!g.arrived;
 function glSection(){const all=glList(),list=all.filter(glConfirmed),wait=all.filter(g=>!glConfirmed(g)),here=list.filter(g=>g.arrived).length,f=L.glFilter||"todo";
  const importBox=`<div class="stack tight"><textarea data-draft="gl_paste" rows="5" placeholder="Paste names, one per line, or a spreadsheet copied as CSV">${esc(dv("gl_paste",""))}</textarea>
-  <div class="row"><button class="btn sm primary" data-act="glPaste">Import pasted names</button><label class="btn sm upl">Upload a .csv file<input type="file" accept=".csv,.txt,text/csv,text/plain" data-act="glFile"></label></div>
+  <div class="row"><button class="btn sm primary" data-act="glPaste">Import pasted names</button><label class="btn sm upl">Upload a .csv file<input type="file" data-act="glFile"></label></div>
   <p class="small muted m0">From Google Sheets: File → Download → Comma-separated values. Guests who haven't confirmed are kept aside until you confirm them.</p></div>`;
  if(!all.length)return `<section class="card stack"><div class="row between"><h2>Guest list</h2></div><p class="small muted m0">Import your guest list to check people in at the door and see who hasn't joined the games yet. Their names also show up as suggestions in the raffle and gift log.</p>${importBox}</section>`;
  const show=list.filter(g=>f==="all"||f==="todo"&&!g.arrived||f==="here"&&g.arrived||f==="nogames"&&g.arrived&&!glInGames(g));
@@ -3280,7 +3280,7 @@ async function glDoImport(txt){const list=parseGuests(txt);if(!list.length)retur
  delete L.drafts.gl_paste;const nc=Object.values(r.u).filter(glConfirmed).length,nw=r.added-nc;toast(r.added?`${nc} confirmed guest${nc===1?"":"s"} added${nw?` · ${nw} awaiting RSVP`:""}`:"Everyone is already on the list");render(true)}
 Object.assign(ACT,{
  glPaste:()=>glDoImport(dv("gl_paste","")),
- glFile:el=>{const f=el.files&&el.files[0];if(!f)return;if(/\.xlsx?$/i.test(f.name))return toast("Save it as a .csv file first (File → Download → CSV)");const fr=new FileReader();fr.onload=()=>glDoImport(fr.result);fr.readAsText(f)},
+ glFile:el=>{const f=el.files&&el.files[0];if(!f)return toast("No file was picked");if(/\.(xlsx?|pdf|docx?|jpe?g|png|heic)$/i.test(f.name))return toast("That file can't be read here. Pick the .csv file.");toast("Reading "+f.name+"…");const fr=new FileReader();fr.onerror=()=>toast("Couldn't open that file. Try pasting the names instead.");fr.onload=()=>glDoImport(String(fr.result||""));fr.readAsText(f);el.value=""},
  glFilter:el=>{L.glFilter=el.dataset.k;render(true)},
  glWaitToggle:()=>{L.glWaitOpen=!L.glWaitOpen},
  glConfirm:el=>{const k=el.dataset.k,g=(D.guests||{})[k];if(!g)return;D.guests=Object.assign({},D.guests,{[k]:Object.assign({},g,{rsvp:"yes",confirmedBy:L.modName||""})});ER("guests/"+k).update({rsvp:"yes",confirmedBy:L.modName||""});toast(g.name+" confirmed");buzz(30);render(true)},
