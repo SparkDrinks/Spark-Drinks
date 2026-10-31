@@ -799,7 +799,8 @@ html.hmbrand .eyebrow{color:#b45a00}
 .hmhero h2{color:#fff;font-size:1.6rem}.hmhero p{color:#dbe4f3}.hmhero .eyebrow{color:#f7a440!important}
 
 /* demo bar */
-.demoslot{position:relative}
+.demoslot{position:relative;flex:0 0 100%;width:100%;order:-1}
+header.top:has(.demoslot){flex-wrap:wrap!important}
 .demobar{position:fixed;top:6px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);left:0;right:0;width:calc(100% - 24px);max-width:640px;margin:0 auto;transition:opacity .25s;z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;border-radius:22px;color:#0c2147;font-size:.88rem;border:1.5px solid #fff;
  background:linear-gradient(180deg,#ffffff 0%,#fffaf3 46%,#f1e7d4 100%);
  box-shadow:inset 0 2px 0 #fff,inset 0 -3px 0 rgba(12,33,71,.1),0 2px 0 #cfc3ac,0 5px 0 #b9ab90,0 14px 22px -6px rgba(12,33,71,.55),0 30px 50px -18px rgba(12,33,71,.6),0 0 0 1px rgba(12,33,71,.18)}
