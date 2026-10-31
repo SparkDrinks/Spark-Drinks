@@ -804,17 +804,19 @@ html.hmbrand .eyebrow{color:#b45a00}
 /* demo bar */
 .demoslot{position:relative;flex:0 0 100%;width:100%;order:-1}
 header.top:has(.demoslot){flex-wrap:wrap!important}
-.demobar{position:fixed;top:6px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);left:0;right:0;width:calc(100% - 24px);max-width:640px;margin:0 auto;transition:opacity .25s;z-index:60;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;border-radius:22px;color:#0c2147;font-size:.88rem;border:1.5px solid #fff;
+.demobar{position:fixed;top:6px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);left:0;right:0;width:calc(100% - 24px);max-width:640px;margin:0 auto;transition:opacity .25s;z-index:60;display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:12px 14px 14px;border-radius:22px;color:#0c2147;font-size:.88rem;border:1.5px solid #fff;
  background:linear-gradient(180deg,#ffffff 0%,#fffaf3 46%,#f1e7d4 100%);
  box-shadow:inset 0 2px 0 #fff,inset 0 -3px 0 rgba(12,33,71,.1),0 2px 0 #cfc3ac,0 5px 0 #b9ab90,0 14px 22px -6px rgba(12,33,71,.55),0 30px 50px -18px rgba(12,33,71,.6),0 0 0 1px rgba(12,33,71,.18)}
 .demobar::before{content:"";position:absolute;left:14px;right:14px;top:3px;height:42%;border-radius:18px 18px 40px 40px;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0));pointer-events:none}
 .demobar>*{position:relative}
 .demobar:hover,.demobar:focus-within{opacity:1!important}
-.demobar .dbt{font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.72rem;color:#fff;background:linear-gradient(135deg,#f7941d,#e8650f);border-radius:999px;padding:4px 11px;margin-right:2px;box-shadow:0 2px 0 #b84a06,0 6px 10px -4px rgba(232,101,15,.7)}
-.demobar a,.demobar button{color:#0c2147;text-decoration:none;font:inherit;font-weight:700;padding:7px 13px;border-radius:999px;border:1.5px solid #d9d0c1;background:linear-gradient(180deg,#fff,#f6f1e8);box-shadow:0 2px 0 #d9d0c1,0 6px 10px -6px rgba(12,33,71,.4);cursor:pointer}
-.demobar a:active,.demobar button:active{transform:translateY(2px);box-shadow:0 0 0 #d9d0c1}
-.demobar a.on{background:linear-gradient(180deg,#1b3a73,#0c2147);color:#fff;border-color:#0c2147;box-shadow:0 2px 0 #060f24,0 6px 10px -4px rgba(12,33,71,.6)}
-.demobar button{margin-left:auto}
+.demobar .dbt{font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:.72rem;color:#b45a00;white-space:nowrap}
+.demobar .dbrow{display:flex;align-items:center;gap:8px}.demobar .dbkeys{display:flex;gap:8px;margin-left:auto}
+.demobar .dbscreens{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:6px;border-radius:16px;background:rgba(12,33,71,.07);box-shadow:inset 0 1px 3px rgba(12,33,71,.18)}
+.demobar a,.demobar button{color:#0c2147;text-decoration:none;font:inherit;font-weight:700;text-align:center;white-space:nowrap;padding:8px 12px;border-radius:11px;border:1px solid #d3c9b8;background:linear-gradient(180deg,#ffffff,#efe8dc);box-shadow:inset 0 1px 0 #fff,0 4px 0 #cbbfab,0 7px 10px -5px rgba(12,33,71,.45);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.demobar a:active,.demobar button:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #fff,0 1px 0 #cbbfab,0 2px 4px -2px rgba(12,33,71,.4)}
+.demobar a.on{transform:translateY(3px);background:linear-gradient(180deg,#0c2147,#1b3a73);color:#fff;border-color:#081733;box-shadow:inset 0 2px 5px rgba(0,0,0,.45),0 1px 0 #cbbfab;border-bottom:3px solid #f7941d}
+
 
 /* demo contact gate */
 #leadgate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom))}
@@ -4469,7 +4471,7 @@ const _connectDemo=connect;
 connect=function(){if(demoOn()){try{demoSeed()}catch(e){console.warn("demo seed",e)}if(!store.get("mod_DEMO",null))store.set("mod_DEMO",{h:"demo",id:"m1",r:"mod"})}_connectDemo()};
 /* a bar on every demo screen: switch views, start over */
 function demoBar(){if(!demoOn()||window.top!==window)return "";const v=(h,l)=>`<a class="${(VIEW===(h||"guest"))?"on":""}" href="games.html?e=DEMO${h?"#"+h:""}">${l}</a>`;
- return `<div class="demoslot"><div class="demobar"><span class="dbt">Demo</span><a href="index.html">Home</a>${v("moderator","Host")}${v("screen","Big screen")}${v("","Guest")}<a href="demo.html">All three</a><button data-act="demoReset">Start over</button></div></div>`}
+ return `<div class="demoslot"><div class="demobar"><div class="dbrow"><span class="dbt">Demo</span><span class="dbkeys"><a href="index.html">Home</a><a href="demo.html">All three</a><button data-act="demoReset">Start over</button></span></div><div class="dbscreens">${v("moderator","Host")}${v("","Guest")}${v("screen","Big screen")}</div></div></div>`}
 /* the bar floats with you down the page and fades the further you scroll */
 function demoFloat(){const b=document.querySelector(".demobar"),sl=document.querySelector(".demoslot");if(!b||!sl)return;const h=b.offsetHeight+22;if(sl.dataset.h!=h){sl.dataset.h=h;sl.style.height=h+"px"}const y=window.scrollY||document.documentElement.scrollTop||0;const mx=Math.max(1,(document.documentElement.scrollHeight||0)-(window.innerHeight||0));b.style.opacity=String(Math.max(0,Math.min(1,1-y/mx)).toFixed(2));b.style.pointerEvents=+b.style.opacity<.05?"none":""}
 if(demoOn()&&window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
@@ -5126,7 +5128,7 @@ if(pdemoOn()){
  if(window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
 }
 function pdemoBar(){if(!pdemoOn()||window.top!==window)return "";const on=VIEW;const a=(href,l,v)=>`<a class="${on===v?"on":""}" href="${href}">${l}</a>`;
- return `<div class="demoslot"><div class="demobar"><span class="dbt">Planner demo</span><a href="index.html">Home</a>${a("games.html?pdemo=1#planner","Planner","planner")}${a("games.html?pdemo=1&p=northlight&client=dublin","Client","client")}${a("games.html?pdemo=1&p=northlight&mate=liam","Teammate","mate")}<button data-act="pdemoReset">Start over</button></div></div>`}
+ return `<div class="demoslot"><div class="demobar"><div class="dbrow"><span class="dbt">Planner demo</span><span class="dbkeys"><a href="index.html">Home</a><button data-act="pdemoReset">Start over</button></span></div><div class="dbscreens">${a("games.html?pdemo=1#planner","Planner","planner")}${a("games.html?pdemo=1&p=northlight&client=dublin","Client","client")}${a("games.html?pdemo=1&p=northlight&mate=liam","Teammate","mate")}</div></div></div>`}
 const _hvPD=headerView;headerView=function(){return pdemoBar()+_hvPD()};
 
 /* ================= ACCOUNTS + PLANNER PORTAL =================
