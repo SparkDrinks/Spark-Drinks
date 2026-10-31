@@ -5183,11 +5183,11 @@ function hostConnect(){RT("owner").on("value",s=>{D.owner=s.val()||null;checkAut
 const _hostView0=hostView;
 hostView=function(){const a=AUTH();if(!a||window.__HMPDEMO)return _hostView0();
  if(!L.authReady)return loadingView();
- if(!L.hostOK){const card=(h,b)=>`<section class="card stack narrow"><div class="eyebrow">Host Mode owner</div><h2>${h}</h2>${b}</section>`;
+ if(!L.hostOK){const card=(h,b)=>`<section class="card stack narrow"><div class="eyebrow">Host Mode owner</div><h2>${h}</h2>${b}<a class="btn xs as" href="index.html">Home</a></section>`;
   if(L.user)return card("This isn't the owner account",`<p class="small muted m0">You're signed in as ${esc(L.user.email||"")}. The admin console is only for the Host Mode owner.</p><a class="btn primary" href="${esc(baseURL())}#planner">Go to the planner portal</a><button class="btn" data-act="acOut">Sign out</button>`);
   if(!D.owner)return card("Set up the owner account",`<p class="small muted m0">One time only. Prove it's you with the current host PIN, then choose the email and password you'll sign in with from now on.</p>${acctForm("owner")}`);
   return card("Sign in",`<p class="small muted m0">The admin console is for the Host Mode owner.</p>${acctForm("signin")}`)}
- const h=_hostView0();return h.replace('<div class="stack mw0">',`<div class="stack mw0"><div class="row between small acctbar"><span class="muted">Signed in as ${esc(L.user.email||"")}</span><span class="row"><a class="btn xs" href="${esc(baseURL())}#planner">My planner portal</a><button class="btn xs" data-act="acOut">Sign out</button></span></div>`)};
+ const h=_hostView0();return h.replace('<div class="stack mw0">',`<div class="stack mw0"><div class="row between small acctbar"><span class="muted">Signed in as ${esc(L.user.email||"")}</span><span class="row"><a class="btn xs" href="index.html">Home</a><a class="btn xs" href="${esc(baseURL())}#planner">My planner portal</a><button class="btn xs" data-act="acOut">Sign out</button></span></div>`)};
 
 /* ---- owner: Planners tab ---- */
 function hPlanners(){const pv=D.pinvites||{},pl=D.plist||{},ks=Object.keys(pv).sort((a,b)=>(pv[b].t||0)-(pv[a].t||0)),ids=Object.keys(pl).sort((a,b)=>(pl[b].t||0)-(pl[a].t||0)),lg=L.legacy||{};
