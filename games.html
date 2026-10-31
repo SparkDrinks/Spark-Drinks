@@ -1382,8 +1382,8 @@ document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("#rv");if(r){const s=st().reveal;if(s&&now()>s.at+1500){r.classList.remove("on");r.innerHTML=""}}});
 
 function headerView(){
- const c=C();const title=VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"?"Host Mode":(c.title||"Host Mode");
- const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="fb"?"Quick feedback":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":(c.tagline||"");
+ const c=C();const noEv=(!EV||L.missing)&&VIEW==="guest";const title=noEv||VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"?"Host Mode":(c.title||"Host Mode");
+ const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="fb"?"Quick feedback":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":noEv?"Plan it. Run it. Remember it.":(c.tagline||"");
  const showAa=VIEW==="guest"||VIEW==="album"||VIEW==="keepsake";
  return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span><button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
 function loadingView(){return `<div class="card muted">${t("Loading…")}</div>`}
@@ -2941,7 +2941,7 @@ let fontKey="";function loadFonts(f){if(!document.head)return;const fams=[...new
 function applyTheme(){const c=C();if(EV&&window.__themePre&&!D.contentLoaded){}else setThemeVars(c.colors||{},Object.assign({title:"Great Vibes",head:"Marcellus",body:"Figtree",size:15},c.fonts||{}),c.glow);
  const r=document.documentElement;r.classList.toggle("large",!!L.large);r.classList.toggle("hc",!!L.hc);r.lang=L.lang==="es"?"es":"en";
  if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_");
- document.title=(VIEW==="host"?"Host Mode":VIEW==="new"?"Create your event · Host Mode":(c.title||"Host Mode"))+(VIEW==="moderator"?" · Moderator":VIEW==="screen"?" · Big screen":VIEW==="host"?" · Admin":"")}
+ document.title=(VIEW==="host"||((!EV||L.missing)&&VIEW==="guest")?"Host Mode":VIEW==="new"?"Create your event · Host Mode":(c.title||"Host Mode"))+(VIEW==="moderator"?" · Moderator":VIEW==="screen"?" · Big screen":VIEW==="host"?" · Admin":"")}
 function themeStudio(p,inWizard){const base=Object.assign(curColors(),C().colors||{});const pal=L.palette||C().palette||[];const t2=themeFromDrafts(p);
  const warn=[];const ck=(a,b,r,l)=>{const v=contrast(t2.colors[a],t2.colors[b]);if(v<r)warn.push(`${l} may be hard to read (${v.toFixed(1)}:1, aim for ${r}:1)`)};
  ck("ink","ground",4.5,"Main text on the page background");ck("ink","card",4.5,"Main text on cards");ck("hd","card",3,"Headings on cards");ck("muted","card",3,"Soft text on cards");if(contrast("#ffffff",t2.colors.btn1)<2.5)warn.push("White button text on the button start color may be hard to read");
@@ -3661,7 +3661,7 @@ const markKind=()=>{const m=C().mark;if(m==="none")return null;if(MARKS[m])retur
 function markSVG(k,size){const m=MARKS[k];if(!m)return "";const id="gm"+k+size;
  return `<svg class="tmark" viewBox="${m.vb}" width="${size}" height="${Math.round(size*(+m.vb.split(" ")[3])/(+m.vb.split(" ")[2]))}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dc83"/><stop offset=".5" style="stop-color:var(--gold)"/><stop offset="1" stop-color="#9c6b00"/></linearGradient></defs><path d="${m.d}" fill="none" stroke="url(#${id})" stroke-width="${size>=40?1.7:1.4}" stroke-linecap="round" stroke-linejoin="round"/>${m.eye?`<circle cx="${m.eye[0]}" cy="${m.eye[1]}" r=".95" fill="url(#${id})"/>`:""}</svg>`}
 const titleMark=size=>{const k=markKind();return k?markSVG(k,size):""};
-const _hvDL=headerView;headerView=function(){const h=_hvDL();if(VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
+const _hvDL=headerView;headerView=function(){const h=_hvDL();if(!EV||L.missing||VIEW==="host"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||!titleMark(30))return h;return h.replace(/<h1>([\s\S]*?)<\/h1>/,(m,t)=>`<h1><span class="tline">${t}${titleMark(VIEW==="screen"?56:44)}</span></h1>`)};
 const _mEventDL=mEvent;mEvent=function(){const cur=markKind()||"none";const b=(k,l)=>`<button class="btn sm ${cur===k?"primary":""}" data-act="setMark" data-k="${k}" aria-pressed="${cur===k}">${k==="none"?"":markSVG(k,22)} ${l}</button>`;
  return _mEventDL()+`<section class="card stack"><h2>Title mark</h2><p class="small muted m0">A small gold drawing beside the event title on guests' phones and the big screen.</p><div class="row">${b("bird","Songbird")}${b("rose","Rose")}${b("none","None")}</div></section>`};
 ACT.setMark=el=>{ER("content/mark").set(el.dataset.k);toast(el.dataset.k==="none"?"Title mark off":"Title mark updated")};
@@ -4416,7 +4416,7 @@ Object.assign(ACT,{
 
 /* ---- Host Mode's own look: the create-event page and the host console wear the brand, not an event's theme ---- */
 const BRAND={colors:{bar:"#0c2147",ground:"#f2f5fa",card:"#ffffff",line:"#d2dbea",ink:"#0c2147",muted:"#4b5b79",hd:"#0f2c5c",hd2:"#b45a00",btn1:"#0f2c5c",btn2:"#1f4f96",rose:"#f7941d",flame:"#f26722",gold:"#f2b134",violet:"#0f2c5c",leaf:"#3dae2b"},fonts:{title:"Montserrat",head:"Montserrat",body:"Figtree",size:15}};
-const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate"||VIEW==="client"||VIEW==="fb";
+const brandView=()=>VIEW==="new"||VIEW==="host"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"||(VIEW==="guest"&&(!EV||L.missing));
 const _applyThemeBrand=applyTheme;
 applyTheme=function(){_applyThemeBrand();const on=brandView();document.documentElement.classList.toggle("hmbrand",on);if(!on)return;
  setThemeVars(BRAND.colors,BRAND.fonts,true);if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_")};
@@ -4934,9 +4934,9 @@ headerView=function(){const h=_headerView5();if(!brandOn())return h;const b=D.br
  return h.replace("<h1>Host Mode</h1>",`<h1 class="brandrow">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}${name||(b.logo?"":"Host Mode")}</h1>`).replace(/<p>(Your event portal|Your tasks)<\/p>/,'<p>$1 · powered by Host Mode</p>')};
 function brandLogo(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej();fr.onload=()=>{const img=new Image();img.onerror=()=>rej();img.onload=()=>{const k=Math.min(1,240/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/png"))};img.src=fr.result};fr.readAsDataURL(file)})}
 function hBrandCard(){const b=D.brand||{},nm=dv("br_name",b.name||""),col=dv("br_color",b.color||"#0f2c5c"),lg=L.brLogo!==undefined?L.brLogo:b.logo||"";
- return `<section class="card stack"><h2>Your branding</h2><p class="small muted m0">Your logo, name and colour appear on your clients' portals and your teammates' pages, so it looks like your business. “Powered by Host Mode” stays in small print.</p>
+ return `<section class="card stack"><h2>Your branding</h2><p class="small muted m0">Your logo, name and color appear on your clients' portals and your teammates' pages, so it looks like your business. “Powered by Host Mode” stays in small print.</p>
  <label class="stack tight"><span class="small">Business name</span><input type="text" data-draft="br_name" maxlength="40" value="${esc(nm)}" placeholder="Bright Day Events"></label>
- <div class="row"><label class="stack tight"><span class="small">Main colour</span><input type="color" data-draft="br_color" value="${esc(brandHex(col)||"#0f2c5c")}" style="width:64px;padding:2px"></label>
+ <div class="row"><label class="stack tight"><span class="small">Main color</span><input type="color" data-draft="br_color" value="${esc(brandHex(col)||"#0f2c5c")}" style="width:64px;padding:2px"></label>
  <label class="btn upl">${lg?"Change logo":"Add logo"}<input type="file" accept="image/*" data-act="brLogo"></label>${lg?`<img class="brandlogo" src="${esc(lg)}" alt="Your logo"><button class="btn xs" data-act="brLogoX">Remove logo</button>`:""}</div>
  <div class="row"><button class="btn primary" data-act="brSave">Save branding</button>${b.name||b.logo||b.color?`<button class="btn" data-act="brClear">Back to Host Mode look</button>`:""}</div></section>`}
 const _hClients5=hClients;
