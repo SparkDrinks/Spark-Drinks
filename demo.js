@@ -1,5 +1,5 @@
 /* Host Mode demo: a pretend database that lives only in this browser, so anyone can try the app without touching real events. */
-(function(){if(!/[?&]e=demo(&|$)/i.test(location.search))return;window.__HMDEMO=true;const KEY="hm_demo_db";const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}};let data=load();const listeners=[];
+(function(){const PD=/[?&]pdemo=1(&|$)/.test(location.search);if(!PD&&!/[?&]e=demo(&|$)/i.test(location.search))return;if(PD)window.__HMPDEMO=true;else window.__HMDEMO=true;const KEY=PD?"hm_pdemo_db":"hm_demo_db";const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}};let data=load();const listeners=[];
 const split=p=>p.split("/").filter(Boolean);const clone=v=>v==null?null:JSON.parse(JSON.stringify(v));
 const getAt=p=>{let o=data;for(const k of split(p)){if(o==null||typeof o!=="object")return null;o=o[k]}return o===undefined?null:clone(o)};
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){window.__saveErr=String(e)}};

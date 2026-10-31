@@ -862,7 +862,7 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 <div id="mo" aria-live="polite"></div><div id="rv" aria-live="assertive"></div><div id="tour"></div><div id="rx" aria-hidden="true"></div><div id="ov" aria-live="polite"></div><div id="cd" role="status" aria-live="assertive"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>if(/[?&]e=demo(&|$)/i.test(location.search))document.write('<script src="demo.js?v=5"><\/script>')</script>
+<script>if(/[?&]e=demo(&|$)/i.test(location.search)||/[?&]pdemo=1(&|$)/.test(location.search))document.write('<script src="demo.js?v=6"><\/script>');if(/[?&]pdemo=1(&|$)/.test(location.search))document.write('<script src="pdemo.js?v=1"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
@@ -5028,6 +5028,91 @@ Object.assign(ACT,{
  fbAsk:async el=>{const id=el.dataset.m,c=(D.clients||{})[id]||{};await RT("clientMsgs/"+id).push().set({from:"planner",text:`Thank you for letting us be part of ${c.evName||"your event"}! When you have a minute, please tell us how it went. The "How did we do?" card is on your Overview page.`,t:Date.now()});await RT(`clients/${id}/plSeen`).set(Date.now());await RT(`clients/${id}/askFb`).set(Date.now());toast("Asked in the client's messages")},
  fbCopyQuotes:el=>{const k=el.dataset.k;copyText(fbList(k).filter(x=>x.quote&&x.best).map(fbQuoteText).join("\n\n"))}
 });
+
+/* ================= PLANNER DEMO (?pdemo=1) =================
+   A pretend planning business, Northlight Events, with Dublin Investments as its main client.
+   Runs on demo.js's in-browser database (its own storage, separate from the Rosa's 30th demo).
+   The console opens without a PIN; client and teammate portals are one tap away in the demo bar. */
+const PDEMO_V=1;
+const pdemoOn=()=>!!window.__HMPDEMO;
+function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"{}");if(cur.pdemoV===PDEMO_V&&cur.partygames)return;
+ const day=n=>{const x=new Date();x.setHours(12,0,0,0);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)},ago=h=>Date.now()-h*36e5;
+ const EVD=12,dub=Object.assign({},window.HM_PDEMO_DUBLIN||{title:"Annual Company Conference",honorees:"Dublin Investments",tagline:"Stronger Together",eventType:"corporate"},{date:day(EVD)});
+ const tasks=(list)=>{const o={};list.forEach((x,i)=>o["t"+i]=Object.assign({show:true,done:false,t:i+1},x));return o};
+ const csv="Name,Email,Company\nSiobhan Kelly,siobhan@example.com,Dublin Investments\nConor Walsh,conor@example.com,Dublin Investments\nGrace Doyle,grace@example.com,Liffey Partners\nRonan Byrne,ronan@example.com,Dublin Investments\nMegan Ryan,megan@example.com,Harbour Capital\nDeclan Murphy,declan@example.com,Dublin Investments";
+ const svgLogo="data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0f5e63"/><path d="M18 44V20l28 24V20" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#f2b134"/></svg>');
+ const pg={
+  admin:{},brand:{name:"Northlight Events",color:"#0f5e63",logo:svgLogo},dayOf:false,
+  index:{DUBLIN:{name:"Annual Company Conference",created:ago(400)},WHELAN:{name:"Sarah & James's Wedding",created:ago(300)},OCONNOR:{name:"Margaret's 50th",created:ago(900)}},
+  events:{DUBLIN:{meta:{name:"Annual Company Conference",created:ago(400)},content:dub},
+   WHELAN:{meta:{name:"Sarah & James's Wedding",created:ago(300)},content:{title:"Sarah & James",honorees:"Sarah & James",tagline:"Forever starts here",eventType:"wedding",date:day(220)}},
+   OCONNOR:{meta:{name:"Margaret's 50th",created:ago(900)},content:{title:"Margaret's 50th",honorees:"Margaret",eventType:"birthday",date:day(-24)}}},
+  clients:{dublin:{name:"Dublin Investments",ev:"DUBLIN",evName:"Annual Company Conference",date:day(EVD),t:ago(1),plSeen:ago(30)},
+   whelan:{name:"Sarah & James Whelan",ev:"WHELAN",evName:"Sarah & James's Wedding",date:day(220),t:ago(300),plSeen:ago(5)},
+   oconnor:{name:"Margaret O'Connor",ev:"OCONNOR",evName:"Margaret's 50th",date:day(-24),t:ago(900),plSeen:ago(100),askFb:ago(200)}},
+  clientTasks:{
+   dublin:tasks([
+    {title:"Book the venue: The Convention Centre Dublin",owner:"planner",due:day(-40),done:true,doneAt:ago(960),by:"planner"},
+    {title:"Finalize the agenda and speakers",owner:"client",due:day(2),note:"Confirm panel names with your comms team"},
+    {title:"Send the final attendee list",owner:"client",due:day(3),note:"Upload it under Uploads, a spreadsheet works best"},
+    {title:"Book AV and microphones",owner:"planner",due:day(2),done:true,doneAt:ago(30),by:"planner"},
+    {title:"Order name badges",owner:"planner",due:day(3)},
+    {title:"Approve the lunch menu",owner:"client",due:day(4)},
+    {title:"Confirm the keynote's arrival time and AV needs",owner:"planner",due:day(5),note:"Jaime Williams, keynote at 9:30 AM"},
+    {title:"Send sponsor logos for the big screen",owner:"client",due:day(-1)},
+    {title:"Print QR code signs for the tables",owner:"planner",due:day(9)},
+    {title:"Test the big screen and links at the venue",owner:"planner",due:day(11)},
+    {title:"Pack the registration kit",owner:"planner",due:day(11),show:false,note:"Badges, pens, tape, chargers"},
+    {title:"Send thank-you notes to speakers and partners",owner:"planner",due:day(19)}]),
+   whelan:tasks([{title:"Choose a venue",owner:"planner",due:day(-60),done:true,doneAt:ago(1500)},{title:"Send save-the-dates",owner:"client",due:day(14)},{title:"Book the photographer",owner:"planner",due:day(40)},{title:"Pick the menu tasting date",owner:"client",due:day(60)}]),
+   oconnor:tasks([{title:"Book the private room",owner:"planner",due:day(-70),done:true,doneAt:ago(2000)},{title:"Send invitations",owner:"client",due:day(-50),done:true,doneAt:ago(1700)},{title:"Order the cake",owner:"planner",due:day(-27),done:true,doneAt:ago(700)}])},
+  clientMsgs:{dublin:{m1:{from:"planner",text:"Hi Aoife, welcome to your conference portal! Your checklist, dates and payments are all here. The two things we need most this week are the final attendee list and the sponsor logos.",t:ago(220)},
+    m2:{from:"client",text:"Thanks Claire, this is great. The attendee list is nearly done, I'll upload it tomorrow.",t:ago(190)},
+    m3:{from:"planner",text:"Perfect. I've also sent the lunch menu for your approval. Let me know if anything needs to change for dietary needs.",t:ago(26)},
+    m4:{from:"client",text:"Uploaded the attendee list just now. Logos coming from our design team.",t:ago(3)}},
+   oconnor:{m1:{from:"planner",text:"Thank you for letting us be part of Margaret's 50th! When you have a minute, please tell us how it went.",t:ago(200)}}},
+  clientFiles:{dublin:{f1:{name:"Attendee list.csv",kind:"guests",size:csv.length,by:"client",t:ago(3),count:6,status:"pending"},f2:{name:"Lunch menu.pdf",kind:"doc",size:(window.HM_PDEMO_MENU||"").length*.75|0,by:"planner",t:ago(26),share:true}}},
+  clientBlobs:{dublin:Object.assign({f1:"data:text/csv;base64,"+btoa(csv)},window.HM_PDEMO_MENU?{f2:window.HM_PDEMO_MENU}:{})},
+  clientApprovals:{dublin:{a1:{title:"Lunch menu",note:"Three courses with a vegetarian and a gluten-free option. Coffee station all day.",fileId:"f2",fileName:"Lunch menu.pdf",status:"pending",version:1,t:ago(26),hist:{h1:{s:"sent",t:ago(26)}}},
+    a2:{title:"Stage backdrop design",note:"Navy and orange with the Stronger Together line.",status:"approved",version:2,t:ago(160),decidedAt:ago(120),hist:{h1:{s:"sent",t:ago(160)},h2:{s:"changes",c:"Can the logo be a bit larger?",t:ago(150)},h3:{s:"revised",t:ago(130)},h4:{s:"approved",t:ago(120)}}}}},
+  clientPayments:{dublin:{p1:{title:"Venue deposit",amount:4000,due:day(-30),paid:true,paidAt:ago(700),t:1},p2:{title:"AV and staging",amount:2200,due:day(-5),paid:true,paidAt:ago(130),t:2},p3:{title:"Catering, 50% deposit",amount:3150,due:day(3),paid:false,t:3},p4:{title:"Final balance",amount:5600,due:day(EVD+7),paid:false,t:4}},
+   whelan:{p1:{title:"Planning retainer",amount:1500,due:day(-50),paid:true,paidAt:ago(1300),t:1}}},
+  clientDates:{dublin:{d1:{title:"Final headcount due to the caterer",date:day(5),time:"",note:"",t:1},d2:{title:"AV walkthrough at the venue",date:day(10),time:"14:00",note:"Bring the slide deck on a USB stick",t:2},d3:{title:"Conference day: registration opens",date:day(EVD),time:"08:15",note:"The Convention Centre Dublin",t:3}}},
+  clientVendors:{dublin:{v1:{name:"The Convention Centre Dublin",role:"Venue",phone:"555-0101",arrive:"07:00",delivers:"Main hall and two breakout rooms",show:true,team:true,t:1},
+    v2:{name:"BrightStage AV",role:"AV and staging",phone:"555-0164",email:"crew@brightstage.example",arrive:"07:30",delivers:"Screens, microphones, stage lights",show:true,team:true,t:2},
+    v3:{name:"Harbourside Catering",role:"Catering",phone:"555-0128",arrive:"10:30",delivers:"Coffee station and lunch for 180",show:true,team:true,t:3},
+    v4:{name:"Swift Print",role:"Badges and signs",phone:"555-0177",delivers:"Name badges and QR signs",show:false,team:true,t:4,note:"Pick up the day before"}}},
+  clientTemplates:{tp1:{name:"Corporate conference",t:ago(500),items:[{title:"Book the venue",owner:"planner",days:60,show:true},{title:"Finalize the agenda and speakers",owner:"client",days:10,show:true},{title:"Send the final attendee list",owner:"client",days:9,show:true},{title:"Book AV and microphones",owner:"planner",days:10,show:true},{title:"Order name badges",owner:"planner",days:9,show:true},{title:"Approve the lunch menu",owner:"client",days:8,show:true},{title:"Print QR code signs",owner:"planner",days:3,show:true},{title:"Test the big screen at the venue",owner:"planner",days:1,show:true},{title:"Send thank-you notes",owner:"planner",days:-7,show:true}]}},
+  feedback:{OCONNOR:{r1:{who:"client",name:"Margaret O'Connor",rating:5,best:"Every detail was handled. I actually got to enjoy my own party!",better:"",ok:true,quote:true,t:ago(190)},
+    r2:{who:"guest",name:"Tom B",rating:5,best:"The trivia on the big screen had the whole room laughing.",ok:true,t:ago(400)},
+    r3:{who:"guest",name:"",rating:4,best:"Lovely venue and great music.",better:"More vegetarian options at dinner.",ok:false,t:ago(420)}}},
+  mates:{liam:{name:"Liam",t:ago(800)},niamh:{name:"Niamh",t:ago(700),nudge:{t:ago(20),msg:"You have 1 overdue task."}}},
+  mateTasks:{liam:{a:{title:"Collect the name badges from Swift Print",ev:"DUBLIN",evName:"Annual Company Conference",due:day(10),done:false,t:1},
+    b:{title:"Set up the registration table",ev:"DUBLIN",evName:"Annual Company Conference",due:day(EVD),note:"From 7:15 AM, badges in alphabetical order",done:false,t:2},
+    c:{title:"Test the microphones with BrightStage AV",ev:"DUBLIN",evName:"Annual Company Conference",due:day(EVD),note:"Before 8:00 AM",done:false,t:3},
+    d:{title:"Put QR code signs on every table",ev:"DUBLIN",evName:"Annual Company Conference",due:day(EVD),done:false,t:4},
+    e:{title:"Measure the room for the dance floor",ev:"WHELAN",evName:"Sarah & James's Wedding",due:day(30),done:false,t:5},
+    f:{title:"Pick up the balloon arch",ev:"OCONNOR",evName:"Margaret's 50th",due:day(-25),done:true,doneAt:ago(610),by:"mate",t:6}},
+   niamh:{a:{title:"Call the caterer about dietary needs",ev:"DUBLIN",evName:"Annual Company Conference",due:day(-1),done:false,t:1},
+    b:{title:"Run registration and hand out badges",ev:"DUBLIN",evName:"Annual Company Conference",due:day(EVD),done:false,t:2},
+    c:{title:"Update the seating chart",ev:"WHELAN",evName:"Sarah & James's Wedding",due:day(60),done:false,t:3}}},
+  leads:{}};
+ localStorage.setItem("hm_pdemo_db",JSON.stringify({pdemoV:PDEMO_V,partygames:pg}));try{firebase.database().ref("pdemoV").set(PDEMO_V)}catch(e){}}
+function pdemoReset(){try{localStorage.removeItem("hm_pdemo_db");["mateSeen_liam","mateSeen_niamh","clSeen_dublin"].forEach(k=>store.set(k,0));Object.keys(localStorage).filter(k=>/fbDone_|hm_theme_(DUBLIN|WHELAN|OCONNOR)/.test(k)).forEach(k=>localStorage.removeItem(k))}catch(e){}if(VIEW==="host")location.reload();else location.href="games.html?pdemo=1#host"}
+if(pdemoOn()){
+ try{pdemoSeed()}catch(e){console.warn("planner demo seed",e)}
+ if(VIEW==="host"){L.hostOK=true;if(!L.hostTab)L.hostTab="clients";if(L.cliOpen===undefined)L.cliOpen="dublin";if(!L.cliTab)L.cliTab="list"}
+ const _caPD=checkAuth;checkAuth=function(){_caPD();if(VIEW==="host")L.hostOK=true};
+ /* every link the app hands out stays inside the demo */
+ const pdq=u=>u.replace(/games\.html\?/,"games.html?pdemo=1&");
+ const _clL=clLink,_mtL=mateLink,_fbL=fbLink;clLink=id=>pdq(_clL(id));mateLink=id=>pdq(_mtL(id));fbLink=k=>pdq(_fbL(k));
+ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("a[href]");if(!a)return;const h=a.getAttribute("href");if(/(^|\/)games\.html/.test(h)&&!/pdemo=1/.test(h)){a.setAttribute("href",h.includes("?")?h.replace("?","?pdemo=1&"):h.replace("games.html","games.html?pdemo=1"))}},true);
+ ACT.pdemoReset=()=>pdemoReset();
+ if(window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
+}
+function pdemoBar(){if(!pdemoOn()||window.top!==window)return "";const on=VIEW;const a=(href,l,v)=>`<a class="${on===v?"on":""}" href="${href}">${l}</a>`;
+ return `<div class="demoslot"><div class="demobar"><span class="dbt">Planner demo</span>${a("games.html?pdemo=1#host","Planner","host")}${a("games.html?pdemo=1&client=dublin","Client","client")}${a("games.html?pdemo=1&mate=liam","Teammate","mate")}<a href="planners.html">Back</a><button data-act="pdemoReset">Start over</button></div></div>`}
+const _hvPD=headerView;headerView=function(){return pdemoBar()+_hvPD()};
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
