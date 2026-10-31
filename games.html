@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e8338f">
 <title>Host Mode</title>
+<script>try{var m=/[?&]e=([^&#]*)/i.exec(location.search),k=m&&"hm_theme_"+decodeURIComponent(m[1]).toUpperCase().replace(/[^A-Z0-9-]/g,""),v=k&&JSON.parse(localStorage.getItem(k)||"null");if(v){window.__themePre=1;for(var p in v)document.documentElement.style.setProperty(p,v[p])}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Marcellus&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
@@ -589,12 +590,12 @@ body:has(.phone){background-image:radial-gradient(900px 440px at 50% -170px,colo
 .glrows .pill:not(.ok):not(.live){background:color-mix(in srgb,var(--muted) 12%,transparent);color:var(--muted)}
 textarea{font:inherit;color:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card)}
 /* ===== Design: ribbons, title mark, moods ===== */
-@property --mood-a{syntax:'<color>';inherits:true;initial-value:transparent}
-@property --mood-b{syntax:'<color>';inherits:true;initial-value:transparent}
-:root{--mood-a:color-mix(in srgb,var(--violet) 8%,transparent);--mood-b:color-mix(in srgb,var(--leaf) 6%,transparent);transition:--mood-a 2.6s ease,--mood-b 2.6s ease}
-:root[data-mood="warm"]{--mood-a:color-mix(in srgb,var(--flame) 26%,transparent);--mood-b:color-mix(in srgb,var(--gold) 20%,transparent)}
-:root[data-mood="bright"]{--mood-a:color-mix(in srgb,var(--rose) 22%,transparent);--mood-b:color-mix(in srgb,var(--sky) 14%,transparent)}
-:root[data-mood="gold"]{--mood-a:color-mix(in srgb,var(--gold) 30%,transparent);--mood-b:color-mix(in srgb,var(--rose) 12%,transparent)}
+@property --mood-a{syntax:'<color>';inherits:false;initial-value:transparent}
+@property --mood-b{syntax:'<color>';inherits:false;initial-value:transparent}
+#ribbons{--mood-a:color-mix(in srgb,var(--violet) 8%,transparent);--mood-b:color-mix(in srgb,var(--leaf) 6%,transparent);transition:--mood-a 2.6s ease,--mood-b 2.6s ease}
+:root[data-mood="warm"] #ribbons{--mood-a:color-mix(in srgb,var(--flame) 26%,transparent);--mood-b:color-mix(in srgb,var(--gold) 20%,transparent)}
+:root[data-mood="bright"] #ribbons{--mood-a:color-mix(in srgb,var(--rose) 22%,transparent);--mood-b:color-mix(in srgb,var(--sky) 14%,transparent)}
+:root[data-mood="gold"] #ribbons{--mood-a:color-mix(in srgb,var(--gold) 30%,transparent);--mood-b:color-mix(in srgb,var(--rose) 12%,transparent)}
 #ribbons{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
   background:radial-gradient(120% 70% at 50% 0%,var(--mood-a),transparent 70%),radial-gradient(90% 60% at 50% 105%,var(--mood-b),transparent 70%)}
 #ribbons .rb{position:absolute;inset:-6%}
@@ -616,6 +617,8 @@ textarea{font:inherit;color:inherit;width:100%;border:1px solid var(--line);bord
 @media (prefers-reduced-motion:reduce){.drift #ribbons .rb,.opening #ribbons svg,.opening .wrap{animation:none}}
 /* the page's own background lets the ribbons show */
 body{background-attachment:fixed}
+@media (hover:none){body{background-attachment:scroll}}
+#ribbons{transform:translateZ(0);will-change:transform}
 /* title mark */
 .brand h1 .tline{display:inline-flex;align-items:flex-end;gap:.18em}
 .brand h1 .tmark{flex:none;margin-bottom:.12em;filter:drop-shadow(0 1px 1px rgba(120,80,0,.18))}
@@ -2913,6 +2916,7 @@ function setThemeVars(colors,fonts,glow){const r=document.documentElement;const 
  if(colors&&colors.ground)r.style.setProperty("--mint",mixHex(colors.ground,colors.leaf||"#2f8a4c",.1));
  const meta=document.querySelector('meta[name="theme-color"]');if(meta&&meta.setAttribute)meta.setAttribute("content",(colors&&(colors.bar||colors.rose))||"#e8338f");
  r.classList.toggle("noglow",glow===false);
+ try{if(EV&&colors&&Object.keys(colors).length){const o={};["--ground","--card","--line","--ink","--muted","--hd","--hd2","--btn1","--btn2","--rose","--flame","--gold","--violet","--leaf","--ground-2","--mint"].forEach(k=>{const x=r.style.getPropertyValue(k);if(x)o[k]=x});const j=JSON.stringify(o);if(localStorage.getItem("hm_theme_"+EV)!==j)localStorage.setItem("hm_theme_"+EV,j)}}catch(e){}
  if(fonts){loadFonts(fonts);r.style.setProperty("--f-script",`"${fonts.title}",${FONT_FALL.title}`);r.style.setProperty("--f-caps",`"${fonts.head}",${FONT_FALL.head}`);r.style.setProperty("--f-body",`"${fonts.body}",${FONT_FALL.body}`);document.body&&(document.body.style.fontSize=(+fonts.size||15)+"px")}}
 let fontKey="";function loadFonts(f){if(!document.head)return;const fams=[...new Set([f.title,f.head,f.body].filter(Boolean))];const key=fams.join("|");if(key===fontKey)return;fontKey=key;let el=document.getElementById("fontlink");if(!el){el=document.createElement("link");el.id="fontlink";el.rel="stylesheet";document.head.appendChild(el)}
  el.href="https://fonts.googleapis.com/css2?"+fams.map(x=>"family="+x.replace(/ /g,"+")+":wght@400;600;700").join("&")+"&display=swap"}
