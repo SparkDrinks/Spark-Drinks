@@ -4469,7 +4469,7 @@ const _connectDemo=connect;
 connect=function(){if(demoOn()){try{demoSeed()}catch(e){console.warn("demo seed",e)}if(!store.get("mod_DEMO",null))store.set("mod_DEMO",{h:"demo",id:"m1",r:"mod"})}_connectDemo()};
 /* a bar on every demo screen: switch views, start over */
 function demoBar(){if(!demoOn()||window.top!==window)return "";const v=(h,l)=>`<a class="${(VIEW===(h||"guest"))?"on":""}" href="games.html?e=DEMO${h?"#"+h:""}">${l}</a>`;
- return `<div class="demoslot"><div class="demobar"><span class="dbt">Demo</span>${v("moderator","Host")}${v("screen","Big screen")}${v("","Guest")}<a href="demo.html">All three</a><button data-act="demoReset">Start over</button></div></div>`}
+ return `<div class="demoslot"><div class="demobar"><span class="dbt">Demo</span><a href="index.html">Home</a>${v("moderator","Host")}${v("screen","Big screen")}${v("","Guest")}<a href="demo.html">All three</a><button data-act="demoReset">Start over</button></div></div>`}
 /* the bar floats with you down the page and fades the further you scroll */
 function demoFloat(){const b=document.querySelector(".demobar"),sl=document.querySelector(".demoslot");if(!b||!sl)return;const h=b.offsetHeight+22;if(sl.dataset.h!=h){sl.dataset.h=h;sl.style.height=h+"px"}const y=window.scrollY||document.documentElement.scrollTop||0;const mx=Math.max(1,(document.documentElement.scrollHeight||0)-(window.innerHeight||0));b.style.opacity=String(Math.max(0,Math.min(1,1-y/mx)).toFixed(2));b.style.pointerEvents=+b.style.opacity<.05?"none":""}
 if(demoOn()&&window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
@@ -5126,7 +5126,7 @@ if(pdemoOn()){
  if(window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
 }
 function pdemoBar(){if(!pdemoOn()||window.top!==window)return "";const on=VIEW;const a=(href,l,v)=>`<a class="${on===v?"on":""}" href="${href}">${l}</a>`;
- return `<div class="demoslot"><div class="demobar"><span class="dbt">Planner demo</span>${a("games.html?pdemo=1#planner","Planner","planner")}${a("games.html?pdemo=1&p=northlight&client=dublin","Client","client")}${a("games.html?pdemo=1&p=northlight&mate=liam","Teammate","mate")}<a href="planners.html">Back</a><button data-act="pdemoReset">Start over</button></div></div>`}
+ return `<div class="demoslot"><div class="demobar"><span class="dbt">Planner demo</span><a href="index.html">Home</a>${a("games.html?pdemo=1#planner","Planner","planner")}${a("games.html?pdemo=1&p=northlight&client=dublin","Client","client")}${a("games.html?pdemo=1&p=northlight&mate=liam","Teammate","mate")}<button data-act="pdemoReset">Start over</button></div></div>`}
 const _hvPD=headerView;headerView=function(){return pdemoBar()+_hvPD()};
 
 /* ================= ACCOUNTS + PLANNER PORTAL =================
