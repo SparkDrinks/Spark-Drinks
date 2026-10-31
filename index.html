@@ -4,7 +4,7 @@
 <meta name="theme-color" content="#fffaf3">
 <link rel="icon" href="img/icon.svg" type="image/svg+xml">
 <title>Host Mode · Run your whole event from your phone</title>
-<meta name="description" content="Host Mode plans your event, checks guests in, and runs live games, big-screen moments and photo slideshows from one phone. Baby showers, weddings, birthdays, reunions and company events.">
+<meta name="description" content="Host Mode lets you plan, run and remember your event and still be a guest at it. For one-time hosts, and for planners and venues who run events for clients.">
 <script>
 /* Event links (?e=CODE) and page links (#screen, #host…) go straight into the app. */
 if(location.search||location.hash)location.replace("games.html"+location.search+location.hash);
@@ -166,22 +166,42 @@ footer a{text-decoration:none}footer a:hover{color:var(--navy)}
 .rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.float,.track{animation:none}.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+
+/* two doors + planner section */
+.doors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:6px}
+.door{display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:22px;background:#fff;border:1.5px solid var(--line-2);text-decoration:none;box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
+.door:hover{transform:translateY(-3px);border-color:var(--navy)}
+.door b{font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;line-height:1.15;color:var(--navy)}
+.door span{color:var(--body);font-size:15px}.door span.eyebrow{color:#b45a00;font-size:11px}
+.door i{font-style:normal;font-weight:800;color:var(--flame);margin-top:6px}
+.door.hot{border-color:var(--orange);background:linear-gradient(180deg,#fff,#fff6ea)}
+@media (max-width:640px){.doors{grid-template-columns:1fr}}
+.pts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pt{background:#fff;border:1px solid var(--line);border-top:4px solid var(--orange);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.pt:nth-child(2){border-top-color:var(--sky)}.pt:nth-child(3){border-top-color:var(--gold)}.pt:nth-child(4){border-top-color:var(--green)}
+.pt b{font-family:Montserrat,sans-serif;font-weight:800;font-size:19px;line-height:1.2;color:var(--navy);display:block;margin-bottom:8px}.pt p{margin:0;color:var(--body);font-size:15px}
+@media (max-width:980px){.pts{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.pts{grid-template-columns:1fr}}
+.auto{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.honest{margin-top:28px;background:#fff;border:1px solid var(--line);border-radius:24px;padding:26px;box-shadow:var(--shadow)}
+.honest h3{font-size:22px;font-weight:800;margin-bottom:14px}.honest .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.list.nope li::before{background:rgba(232,101,15,.2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e8650f' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='m7 7 10 10M17 7 7 17'/%3E%3C/svg%3E") center/11px no-repeat}
+@media (max-width:700px){.honest .two{grid-template-columns:1fr}}
 </style></head><body>
 
 <header class="nav"><div class="wrap">
  <a class="logo" href="./" aria-label="Host Mode home"><svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#0c2147"/><rect x="11" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="30.5" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="13" y="19.5" width="22" height="9" rx="4.5" fill="#f7941d"/><circle cx="30.5" cy="24" r="3.4" fill="#fff"/><circle cx="39.5" cy="8.5" r="2.6" fill="#f2b134"/><circle cx="8.5" cy="40" r="1.8" fill="#3dae2b"/></svg><span>Host <b>Mode</b></span></a>
- <nav><a class="lnk" href="#screens">How it works</a><a class="lnk" href="#features">Features</a><a class="lnk" href="demo.html">Live demo</a><a class="btn hot" href="#create">Create your event</a></nav>
+ <nav><a class="lnk" href="#host">Hosting one event</a><a class="lnk" href="#pros">Planners &amp; venues</a><a class="lnk" href="demo.html">Live demo</a><a class="btn hot" href="#create">Create your event</a></nav>
 </div></header>
 
 <main>
 <section class="hero"><div class="wrap">
  <div>
   <div class="eyebrow">The host's secret weapon</div>
-  <h1>Host the event <span class="grad">everyone talks about.</span></h1>
-  <p class="lead">Plan the weeks before, check guests in at the door, and run live games, big moments and the photo slideshow on the big screen, all from your phone.</p>
-  <div class="ctas">
-   <a class="btn hot" href="#create">Create your event <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-   <a class="btn" href="demo.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>Try the live demo</a>
+  <h1>Run the whole event. <span class="grad">Still be a guest at it.</span></h1>
+  <p class="lead">Host Mode keeps the plan, the guests, the games and the photos in one place, so you can enjoy your own party. Planners and venues get the same tools for every client.</p>
+  <div class="doors">
+   <a class="door hot" href="#host"><span class="eyebrow">Door 1</span><b>I'm hosting one event</b><span>A baby shower, wedding, birthday or reunion. Simple from the first minute.</span><i>See how it works →</i></a>
+   <a class="door" href="#pros"><span class="eyebrow">Door 2</span><b>I plan events for clients</b><span>Planners and venues running many events, with a portal for every client.</span><i>See the planner tools →</i></a>
   </div>
   <div class="proof"><span>No app to install</span><span>Guests join with one scan</span><span>Works on any TV</span></div>
  </div>
@@ -199,8 +219,18 @@ footer a{text-decoration:none}footer a:hover{color:var(--navy)}
  <span class="tag" aria-hidden="true"><i></i>Baby showers</span><span class="tag" aria-hidden="true"><i></i>Weddings</span><span class="tag" aria-hidden="true"><i></i>Birthdays</span><span class="tag" aria-hidden="true"><i></i>Engagement parties</span><span class="tag" aria-hidden="true"><i></i>Anniversaries</span><span class="tag" aria-hidden="true"><i></i>Family reunions</span><span class="tag" aria-hidden="true"><i></i>Company events</span><span class="tag" aria-hidden="true"><i></i>Gender reveals</span><span class="tag" aria-hidden="true"><i></i>Holiday parties</span>
 </div></div>
 
+<section class="sec" id="host" style="padding-bottom:10px"><div class="wrap">
+ <div class="head rv"><div class="eyebrow">Door 1 · Hosting one event</div><h2>Be a guest at <span class="grad">your own event.</span></h2><p>Most hosts spend the party running it. Host Mode does the running, so you can be in the room, in the photos and in the moment.</p></div>
+ <div class="pts">
+  <article class="pt rv"><b>Know it's handled</b><p>Starter checklists, a budget, a guest count, a seating chart and reminders, so nothing lives in your head the night before.</p></article>
+  <article class="pt rv"><b>Welcome people without lifting a finger</b><p>Guests scan one code and they're checked in. No app, no account, no list to hold at the door.</p></article>
+  <article class="pt rv"><b>Let the party run itself</b><p>Games, big moments and the evening order play on the TV and every phone. You can tap along or just watch.</p></article>
+  <article class="pt rv"><b>Keep the memories</b><p>A shared photo album, a slideshow on the big screen and a keepsake afterwards, so the day outlasts the day.</p></article>
+ </div>
+</div></section>
+
 <section class="sec tint" id="screens"><div class="wrap">
- <div class="head rv"><div class="eyebrow">Three screens, one event</div><h2>You run it. The room <span class="grad">feels it.</span></h2><p>Your phone is the remote. The TV is the stage. Every guest's phone is a game controller. Tap once and they all move together.</p></div>
+ <div class="head rv"><div class="eyebrow">For one event</div><h2>You run it. The room <span class="grad">feels it.</span></h2><p>Your phone is the remote. The TV is the stage. Every guest's phone is a game controller. Tap once and they all move together.</p></div>
  <div class="three">
   <article class="scr rv"><div class="num">1</div><h3>The host's phone</h3><p>Your console for the whole day: the run of show, check-in, games, moments, raffles and scores. Helpers get their own sign-in.</p><div class="shot"><img src="img/shot-host.jpg" alt="The host console showing the next step and the games to go live with" loading="lazy" width="390" height="844"></div></article>
   <article class="scr rv"><div class="num">2</div><h3>The big screen</h3><p>Any TV with a browser. Questions, countdowns, the live leaderboard, photo slideshows and a gold-confetti finale.</p><div class="shot tv"><img src="img/shot-tv.jpg" alt="The big screen showing a trivia question and the leaderboard" loading="lazy" width="1280" height="720"></div><div class="shot tv"><img src="img/shot-moment.jpg" alt="The big screen showing a Make a wish moment" loading="lazy" width="1280" height="720"></div></article>
@@ -224,10 +254,29 @@ footer a{text-decoration:none}footer a:hover{color:var(--navy)}
  </div>
 </div></section>
 
+<section class="sec tint" id="pros"><div class="wrap">
+ <div class="head rv"><div class="eyebrow">Door 2 · Planners &amp; venues</div><h2>Every client's event, <span class="grad">in one place.</span></h2><p>Give each client a simple private link, keep your team on track, and run every event the same dependable way. Start with one client. Add the deeper tools only when you want them.</p></div>
+ <div class="auto">
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>A portal for every client</h3><p>One link, no account. Your client sees their checklist, what is waiting on them, their dates, their payments and their messages. You choose what they see.</p></article>
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>Checklists you reuse</h3><p>Save your usual wedding, birthday or corporate checklist once. Add a new client and the due dates fill in from the event date.</p></article>
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>Approvals with a record</h3><p>Send a menu, floor plan or design. The client taps Approve or Request changes, and you keep the history.</p></article>
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>Uploads that arrive ready</h3><p>Clients send photos for printed boards, PDFs and guest lists. You review a guest list before it changes yours.</p></article>
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>A team that stays on track</h3><p>Add teammates. Each sees only their own tasks, across all your events, and you can remind everyone who is behind. On the day, they get a simple “do this now” screen with a help button.</p></article>
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>Payments, dates and vendors</h3><p>Track what is paid and due, key dates with add-to-calendar, and every vendor's phone and arrival time. Share them with clients and teammates, or keep them private.</p></article>
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>Your brand, their portal</h3><p>Your logo, name and colour on every client and teammate page, with a weekly summary you can post in one tap.</p></article>
+  <article class="cell rv"><div class="ic g"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg></div><h3>Feedback you can use</h3><p>After the event, clients and guests rate it and tell you what worked. Feature the comments they allow as testimonials.</p></article>
+
+ </div>
+ <div class="honest rv"><h3>What it does, and what it doesn't</h3>
+  <div class="two"><div><b>Does</b><ul class="list"><li>Keeps vendors, payments, dates, files and approvals in one place</li><li>Shows clients and teammates exactly what you decide to share</li><li>Shows reminders and weekly summaries inside each portal</li></ul></div>
+  <div><b>Doesn't</b><ul class="list nope"><li>Book vendors for you</li><li>Take or send money. Payments are tracked, not processed</li><li>Email reminders yet. They show inside the portal for now</li></ul></div></div></div>
+ <div class="ctas rv" style="margin-top:28px"><a class="btn hot" href="demo.html">Try the live demo</a><a class="btn navy" href="#create">I have an invite code</a></div>
+</div></section>
+
 <section class="sec" style="padding-top:30px"><div class="wrap">
  <div class="head rv"><div class="eyebrow">Up and running tonight</div><h2>Three steps. <span class="grad">No setup stress.</span></h2></div>
  <div class="steps">
-  <div class="step rv"><b>01</b><h3>Get your invite code</h3><p>Your host or planner sends you a code. It opens one event that's all yours.</p></div>
+  <div class="step rv"><b>01</b><h3>Get your invite code</h3><p>Your planner or Host Mode sends you a code. It opens one event that's all yours.</p></div>
   <div class="step rv"><b>02</b><h3>Pick your event type</h3><p>Start from a complete template with games, moments and an evening order. Upload your flyer and the colors match it.</p></div>
   <div class="step rv"><b>03</b><h3>Share one code</h3><p>Put the QR code on the TV and the tables. Guests scan it and the party starts.</p></div>
  </div>
@@ -241,7 +290,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--navy)}
    <input id="code" name="invite" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Enter your code" required>
    <button class="btn hot" type="submit">Create my event <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
    <a class="btn navy" href="demo.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>Try the live demo</a>
-   <small>No code yet? Ask your host, or type <b>DEMO</b> to explore. Hosts sign in on the <a href="games.html#host">host console</a>.</small>
+   <small>No code yet? Type <b>DEMO</b> to explore. Hosts sign in on the <a href="games.html#host">host console</a>.</small>
   </form>
  </div>
 </div></section>
