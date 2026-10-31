@@ -806,11 +806,11 @@ html.hmbrand .eyebrow{color:#b45a00}
 .demobar button{margin-left:auto}
 
 /* demo contact gate */
-#leadgate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#leadgate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom))}
 #leadgate .lg-bg{position:fixed;inset:0;background:rgba(7,21,49,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.lg-card{position:relative;width:min(520px,100%);background:#fff;color:#0c2147;border-radius:24px;padding:24px;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);font-family:Figtree,system-ui,sans-serif;max-height:calc(100vh - 32px);overflow:auto}
+.lg-card{position:relative;width:min(520px,100%);background:#fff;color:#0c2147;border-radius:24px;padding:20px 22px 18px;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);font-family:Figtree,system-ui,sans-serif;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain}
 .lg-card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;border-radius:24px 24px 0 0;background:linear-gradient(90deg,#f7941d 60%,#3dae2b 60%)}
-.lg-x{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:1.5px solid #e7e0d4;background:#fff;color:#0c2147;font:600 26px/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
+.lg-x{position:sticky;top:0;float:right;margin:-4px -6px 0 8px;z-index:2;box-shadow:0 4px 12px -6px rgba(12,33,71,.4);width:44px;height:44px;border-radius:50%;border:1.5px solid #e7e0d4;background:#fff;color:#0c2147;font:600 26px/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
 .lg-x:hover{background:#fffaf3;border-color:#0c2147}
 .lg-eb{font-weight:800;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#b45a00}
 .lg-card h2{font-family:Montserrat,system-ui,sans-serif;font-weight:900;font-size:26px;letter-spacing:-.02em;margin:6px 0 6px;color:#0c2147}
@@ -824,7 +824,7 @@ html.hmbrand .eyebrow{color:#b45a00}
 .lg-go{width:100%;margin-top:14px;min-height:52px;border:0;border-radius:999px;background:linear-gradient(135deg,#f7941d,#e8650f);color:#fff;font:800 16px Montserrat,system-ui,sans-serif;cursor:pointer;box-shadow:0 14px 30px -14px rgba(232,101,15,.9)}
 .lg-go:disabled{opacity:.7}
 .lg-fine{font-size:12px!important;color:#5d6b86!important;text-align:center;margin:10px 0 0!important}
-@media (max-width:480px){.lg-grid{grid-template-columns:1fr}.lg-card{padding:20px}}
+@media (max-width:480px){.lg-grid{grid-template-columns:1fr;gap:8px}.lg-card{padding:16px 16px 14px;border-radius:20px}.lg-card h2{font-size:22px}.lg-card p{font-size:14px;margin-bottom:10px}.lg-grid input,.lg-grid select,.lg-grid textarea{min-height:44px;padding:8px 12px}.lg-go{margin-top:10px}}
 </style>
 </head><body>
 <div class="wrap">
@@ -4391,20 +4391,20 @@ async function leadSend(o){const url=FIREBASE_CONFIG.databaseURL.replace(/\/$/,"
 if(demoOn()){
  document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest("[data-act],a[href],button,label.upl,input[type=checkbox]");if(!el||leadDone())return;
   if(el.closest(".demobar")||el.closest("#leadgate"))return;
-  if(leadCount()<LEAD_FREE){leadTap();return}
-  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-  if(window.top!==window){try{window.top.postMessage({hm:"leadgate"},location.origin)}catch(x){}}else showLeadGate()},true);
+  leadTap();if(leadCount()<LEAD_FREE||L.leadShown)return;L.leadShown=true;
+  /* the second tap does what it was meant to do, then the form slides in once */
+  setTimeout(()=>{if(leadDone())return;if(window.top!==window){try{window.top.postMessage({hm:"leadgate"},location.origin)}catch(x){}}else showLeadGate()},700)},true);
  addEventListener("storage",e=>{if(e.key==="hm_lead_done"&&leadDone()){const g=document.getElementById("leadgate");if(g)g.remove()}});
 }
 function showLeadGate(){if(document.getElementById("leadgate"))return;const g=document.createElement("div");g.id="leadgate";g.innerHTML=LEAD_FORM_HTML();document.body.appendChild(g);leadWire(g)}
 /* the same form is used on demo.html, so it lives in one string */
 const LEAD_FORM_HTML=()=>`<div class="lg-bg"></div><form class="lg-card" novalidate aria-labelledby="lgT"><button type="button" class="lg-x" aria-label="Close">×</button><div class="lg-eb">Enjoying the demo?</div><h2 id="lgT">Tell us how to reach you</h2>
- <p>Leave your details to keep exploring. We'll send you an invite code when you're ready to plan your own event.</p>
+ <p>Leave your details and we'll send you an invite code when you're ready to plan your own event.</p>
  <div class="lg-grid"><label>Your name<input name="name" autocomplete="name" required></label><label>Email<input name="email" type="email" autocomplete="email" required></label>
  <label>Phone (optional)<input name="phone" type="tel" autocomplete="tel"></label><label>What are you planning?<select name="type"><option value="">Choose one</option>${Object.keys(EVENT_TYPES).map(k=>`<option>${EVENT_TYPES[k].label}</option>`).join("")}<option>I plan events for clients</option></select></label>
  <label>Event date (optional)<input name="date" type="date"></label><label class="lg-wide">Anything else? (optional)<textarea name="note" rows="2"></textarea></label></div>
- <p class="lg-err" hidden></p><button class="lg-go" type="submit">Keep exploring</button><p class="lg-fine">We only use this to contact you about Host Mode.</p></form>`;
-function leadWire(g){const f=g.querySelector("form");g.querySelector(".lg-x").onclick=()=>g.remove();g.querySelector(".lg-bg").onclick=()=>g.remove();addEventListener("keydown",function k(e){if(e.key==="Escape"){g.remove();removeEventListener("keydown",k)}});f.addEventListener("submit",async e=>{e.preventDefault();const v=k=>String((f.elements[k]&&f.elements[k].value)||"").trim();const err=f.querySelector(".lg-err");
+ <p class="lg-err" hidden></p><button class="lg-go" type="submit">Send my details</button><p class="lg-fine">We only use this to contact you about Host Mode.</p></form>`;
+function leadWire(g){const f=g.querySelector("form");const close=()=>{try{localStorage.setItem("hm_lead_done","closed")}catch(y){}g.remove()};g.querySelector(".lg-x").onclick=close;g.querySelector(".lg-bg").onclick=close;addEventListener("keydown",function k(e){if(e.key==="Escape"){close();removeEventListener("keydown",k)}});f.addEventListener("submit",async e=>{e.preventDefault();const v=k=>String((f.elements[k]&&f.elements[k].value)||"").trim();const err=f.querySelector(".lg-err");
   const o={name:v("name").slice(0,80),email:v("email").slice(0,120),phone:v("phone").slice(0,40),type:v("type").slice(0,60),date:v("date").slice(0,20),note:v("note").slice(0,600),t:{".sv":"timestamp"},src:"demo",page:location.hash.slice(1)||"guest"};
   if(!o.name){err.textContent="Please add your name.";err.hidden=false;return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(o.email)){err.textContent="Please check your email address.";err.hidden=false;return}
