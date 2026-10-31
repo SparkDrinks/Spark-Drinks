@@ -1438,7 +1438,7 @@ function mEvent(){const c=C(),m=D.meta||{};const cs=c.colors||{};const g=c.games
  <a class="btn as" href="${esc(eventURL(EV,"print"))}" target="_blank" rel="noopener">Open the printable kit</a></div></div></section>
  ${m.practice?"":`<section class="card stack"><h2>Rehearsal ${hint("practice")}</h2><p class="small muted m0">Practice the whole night with 16 pretend guests who vote, find items and call bingo. It runs in a separate practice event, so tonight's scores stay clean.</p><button class="btn primary as" data-act="startPractice">Start a practice run</button></section>`}
  <section class="card stack"><h2>Photo cleanup ${hint("retention")}</h2><div class="row"><span class="small">Delete photos after</span><input type="number" min="0" max="365" data-draft="ret" value="${esc(dv("ret",C().retentionDays!=null?C().retentionDays:60))}"><span class="small">days</span><button class="btn sm" data-act="saveRetention">Save</button></div><p class="small muted m0">Cleanup runs each time a host or moderator console opens. 0 keeps photos.</p></section>
- <section class="card stack"><h2>Moderators ${hint("pin")}</h2>${L.isAdmin?modsPanel(EV,D.mods,D.meta):`<p class="small m0">You're signed in as <b>${esc(L.modName||"a moderator")}</b>. Only the administrator can add or remove moderators.</p>`}</section>
+ <section class="card stack"><h2>Moderators ${hint("pin")}</h2>${L.isAdmin||L.isOwner?modsPanel(EV,D.mods,D.meta):`<p class="small m0">You're signed in as <b>${esc(L.modName||"a moderator")}</b>. Only the person who created this event or the administrator can add or remove moderators.</p>`}</section>
  <section class="card stack"><h2>Start fresh</h2>${L.isAdmin?freshPanel(EV):'<p class="small muted m0">Only the administrator can clear the event. Ask them to sign in with the host PIN.</p>'}</section>`}
 
 /* ---- Memories ---- */
@@ -2455,7 +2455,7 @@ function modSession(){const s=store.get("mod_"+EV,null);if(!s)return null;return
 function checkAuth(){const m=L.masterHash;const hs=store.get("host",null);L.hostOK=!!m&&(hs===m||!!hs&&hs.h===m);
  if(EV&&D.meta){const s=modSession();const mods=D.mods||{};let ok=false,admin=false,name="";
   if(s&&s.h){if(s.h===m){ok=admin=true;name="Administrator"}else if(s.id&&mods[s.id]&&mods[s.id].pinHash===s.h){ok=true;name=mods[s.id].name}else if(D.meta.pinHash&&s.h===D.meta.pinHash&&!s.id){ok=true;name="Moderator"}}
-  if(L.modOK&&!ok&&VIEW==="moderator")L.kicked=true;L.modOK=ok;L.isAdmin=admin;L.modName=name;L.modId=ok&&s&&s.id||null}}
+  if(L.modOK&&!ok&&VIEW==="moderator")L.kicked=true;L.modOK=ok;L.isAdmin=admin;L.modName=name;L.modId=ok&&s&&s.id||null;L.isOwner=!!(ok&&s&&s.id&&mods[s.id]&&mods[s.id].owner)}}
 function pinScreen(){return `<section class="card stack narrow"><div class="eyebrow">Moderators only</div><h2>Enter your PIN</h2><p class="small muted m0">${esc(D.meta?D.meta.name:"")}</p>${L.kicked?'<div class="nudge">Your moderator access for this event was removed by the administrator.</div>':""}
  <input type="password" id="pin" inputmode="numeric" autocomplete="off" data-draft="pin" value="${esc(dv("pin",""))}"><button class="btn primary" data-act="pin">Open the console</button><p class="small muted m0">Use your personal moderator PIN. The administrator signs in with the host PIN.</p><a class="small muted" href="${esc(eventURL(EV))}">I'm a guest</a></section>`}
 Object.assign(ACT,{
@@ -2526,7 +2526,7 @@ function freshPanel(code){const o=Object.assign({archive:true,download:true,cont
  <label class="row small"><input type="checkbox" data-act="freshOpt" data-k="content" ${o.content?"checked":""}> Also clear the content (questions, moments, colors, your photos)</label>
  <div class="row"><span class="small">Type RESET to confirm:</span><input type="text" class="w110" data-draft="fr_${esc(code)}" value="${esc(dv("fr_"+code,""))}"><button class="btn primary" data-act="freshGo" data-code="${esc(code)}">${L.freshing?"Working…":"Start fresh"}</button></div></div>`}
 function modsPanel(code,mods,meta){const ms=mods||{},keys=Object.keys(ms).sort((a,b)=>(ms[a].t||0)-(ms[b].t||0));
- return `<div class="stack tight">${keys.length?keys.map(k=>`<div class="row between small"><span><b>${esc(ms[k].name)}</b> <span class="muted">· added ${new Date(ms[k].t||0).toLocaleDateString()}</span>${ms[k].owner?' <span class="pill">created the event</span>':""}</span><button class="btn xs" data-act="delMod" data-code="${esc(code)}" data-id="${k}">Remove</button></div>`).join(""):'<span class="small muted">No personal moderators yet.</span>'}
+ return `<div class="stack tight">${keys.length?keys.map(k=>`<div class="row between small"><span><b>${esc(ms[k].name)}</b> <span class="muted">· added ${new Date(ms[k].t||0).toLocaleDateString()}</span>${ms[k].owner?' <span class="pill">created the event</span>':""}</span>${ms[k].owner&&!L.isAdmin?"":`<button class="btn xs" data-act="delMod" data-code="${esc(code)}" data-id="${k}">Remove</button>`}</div>`).join(""):'<span class="small muted">No personal moderators yet.</span>'}
  <div class="row"><input type="text" class="grow" placeholder="Moderator's name" data-draft="nm_name_${esc(code)}" value="${esc(dv("nm_name_"+code,""))}"><input type="password" inputmode="numeric" placeholder="Their PIN" class="w110" data-draft="nm_pin_${esc(code)}" value="${esc(dv("nm_pin_"+code,""))}"><button class="btn sm primary" data-act="addMod" data-code="${esc(code)}">Add moderator</button></div>
  <div class="row between small"><span>Shared event PIN: <b>${meta&&meta.pinHash?"on":"off"}</b> <span class="muted">(anyone with it can moderate)</span></span>${meta&&meta.pinHash?`<button class="btn xs" data-act="sharedOff" data-code="${esc(code)}">Turn off and sign everyone out</button>`:`<span class="row"><input type="password" inputmode="numeric" class="w110" placeholder="New shared PIN" data-draft="sp_${esc(code)}"><button class="btn xs" data-act="sharedSet" data-code="${esc(code)}">Set</button></span>`}</div></div>`}
 function watchHostEvent(code){D.hostMods=D.hostMods||{};D.hostMeta=D.hostMeta||{};D.hostEv=D.hostEv||{};if(D.hostMods["_w"+code])return;D.hostMods["_w"+code]=1;
@@ -3100,9 +3100,15 @@ const nameList=id=>`<datalist id="${id}">${[...new Set(guestNames())].sort().map
 const helperName=id=>id&&(D.mods||{})[id]?D.mods[id].name:"Everyone";
 
 /* ---- run of show ---- */
-const ROS_DEFAULT=[["15:00","Doors open","Greet guests. Check diaper packs and add them to the raffle."],["15:15","Team Splitter and Long Word Wins","Icebreakers. Start them from the Live tab."],["15:30","Open the Scavenger Hunt","It runs in the background all night."],
- ["15:45","Trivia",""],["16:15","Dinner is served","Show the Dinner moment on the big screen."],["16:45","Gift opening","Log each gift on the Tonight tab for the thank-you notes."],["17:15","Crossword and Superlatives",""],
- ["17:40","The reveal",""],["17:50","Diaper raffle draw","Draw the winner on the big screen."],["18:00","Bingo, then crown the winners",""],["18:30","Farewell and cleanup","Collect decorations and the gift list."]];
+function rosDefault(){const baby=evType()==="baby",raf=rafCfg(),ord=C().order||[],moms=C().moments||[];
+ const has=id=>Array.isArray(moms)?moms.some(m=>m&&m.id===id):!!moms[id];const out=[];const add=(t,n,x)=>out.push([t,n,x||""]);
+ add("15:00","Doors open",raf.on?(baby?"Greet guests. Check diaper packs and add them to the raffle.":"Greet guests and add raffle entries."):"Greet guests.");
+ add("15:15","Team Splitter and Long Word Wins","Icebreakers. Start them from the Live tab.");add("15:30","Open the Scavenger Hunt","It runs in the background all night.");add("15:45","Trivia");
+ if(has("dinner"))add("16:15","Dinner is served","Show the Dinner moment on the big screen.");
+ if(giftOn())add("16:45","Gift opening","Log each gift on the Tonight tab for the thank-you notes.");else if(has("gifts"))add("16:45","Gift opening");
+ add("17:15","Crossword and Superlatives");if(ord.includes("reveal"))add("17:40","The reveal");
+ if(raf.on)add("17:50",raf.name+" draw","Draw the winner on the big screen.");
+ add("18:00","Bingo, then crown the winners");add("18:30","Farewell and cleanup","Collect decorations"+(giftOn()?" and the gift list.":"."));return out}
 const rosItems=()=>{const r=C().ros||{};return Object.keys(r).map(k=>Object.assign({k},r[k])).sort((a,b)=>(a.time||"").localeCompare(b.time||"")||(a.t||0)-(b.t||0))};
 const fmtTime=t=>{if(!t)return "";const [h,m]=t.split(":").map(Number);if(isNaN(h))return t;return `${(h%12)||12}:${String(m||0).padStart(2,"0")} ${h<12?"AM":"PM"}`};
 const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
@@ -3131,22 +3137,31 @@ function rosSection(){const items=rosItems(),nextI=items.findIndex(x=>!(D.rosDon
  ${Object.keys(D.mods||{}).length?"":`<p class="small muted m0">Add helpers on the Event tab, then assign them steps here. Each helper sees their own jobs when they sign in.</p>`}</section>`}
 
 /* ---- diaper raffle ---- */
-const rafMin=()=>+(C().raffleMin||70);
+/* Baby showers start with the diaper raffle on. Every other event gets a general raffle, off until someone turns it on. */
+function rafCfg(){const r=C().raffle||{},baby=evType()==="baby",min=+(C().raffleMin||70);
+ const base=baby?{name:"Diaper raffle",rule:`Only guests who bring a pack of ${min} or more diapers. One entry each, however many packs.`,gift:`Diapers (pack of ${min}+)`}:{name:"Raffle",rule:"One entry per guest.",gift:""};
+ return {on:r.on!=null?!!r.on:baby,name:r.name||base.name,rule:r.rule!=null?r.rule:base.rule,gift:giftOn()?(r.gift!=null?r.gift:base.gift):"",giftSet:r.gift!=null?r.gift:base.gift,baby}}
 const rafList=()=>Object.keys(D.raf||{}).map(k=>Object.assign({k},D.raf[k])).sort((a,b)=>(a.t||0)-(b.t||0));
 const rafWon=()=>Object.keys(D.rafWins||{}).map(k=>D.rafWins[k]).sort((a,b)=>(a.t||0)-(b.t||0));
-function rafSection(){const list=rafList(),won=rafWon(),wonSet=new Set(won.map(w=>normName(w.name))),left=list.filter(x=>!wonSet.has(normName(x.name))).length;const r=st().raffle,onTv=r&&typeof r==="object"&&r.show;
- return `<section class="card stack gilt"><div class="row between"><h2>Diaper raffle</h2><span class="pill gold">${list.length} entered</span></div>
- <p class="small muted m0">Only guests who bring a pack of <b>${rafMin()} or more</b> diapers. One entry each, however many packs.</p>
+function rafSection(){const cfg=rafCfg();
+ if(!cfg.on)return `<section class="card row between"><div><h2>Raffle</h2><p class="small muted m0">Optional. Helpers enter guests by name, one entry each, and you draw the winner on the big screen.</p></div><button class="btn sm" data-act="rafOn">Add a raffle</button></section>`;
+ const list=rafList(),won=rafWon(),wonSet=new Set(won.map(w=>normName(w.name))),left=list.filter(x=>!wonSet.has(normName(x.name))).length;const r=st().raffle,onTv=r&&typeof r==="object"&&r.show;
+ return `<section class="card stack gilt"><div class="row between"><h2>${esc(cfg.name)}</h2><span class="pill gold">${list.length} entered</span></div>
+ ${cfg.rule?`<p class="small muted m0">${esc(cfg.rule)}</p>`:""}
  <div class="row"><input type="text" class="grow" list="rafNames" data-draft="raf_name" value="${esc(dv("raf_name",""))}" placeholder="Guest's name" aria-label="Guest's name" autocomplete="off">${nameList("rafNames")}<button class="btn primary" data-act="rafAdd">Add to raffle</button></div>
- <label class="row small"><input type="checkbox" data-draft="raf_log" ${dv("raf_log","1")==="1"?"checked":""}> Also add the diapers to the gift log</label>
+ ${cfg.gift?`<label class="row small"><input type="checkbox" data-draft="raf_log" ${dv("raf_log","1")==="1"?"checked":""}> Also add “${esc(cfg.gift)}” to the gift log</label>`:""}
  ${list.length?`<div class="chips">${list.map(x=>`<span class="pill ${wonSet.has(normName(x.name))?"gold":""}">${wonSet.has(normName(x.name))?"🏆 ":""}${esc(x.name)} <button class="x" data-act="rafDel" data-k="${x.k}" aria-label="Remove ${esc(x.name)}">×</button></span>`).join("")}</div>`:'<p class="small muted m0">No entries yet.</p>'}
  <div class="row">${onTv?`<button class="btn" data-act="rafHide">Take it off the big screen</button>`:`<button class="btn gold" data-act="rafDraw" ${left?"":"disabled"}>${won.length?"Draw another winner":"Draw the winner on the big screen"}</button>`}</div>
  ${won.length?`<p class="m0">Winner${won.length>1?"s":""}: ${won.map(w=>`<b>${esc(w.name)}</b>`).join(", ")}</p>`:""}
- <details><summary class="small">Pack size</summary><div class="row"><span class="small">Smallest pack that counts</span><input type="number" min="1" data-draft="raf_min" value="${esc(dv("raf_min",rafMin()))}" style="width:6em"><button class="btn sm" data-act="rafMinSave">Save</button></div></details></section>`}
+ <details><summary class="small">Raffle settings</summary><div class="stack tight">
+  <label class="stack tight"><span class="small">Name</span><input type="text" data-draft="rs_name" value="${esc(dv("rs_name",cfg.name))}" placeholder="Raffle"></label>
+  <label class="stack tight"><span class="small">Who can enter (shown to helpers)</span><input type="text" data-draft="rs_rule" value="${esc(dv("rs_rule",cfg.rule))}" placeholder="One entry per guest."></label>
+  <label class="stack tight"><span class="small">Also log as a gift (optional)</span><input type="text" data-draft="rs_gift" value="${esc(dv("rs_gift",cfg.giftSet))}" placeholder="Leave blank to skip"></label>${giftOn()?"":`<span class="small muted">Turn on the gift log to use this.</span>`}
+  <div class="row"><button class="btn sm primary" data-act="rafCfgSave">Save</button><button class="btn sm" data-act="rafOff">Turn the raffle off</button></div></div></details></section>`}
 const RAF_MS=5200;
 function rafStage(r){const names=r.names&&r.names.length?r.names:[r.winner];const done=now()-r.t>RAF_MS;
  if(!done)setTimeout(()=>renderSoon(),Math.max(50,RAF_MS-(now()-r.t)+60));
- return `<div class="eyebrow">Diaper raffle</div>${done?`<div class="winner gilt-text pop">${esc(r.winner)}</div><p class="muted">Congratulations! Thank you to everyone who brought diapers.</p>`:`<div class="rafreel" id="rafReel">${esc(names[0])}</div><p class="muted">${names.length} guest${names.length===1?"":"s"} in the draw</p>`}`}
+ const cfg=rafCfg();return `<div class="eyebrow">${esc(cfg.name)}</div>${done?`<div class="winner gilt-text pop">${esc(r.winner)}</div><p class="muted">Congratulations!${cfg.baby&&/diaper/i.test(cfg.name)?" Thank you to everyone who brought diapers.":""}</p>`:`<div class="rafreel" id="rafReel">${esc(names[0])}</div><p class="muted">${names.length} guest${names.length===1?"":"s"} in the draw</p>`}`}
 const _bsTonight=bigscreen;
 bigscreen=function(){const r=st().raffle;if(r&&typeof r==="object"&&r.show)return `<div class="tv one"><section class="stage rafstage">${rafStage(r)}</section></div>`;return _bsTonight()};
 if(VIEW==="screen")setInterval(()=>{const r=st().raffle;if(!r||typeof r!=="object"||!r.show)return;const el=$("#rafReel"),el2=document.querySelector(".rafstage .winner");
@@ -3155,41 +3170,47 @@ if(VIEW==="screen")setInterval(()=>{const r=st().raffle;if(!r||typeof r!=="objec
 
 /* ---- gift log ---- */
 const giftList=()=>Object.keys(D.gifts||{}).map(k=>Object.assign({k},D.gifts[k])).sort((a,b)=>(a.t||0)-(b.t||0));
-function giftSection(){const g=giftList(),thanked=g.filter(x=>x.thanked).length;const hon=C().honorees||"the guests of honor";
+const giftOn=()=>{const c=C().giftLog||{};return c.on!=null?!!c.on:Object.keys(D.gifts||{}).length>0};
+function giftSection(){if(!giftOn())return `<section class="card row between"><div><h2>Gift log</h2><p class="small muted m0">Optional. Helpers note who gave what as gifts are opened, and you get a list for thank-you notes.</p></div><button class="btn sm" data-act="gfOn">Add a gift log</button></section>`;
+ const g=giftList(),thanked=g.filter(x=>x.thanked).length;const hon=C().honorees||"the guests of honor";
  return `<section class="card stack"><div class="row between"><h2>Gift log</h2><span class="pill">${g.length} gift${g.length===1?"":"s"}</span></div>
  <p class="small muted m0">Jot down each gift as it's opened. ${esc(hon)} gets a tidy list for the thank-you notes.</p>
  <div class="grid2 g8"><label class="stack tight"><span class="small">From</span><input type="text" list="giftNames" data-draft="gf_from" value="${esc(dv("gf_from",""))}" placeholder="Guest's name" autocomplete="off">${nameList("giftNames")}</label>
  <label class="stack tight"><span class="small">Gift</span><input type="text" data-draft="gf_gift" value="${esc(dv("gf_gift",""))}" placeholder="Stroller, books, a quilt…"></label></div>
  <button class="btn primary as" data-act="gfAdd">Add gift</button>
  ${g.length?`<div class="stack tight">${g.map(x=>`<div class="gamerow evrow ${x.thanked?"dim":""}"><span class="gnum">🎁</span><div class="mw0"><b>${esc(x.from)}</b><div class="small muted">${esc(x.gift)}</div></div><div class="row"><label class="row small"><input type="checkbox" data-act="gfThank" data-k="${x.k}" ${x.thanked?"checked":""}> Thanked</label><button class="btn sm" data-act="gfDel" data-k="${x.k}" aria-label="Remove gift from ${esc(x.from)}">Remove</button></div></div>`).join("")}</div>
-  <div class="row"><button class="btn sm" data-act="gfCopy">Copy the list</button><button class="btn sm" data-act="gfCsv">Download for thank-you notes</button><span class="small muted">${thanked} of ${g.length} thanked</span></div>`:'<p class="small muted m0">No gifts logged yet.</p>'}</section>`}
+  <div class="row"><button class="btn sm" data-act="gfCopy">Copy the list</button><button class="btn sm" data-act="gfCsv">Download for thank-you notes</button><span class="small muted">${thanked} of ${g.length} thanked</span></div>`:'<p class="small muted m0">No gifts logged yet.</p>'}<button class="btn sm as" data-act="gfOff">Turn the gift log off</button></section>`}
 const giftText=()=>giftList().map(x=>`${x.from}: ${x.gift}`).join("\n");
 const csvCell=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
 
 function mTonight(){return rosSection()+rafSection()+giftSection()}
 
 Object.assign(ACT,{
- rosStarter:async()=>{const u={},tm=Date.now();ROS_DEFAULT.forEach((x,i)=>{u["k"+tm.toString(36)+i]={time:x[0],title:x[1],note:x[2],who:"",t:tm+i}});await ER("content/ros").update(u);toast("Suggested plan added. Change anything you like.")},
+ rosStarter:async()=>{const u={},tm=Date.now();rosDefault().forEach((x,i)=>{u["k"+tm.toString(36)+i]={time:x[0],title:x[1],note:x[2],who:"",t:tm+i}});await ER("content/ros").update(u);toast("Suggested plan added. Change anything you like.")},
  rosAdd:async()=>{const title=dv("rn_title","").trim();if(!title)return toast("Say what happens");await ER("content/ros").push({time:dv("rn_time",""),title:title.slice(0,80),note:dv("rn_note","").trim().slice(0,140),who:dv("rn_who",""),t:Date.now()});["rn_time","rn_title","rn_note","rn_who"].forEach(k=>delete L.drafts[k]);render(true)},
  rosEditOpen:el=>{L.rosEdit=el.dataset.k;["re_time","re_title","re_note","re_who"].forEach(k=>delete L.drafts[k]);render(true)},
  rosCancel:()=>{L.rosEdit=null;render(true)},
  rosSave:async el=>{const k=el.dataset.k,x=(C().ros||{})[k]||{};const title=dv("re_title",x.title||"").trim();if(!title)return toast("Say what happens");await ER("content/ros/"+k).update({time:dv("re_time",x.time||""),title:title.slice(0,80),note:dv("re_note",x.note||"").trim().slice(0,140),who:dv("re_who",x.who||"")});L.rosEdit=null;render(true)},
  rosDel:async el=>{await ER("content/ros/"+el.dataset.k).remove();await ER("rosDone/"+el.dataset.k).remove();L.rosEdit=null;render(true)},
  rosDone:el=>{const k=el.dataset.k;if((D.rosDone||{})[k])ER("rosDone/"+k).remove();else{ER("rosDone/"+k).set({by:L.modName||"A helper",t:Date.now()});buzz(30)}},
- rafAdd:async()=>{const name=dv("raf_name","").trim().slice(0,40);if(!name)return toast("Type the guest's name");
+ rafAdd:async()=>{const cfg=rafCfg();const name=dv("raf_name","").trim().slice(0,40);if(!name)return toast("Type the guest's name");
   const n=normName(name);if(rafList().some(x=>normName(x.name)===n))return toast(name+" is already in. One entry per guest.");
   const pid=ids().find(i=>normName(P(i).name)===n)||null;const tm=Date.now();
-  await ER("raffle").push({name,pid,by:L.modName||"",t:tm});
-  if(dv("raf_log","1")==="1")await ER("gifts").push({from:name,gift:`Diapers (pack of ${rafMin()}+)`,t:tm,by:L.modName||"",raffle:true});
-  delete L.drafts.raf_name;toast(name+" is in the raffle");buzz(30);render(true)},
+  const e={name,pid,by:L.modName||"",t:tm},r1=ER("raffle").push(e);D.raf=Object.assign({},D.raf,{[r1.key]:e});
+  let r2=null;if(cfg.gift&&dv("raf_log","1")==="1"){const g={from:name,gift:cfg.gift,t:tm,by:L.modName||"",raffle:true};r2=ER("gifts").push(g);D.gifts=Object.assign({},D.gifts,{[r2.key]:g})}
+  delete L.drafts.raf_name;toast(name+" is in the raffle");buzz(30);render(true);await r1;if(r2)await r2},
+ rafOn:()=>ER("content/raffle/on").set(true),
+ rafOff:()=>ER("content/raffle/on").set(false),
+ rafCfgSave:async()=>{const c=rafCfg();await ER("content/raffle").update({on:true,name:dv("rs_name",c.name).trim().slice(0,40)||"Raffle",rule:dv("rs_rule",c.rule).trim().slice(0,200),gift:dv("rs_gift",c.giftSet).trim().slice(0,80)});["rs_name","rs_rule","rs_gift"].forEach(k=>delete L.drafts[k]);toast("Raffle settings saved")},
  rafDel:el=>{ER("raffle/"+el.dataset.k).remove()},
- rafMinSave:async()=>{const v=Math.max(1,Math.round(+dv("raf_min",rafMin())||70));await ER("content/raffleMin").set(v);toast("Packs of "+v+" or more count")},
  rafDraw:async()=>{const list=rafList(),wonSet=new Set(rafWon().map(w=>normName(w.name)));const pool=list.filter(x=>!wonSet.has(normName(x.name)));if(!pool.length)return toast("Everyone in the raffle has already won");
   const w=pool[rnd(pool.length)],tm=now();const names=pool.map(x=>x.name);for(let i=names.length-1;i>0;i--){const j=rnd(i+1);[names[i],names[j]]=[names[j],names[i]]}
   await ER("rafWins").push({name:w.name,t:Date.now()});setState({raffle:{t:tm,winner:w.name,names:names.slice(0,40),show:true}});toast("Drawing on the big screen…")},
  rafHide:()=>setState({raffle:null}),
  gfAdd:async()=>{const from=dv("gf_from","").trim().slice(0,40),gift=dv("gf_gift","").trim().slice(0,120);if(!from)return toast("Who is it from?");if(!gift)return toast("What's the gift?");
-  await ER("gifts").push({from,gift,t:Date.now(),by:L.modName||""});delete L.drafts.gf_from;delete L.drafts.gf_gift;buzz(30);render(true);const el=document.querySelector('[data-draft="gf_from"]');if(el)el.focus()},
+  const g={from,gift,t:Date.now(),by:L.modName||""},r=ER("gifts").push(g);D.gifts=Object.assign({},D.gifts,{[r.key]:g});delete L.drafts.gf_from;delete L.drafts.gf_gift;buzz(30);render(true);const el=document.querySelector('[data-draft="gf_from"]');if(el)el.focus()},
+ gfOn:()=>ER("content/giftLog/on").set(true),
+ gfOff:()=>ER("content/giftLog/on").set(false),
  gfThank:el=>{ER("gifts/"+el.dataset.k+"/thanked").set(!!el.checked)},
  gfDel:el=>{ER("gifts/"+el.dataset.k).remove()},
  gfCopy:()=>copyText(giftText()),
@@ -3198,7 +3219,7 @@ Object.assign(ACT,{
 
 /* the old raffle on the Scores tab drew from every guest; point it to the Tonight tab */
 const _mScoresTonight=mScores;
-mScores=function(){return _mScoresTonight().replace(/<section class="card stack"><h3>Prizes<\/h3>[\s\S]*?<\/section>/,`<section class="card row between"><span class="small">The diaper raffle and gift log are on the <b>Tonight</b> tab.</span><button class="btn sm" data-act="mtab" data-k="tonight">Open Tonight</button></section>`)};
+mScores=function(){return _mScoresTonight().replace(/<section class="card stack"><h3>Prizes<\/h3>[\s\S]*?<\/section>/,`<section class="card row between"><span class="small">The raffle and gift log are on the <b>Tonight</b> tab.</span><button class="btn sm" data-act="mtab" data-k="tonight">Open Tonight</button></section>`)};
 
 /* helpers see their next job on the Live tab */
 const _mLiveTonight=mLive;
