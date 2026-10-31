@@ -2381,7 +2381,7 @@ const ACT={
  doReset:()=>{if((dv("resetTxt","")).trim()!=="RESET")return toast("Type RESET in capitals to confirm");const keep={meta:D.meta,content:D.content||clone(DEFAULT_CONTENT)};
   ER().set(keep).then(()=>{L.confirm=null;L.drafts.resetTxt="";toast("All game data cleared");render()})},
  changePin:async()=>{const p=(dv("newPin","")).trim();if(p.length<4)return toast("Use at least 4 digits");const h=await hashPin(p);await ER("meta/pinHash").set(h);store.set("mod_"+EV,h);markSetup("pin");L.drafts.newPin="";toast("PIN changed. Share it with your assistant.");render()},
- startPractice:async()=>{markSetup("practice");const code=EV+"-P";await ER("",code).remove();await createEvent(code,(D.meta.name||EV)+" (practice)",clone(C()),D.meta.pinHash||null,true);if(D.mods)await ER("mods",code).set(D.mods);await seedBots(code);store.set("mod_"+code,store.get("mod_"+EV,null));location.href=eventURL(code,"moderator")},
+ startPractice:async()=>{markSetup("practice");const code=EV+"-P";await ER("",code).remove();await createEvent(code,(D.meta.name||EV)+" (practice)",clone(C()),D.meta.pinHash||null,true);if(D.mods)await ER("mods",code).set(D.mods);await seedBots(code);await copyDecks(EV,code);store.set("mod_"+code,store.get("mod_"+EV,null));location.href=eventURL(code,"moderator")},
  endPractice:async()=>{const base=EV.replace(/-P$/,"");await ER().remove();await RT("index/"+EV).remove();location.href=eventURL(base,"moderator")},
  copyLink:el=>copyText(el.dataset.url),
  downloadAlbum:async()=>{if(L.zipping)return;L.zipping=true;render();try{const s=await ER("albumFull").once("value");const all=s.val()||{};const keys=Object.keys(all);
@@ -2659,7 +2659,7 @@ async function startFresh(code,o){const snap=(await ER("",code).once("value")).v
  const summary={players:Object.keys(data.players||{}).length,photos:Object.keys(data.album||{}).length,wishes:Object.keys(data.wishes||{}).length,teams:data.team||{}};
  if(o.archive)await RT(`archives/${code}/${t}`).set({name:(snap.meta||{}).name||code,t,summary,data:JSON.stringify(data)});
  if(o.download)download(`${code}-backup-${new Date(t).toISOString().slice(0,10)}.json`,new Blob([JSON.stringify({event:code,name:(snap.meta||{}).name||code,t,data})],{type:"application/json"}));
- const keep={meta:snap.meta||null,mods:snap.mods||null,secret:snap.secret||null,music:snap.music||null,musicData:snap.musicData||null};
+ const keep={meta:snap.meta||null,mods:snap.mods||null,secret:snap.secret||null,music:snap.music||null,musicData:snap.musicData||null,decks:snap.decks||null,deckImg:snap.deckImg||null,deckThumb:snap.deckThumb||null};
  if(!o.content){keep.content=snap.content||null;keep.honor=snap.honor||null;keep.honorFull=snap.honorFull||null}else keep.content=templateFor(((snap.content||{}).eventType)||"baby",(snap.meta||{}).name);
  await ER("",code).set(keep)}
 function freshPanel(code){const o=Object.assign({archive:true,download:true,content:false},L.freshOpt||{});
@@ -3700,6 +3700,15 @@ Object.assign(ACT,{
  presHand:()=>{const w=whoObj(dv("pr_hand","me"));ER("state/pres").update({pid:w.pid||null,mid:w.mid||null,name:w.name});toast(`${w.name} is presenting now`)},
  presEnd:()=>{setState({pres:null});toast("Presentation ended")}
 });
+
+/* ---- presentations: play nicely with the rest of the night ---- */
+/* Anything else put on the big screen takes over from the slides, so it is never hidden behind them. */
+["moShow","goLive","rafDraw","winner","endNight","tbOn","rvStart"].forEach(k=>{const f=ACT[k];if(!f)return;ACT[k]=function(){if(presOn()){setState({pres:null});toast("Presentation closed so this shows on the big screen")}return f.apply(this,arguments)}});
+/* Dropdowns stay open: the page waits to refresh while a dropdown is open, then catches up once a choice is made. */
+const _holdPR=typingHold;typingHold=function(){const a=document.activeElement;if(a&&a.tagName==="SELECT"&&a.closest&&a.closest("#app"))return true;return _holdPR()};
+document.addEventListener("change",e=>{const el=e.target;if(el&&el.tagName==="SELECT"&&el.dataset&&el.dataset.draft)setTimeout(()=>{try{el.blur()}catch(x){}if(L.heldRender&&!typingHold()){L.heldRender=false;render()}},0)});
+/* Practice runs get a copy of the presentations. */
+async function copyDecks(from,to){for(const k of ["decks","deckImg","deckThumb"]){const v=(await ER(k,from).once("value")).val();if(v)await ER(k,to).set(v)}}
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
