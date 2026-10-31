@@ -2,6 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0c2147">
+<link rel="icon" href="img/icon.svg" type="image/svg+xml">
 <title>Live demo · Host Mode</title>
 <meta name="description" content="Try Host Mode with a pretend birthday party: the host's phone, the big screen and a guest's phone, all live.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +18,7 @@ body{font-family:Figtree,system-ui,sans-serif;color:#fff;background:
 a{color:inherit}
 .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px clamp(16px,4vw,40px)}
 .logo{font-family:Montserrat,sans-serif;font-weight:900;font-size:22px;letter-spacing:-.02em;text-decoration:none;display:flex;align-items:center;gap:10px}
-.logo i{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 200deg,var(--orange),var(--gold),var(--green),var(--blue),var(--orange));box-shadow:0 0 0 2px rgba(255,255,255,.16) inset}
+.logo svg{width:34px;height:34px;flex:none;border-radius:11px;box-shadow:0 0 0 1.5px rgba(255,255,255,.22)}.logo b{color:var(--amber)}
 .top nav{display:flex;gap:8px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;padding:12px 20px;border-radius:999px;text-decoration:none;border:1px solid rgba(255,255,255,.22);color:#fff;background:rgba(255,255,255,.06);cursor:pointer;min-height:44px}
 .btn:hover{background:rgba(255,255,255,.12)}
@@ -57,7 +58,7 @@ h1 span{background:linear-gradient(90deg,var(--amber),var(--gold));-webkit-backg
 @media (min-width:1180px){.stage{display:flex}.cards{display:none}}
 @media (max-width:1179px){.wideonly{display:none}}
 </style></head><body>
-<header class="top"><a class="logo" href="./"><i aria-hidden="true"></i>Host Mode</a>
+<header class="top"><a class="logo" href="./"><svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#0c2147"/><rect x="11" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="30.5" y="10" width="6.5" height="28" rx="3.25" fill="#fff"/><rect x="13" y="19.5" width="22" height="9" rx="4.5" fill="#f7941d"/><circle cx="30.5" cy="24" r="3.4" fill="#fff"/><circle cx="39.5" cy="8.5" r="2.6" fill="#f2b134"/><circle cx="8.5" cy="40" r="1.8" fill="#3dae2b"/></svg><span>Host <b>Mode</b></span></a>
 <nav><a class="btn" href="./">Home</a><a class="btn hot" href="games.html#new">Create your event</a></nav></header>
 <section class="intro"><div class="eyebrow">Live demo</div><h1>Rosa's 30th, <span>running live</span></h1>
 <p>A pretend birthday party with ten guests already playing. Tap around on any screen and watch the others update. Everything stays on this device.</p></section>
