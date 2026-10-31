@@ -789,6 +789,14 @@ button.prth{cursor:pointer}button.prth.on{outline:3px solid var(--rose);outline-
 .plwx{display:flex;gap:14px;align-items:center}.plwxi{font-size:2.6rem}
 .plnotes{min-height:280px;font-size:1rem;line-height:1.5}
 @media (max-width:520px){.plbig{font-size:2.8rem;min-width:64px}.plrow{padding:9px 10px}.plcat{grid-template-columns:90px 1fr auto}}
+
+/* Host Mode brand pages */
+html.hmbrand .brand h1{font-weight:800;letter-spacing:-.02em;background:none;-webkit-text-fill-color:currentColor;color:#0c2147}
+html.hmbrand .brand p{color:#2b6f1f}
+html.hmbrand main a:not(.btn){color:#0f2c5c}
+html.hmbrand .eyebrow{color:#b45a00}
+.hmhero{background:linear-gradient(135deg,#0c2147,#1f4f96);color:#fff;border:0}
+.hmhero h2{color:#fff;font-size:1.6rem}.hmhero p{color:#dbe4f3}.hmhero .eyebrow{color:#f7a440!important}
 </style>
 </head><body>
 <div class="wrap">
@@ -4285,6 +4293,16 @@ Object.assign(ACT,{
    if(Object.keys(u).length)await ER("plan").update(u)}
   L.setupFile=null;Object.keys(L.drafts).filter(k=>/^ev_|^ed_/.test(k)).forEach(k=>delete L.drafts[k]);toast("Setup loaded");render(true)}
 });
+
+/* ---- Host Mode's own look: the create-event page and the host console wear the brand, not an event's theme ---- */
+const BRAND={colors:{bar:"#0c2147",ground:"#f2f5fa",card:"#ffffff",line:"#d2dbea",ink:"#0c2147",muted:"#4b5b79",hd:"#0f2c5c",hd2:"#b45a00",btn1:"#0f2c5c",btn2:"#1f4f96",rose:"#f7941d",flame:"#f26722",gold:"#f2b134",violet:"#0f2c5c",leaf:"#3dae2b"},fonts:{title:"Montserrat",head:"Montserrat",body:"Figtree",size:15}};
+const brandView=()=>VIEW==="new"||VIEW==="host";
+const _applyThemeBrand=applyTheme;
+applyTheme=function(){_applyThemeBrand();const on=brandView();document.documentElement.classList.toggle("hmbrand",on);if(!on)return;
+ setThemeVars(BRAND.colors,BRAND.fonts,true);if(Object.keys(L.drafts).some(k=>k.startsWith("ts_c_")||k.startsWith("ts_f_")||k==="ts_glow"))previewTheme("ts_")};
+const _newEvBrand=newEventView;
+newEventView=function(){const h=_newEvBrand();if(!L.loaded||L.newInv)return h;
+ return `<section class="card stack narrow hmhero"><div class="eyebrow">Welcome to Host Mode</div><h2>Run your whole event from your phone</h2><p class="m0">Plan the weeks before, check guests in at the door, and run games, big moments and the big screen on the day. Baby showers, weddings, birthdays, reunions and company events.</p></section>`+h.replace(`data-act="nwCheck">Continue</button>`,`data-act="nwCheck">Continue</button><p class="small muted m0">No code yet? Ask your host for one. Already have an event? Open the link your host sent you. Hosts sign in on the <a href="games.html#host">host console</a>.</p>`)};
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.

@@ -1,9 +1,14 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0c2147">
 <title>Host Mode</title>
-<script>location.replace("games.html"+location.search+location.hash);</script>
-<meta http-equiv="refresh" content="0;url=games.html">
-</head><body style="font-family:system-ui,sans-serif;padding:24px">
-<p>Opening Host Mode… <a href="games.html">Tap here if it doesn't open.</a></p>
+<script>
+/* Links with an event code (?e=…) or a page (#screen, #host…) keep working; the plain address opens the create-event page. */
+location.replace("games.html"+(location.search||location.hash?location.search+location.hash:"#new"));
+</script>
+<meta http-equiv="refresh" content="0;url=games.html#new">
+<style>body{margin:0;background:#0c2147;color:#fff;font-family:system-ui,sans-serif;padding:24px}a{color:#f7a440}</style>
+</head><body>
+<p>Opening Host Mode… <a href="games.html#new">Tap here if it doesn't open.</a></p>
 </body></html>
