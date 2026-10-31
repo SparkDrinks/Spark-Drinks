@@ -727,6 +727,9 @@ button.prth{cursor:pointer}button.prth.on{outline:3px solid var(--rose);outline-
 .pr-frame.has .pr-wait{display:none}
 .pr-foot{position:absolute;left:0;right:0;bottom:2.4vh;text-align:center;font-family:var(--f-caps);letter-spacing:.14em;color:var(--muted);font-size:clamp(.8rem,1.5vw,1.1rem)}
 @media (prefers-reduced-motion:reduce){.pr-img{transition:none}}
+/* big-screen celebrations: soften what's behind the card so nothing overlaps it */
+#ov.on{background:radial-gradient(120% 90% at 50% 50%,color-mix(in srgb,var(--card) 58%,transparent),color-mix(in srgb,var(--card) 28%,transparent));-webkit-backdrop-filter:blur(7px) saturate(1.1);backdrop-filter:blur(7px) saturate(1.1)}
+.ent-name{padding:.2em .16em .3em;margin:-.2em -.16em -.3em}
 </style>
 </head><body>
 <div class="wrap">
@@ -3709,6 +3712,12 @@ const _holdPR=typingHold;typingHold=function(){const a=document.activeElement;if
 document.addEventListener("change",e=>{const el=e.target;if(el&&el.tagName==="SELECT"&&el.dataset&&el.dataset.draft)setTimeout(()=>{try{el.blur()}catch(x){}if(L.heldRender&&!typingHold()){L.heldRender=false;render()}},0)});
 /* Practice runs get a copy of the presentations. */
 async function copyDecks(from,to){for(const k of ["decks","deckImg","deckThumb"]){const v=(await ER(k,from).once("value")).val();if(v)await ER(k,to).set(v)}}
+
+/* A game, the winners, the raffle draw or the tiebreaker take over the big screen from any moment that's showing. */
+["goLive","rafDraw","winner","endNight","tbOn"].forEach(k=>{const f=ACT[k];if(!f)return;ACT[k]=function(){const s=st();const on=k==="winner"?!s.showWinner:k==="endNight"?!s.ended:true;if(on&&s.moment)setState({moment:null});return f.apply(this,arguments)}});
+
+/* The host console only animates its cards when you switch tabs, not every time something changes on the night. */
+const _vkDL=viewKey;viewKey=function(){return VIEW==="moderator"?["moderator",L.mtab,L.modOK,L.loaded,L.missing].join("|"):_vkDL()};
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
