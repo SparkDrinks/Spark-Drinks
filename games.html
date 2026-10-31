@@ -849,6 +849,7 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .clapp{border:1.5px dashed #f7941d;background:color-mix(in srgb,#f7941d 8%,var(--card));margin:6px 0}
 .clap2{border:1px solid var(--line)}.aphist{margin-top:2px;line-height:1.5}.stack.tight textarea,.clap2 textarea{width:100%}
 .clrow{padding:8px 0;border-bottom:1px solid var(--line)}.clrow.done b{opacity:.6}.clrow a{color:inherit}
+.brandrow{display:flex;align-items:center;gap:10px}.brandlogo{max-height:44px;max-width:120px;object-fit:contain;border-radius:6px}.dayNow{font-size:1.7rem;line-height:1.2}.daybtn{font-size:1.3rem;padding:18px 24px;width:100%}.dayhelp{width:100%;padding:16px;font-size:1.1rem}
 </style>
 </head><body>
 <div class="wrap">
@@ -1239,7 +1240,7 @@ function connect(){
  if(VIEW==="new"){L.loaded=true;renderSoon();return}
  if(VIEW==="mate"){mateConnect();return}
  if(VIEW==="client"){clConnect();return}
- if(VIEW==="host"){RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});[["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(p).on("value",s=>{D[k]=s.val()||{};renderSoon()}));RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
+ if(VIEW==="host"){RT("brand").on("value",s=>{D.brand=s.val();renderSoon()});RT("dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});RT("mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});[["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(p).on("value",s=>{D[k]=s.val()||{};renderSoon()}));RT("mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});return}
  if(!EV){routeWithoutCode();return}
  subscribeEvent();
 }
@@ -4528,6 +4529,7 @@ function mateKey(){return new URLSearchParams(location.search).get("mate")||""}
 function mateConnect(){const id=mateKey();if(!id){L.loaded=true;renderSoon();return}
  RT("mates/"+id).on("value",s=>{D.mateMe=s.val();L.loaded=true;renderSoon()});
  RT("mateTasks/"+id).on("value",s=>{D.mtasks=Object.assign({},D.mtasks,{[id]:s.val()||{}});renderSoon()});
+ RT("brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});RT("dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});
  RT("clients").on("value",s=>{D.clients=s.val()||{};renderSoon()});RT("clientVendors").on("value",s=>{D.cven=s.val()||{};renderSoon()})}
 const mateTasksOf=id=>{const t=(D.mtasks||{})[id]||{};return Object.keys(t).map(k=>Object.assign({k},t[k])).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||String(a.due||"9999").localeCompare(String(b.due||"9999"))||(a.t||0)-(b.t||0))};
 const mateStats=id=>{const l=mateTasksOf(id),d=l.filter(x=>x.done).length;return {total:l.length,done:d,open:l.length-d,pct:l.length?Math.round(d/l.length*100):0}};
@@ -4602,6 +4604,7 @@ D.clients={};D.ctasks={};D.cmsgs={};D.cfiles={};D.cliMe=null;
 const CL_MAX=10*1024*1024;
 function clKey(){return new URLSearchParams(location.search).get("client")||""}
 function clConnect(){const id=clKey();if(!id){L.loaded=true;renderSoon();return}
+ RT("brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
  RT("clients/"+id).on("value",s=>{D.cliMe=s.val();L.loaded=true;renderSoon()});
  RT("clientTasks/"+id).on("value",s=>{D.ctasks=Object.assign({},D.ctasks,{[id]:s.val()||{}});renderSoon()});
  RT("clientMsgs/"+id).on("value",s=>{D.cmsgs=Object.assign({},D.cmsgs,{[id]:s.val()||{}});renderSoon()});
@@ -4907,6 +4910,67 @@ Object.assign(ACT,{
  clSummarySend:async el=>{const id=el.dataset.m,note=dv("sum_note_"+id,"").trim();await RT("clientMsgs/"+id).push().set({from:"planner",text:clSummaryText(id,note),t:Date.now()});await RT(`clients/${id}/plSeen`).set(Date.now());delete L.drafts["sum_note_"+id];toast("Posted to the client's messages");render(true)},
  clIcsOne:el=>{const id=clKey(),x=clTimeline(id).find(i=>i.k===el.dataset.k);if(!x)return;clDownload("event.ics",clIcs([x],(D.cliMe||{}).evName),"text/calendar")},
  clIcsAll:()=>{const id=clKey(),tl=clTimeline(id);if(!tl.length)return;clDownload("event-calendar.ics",clIcs(tl,(D.cliMe||{}).evName),"text/calendar")}
+});
+
+/* ================= STEP 5: planner branding + teammate day-of mode =================
+   partygames/brand = {name, color, logo}      (logo = small PNG data URL; shown on client and teammate portals)
+   partygames/dayOf = true | false             (planner's switch: teammates see the stripped "do now" view)
+   partygames/mates/{id}/help = {t, msg, ok}   (teammate tapped "Need help") */
+D.brand=null;D.dayOf=false;
+const brandOn=(v=VIEW)=>(v==="client"||v==="mate")&&D.brand&&(D.brand.name||D.brand.logo||D.brand.color);
+const brandHex=c=>/^#[0-9a-f]{6}$/i.test(c||"")?c.toLowerCase():"";
+function brandLum(h){const n=parseInt(h.slice(1),16),f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(n>>16)+.7152*f(n>>8&255)+.0722*f(n&255)}
+function brandMix(h,to,p){const a=parseInt(h.slice(1),16),b=parseInt(to.slice(1),16),m=(x,y)=>Math.round(x+(y-x)*p);return "#"+[m(a>>16,b>>16),m(a>>8&255,b>>8&255),m(a&255,b&255)].map(v=>v.toString(16).padStart(2,"0")).join("")}
+/* a colour too light for white button text gets darkened until it reads */
+function brandSafe(h){h=brandHex(h);if(!h)return "";let i=0;while(brandLum(h)>.18&&i++<12)h=brandMix(h,"#000000",.12);return h}
+const _applyThemeBr2=applyTheme;
+applyTheme=function(){_applyThemeBr2();if(!brandOn())return;const c=brandSafe(D.brand.color);if(!c)return;
+ setThemeVars(Object.assign({},BRAND.colors,{bar:brandMix(c,"#000000",.25),hd:c,btn1:c,btn2:brandMix(c,"#ffffff",.25),violet:c}),BRAND.fonts,true)};
+const _headerView5=headerView;
+headerView=function(){const h=_headerView5();if(!brandOn())return h;const b=D.brand,name=esc(b.name||"");
+ return h.replace("<h1>Host Mode</h1>",`<h1 class="brandrow">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}${name||(b.logo?"":"Host Mode")}</h1>`).replace(/<p>(Your event portal|Your tasks)<\/p>/,'<p>$1 · powered by Host Mode</p>')};
+function brandLogo(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej();fr.onload=()=>{const img=new Image();img.onerror=()=>rej();img.onload=()=>{const k=Math.min(1,240/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/png"))};img.src=fr.result};fr.readAsDataURL(file)})}
+function hBrandCard(){const b=D.brand||{},nm=dv("br_name",b.name||""),col=dv("br_color",b.color||"#0f2c5c"),lg=L.brLogo!==undefined?L.brLogo:b.logo||"";
+ return `<section class="card stack"><h2>Your branding</h2><p class="small muted m0">Your logo, name and colour appear on your clients' portals and your teammates' pages, so it looks like your business. “Powered by Host Mode” stays in small print.</p>
+ <label class="stack tight"><span class="small">Business name</span><input type="text" data-draft="br_name" maxlength="40" value="${esc(nm)}" placeholder="Bright Day Events"></label>
+ <div class="row"><label class="stack tight"><span class="small">Main colour</span><input type="color" data-draft="br_color" value="${esc(brandHex(col)||"#0f2c5c")}" style="width:64px;padding:2px"></label>
+ <label class="btn upl">${lg?"Change logo":"Add logo"}<input type="file" accept="image/*" data-act="brLogo"></label>${lg?`<img class="brandlogo" src="${esc(lg)}" alt="Your logo"><button class="btn xs" data-act="brLogoX">Remove logo</button>`:""}</div>
+ <div class="row"><button class="btn primary" data-act="brSave">Save branding</button>${b.name||b.logo||b.color?`<button class="btn" data-act="brClear">Back to Host Mode look</button>`:""}</div></section>`}
+const _hClients5=hClients;
+hClients=function(){return hBrandCard()+_hClients5()};
+
+/* ---- teammate day-of mode ---- */
+const mateDayOn=()=>!!D.dayOf&&L.mateFull!==true;
+function mateDayView(id,me){const l=mateTasksOf(id).filter(x=>!x.done),now=l[0],next=l.slice(1,4),help=me.help&&!me.help.ok;
+ return `<section class="card stack tc"><div class="eyebrow">Today · ${esc(me.name||"")}</div>
+ ${now?`<h2 class="dayNow">${esc(now.title)}</h2>${now.evName?`<div class="small muted">${esc(now.evName)}</div>`:""}${now.note?`<p class="m0">${esc(now.note)}</p>`:""}<button class="btn primary daybtn" data-act="mateDone" data-k="${now.k}">Done ✓</button>`:`<h2>All done. Thank you!</h2><p class="muted m0">Nothing left on your list.</p>`}</section>
+ ${next.length?`<section class="card stack"><h3>Up next</h3><div class="stack tight">${next.map(x=>`<div class="small"><b>${esc(x.title)}</b>${x.note?` <span class="muted">· ${esc(x.note)}</span>`:""}</div>`).join("")}</div>${l.length>4?`<span class="small muted">and ${l.length-4} more</span>`:""}</section>`:""}
+ <section class="card stack">${help?`<p class="m0"><b>Help is requested.</b> Your planner has been told.</p><button class="btn" data-act="mateHelpX">Cancel</button>`:`<button class="btn dayhelp" data-act="mateHelp">🆘 I need help</button>`}</section>
+ ${mateVendorsCard(id)}
+ <p class="small tc"><button class="btn xs" data-act="mateFull">Show my full list</button></p>`}
+const _mateView5=mateView;
+mateView=function(){const id=mateKey();if(id&&L.loaded&&D.mateMe&&mateDayOn())return mateDayView(id,D.mateMe);
+ const h=_mateView5();return D.dayOf&&L.mateFull&&D.mateMe?h+`<p class="small tc"><button class="btn xs" data-act="mateFull">Back to day-of view</button></p>`:h};
+function hHelpBanner(){const ms=D.mates||{},ids=Object.keys(ms).filter(id=>ms[id].help&&!ms[id].help.ok);if(!ids.length)return "";
+ return ids.map(id=>`<section class="banner"><span><b>${esc(ms[id].name)} needs help.</b> ${esc(ms[id].help.msg||"")} <span class="muted">${esc(clAgo(ms[id].help.t))}</span></span><button class="btn xs primary" data-act="mateHelpOk" data-k="${id}">On it</button></section>`).join("")}
+function hDayOfCard(){return `<section class="card stack"><div class="row between"><div class="mw0"><h3>Day-of mode</h3><div class="small muted">${D.dayOf?"On. Teammates see one big task at a time with a Done button and a help button.":"Off. Turn it on at the event so teammates see a simple “do this now” screen."}</div></div><button class="btn sm ${D.dayOf?"":"primary"}" data-act="dayOfToggle">${D.dayOf?"Turn off":"Turn on"}</button></div></section>`}
+const _hTeam5=hTeam;
+hTeam=function(){return hHelpBanner()+hDayOfCard()+_hTeam5()};
+const _tabTeam=null;
+
+Object.assign(ACT,{
+ brLogo:async el=>{const f=el.files&&el.files[0];if(!f)return;try{L.brLogo=await brandLogo(f);render(true)}catch(e){toast("That file isn't a picture we can read")}},
+ brLogoX:()=>{L.brLogo="";render(true)},
+ brSave:async()=>{const b=D.brand||{},name=dv("br_name",b.name||"").trim().slice(0,40),color=brandHex(dv("br_color",b.color||"")),logo=L.brLogo!==undefined?L.brLogo:b.logo||"";
+  if(logo.length>120000)return toast("That logo is too big. Try a simpler picture.");
+  await RT("brand").set({name,color,logo});L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Branding saved");render(true)},
+ brClear:async()=>{await RT("brand").remove();L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Back to the Host Mode look");render(true)},
+ dayOfToggle:async()=>{await RT("dayOf").set(!D.dayOf);toast(D.dayOf?"Day-of mode is off":"Day-of mode is on")},
+ mateDone:async el=>{const id=mateKey(),k=el.dataset.k;await RT(`mateTasks/${id}/${k}`).update({done:true,doneAt:Date.now(),by:"mate"});buzz(30)},
+ mateHelp:async()=>{const id=mateKey();await RT("mates/"+id+"/help").set({t:Date.now(),msg:"Needs help now",ok:false});buzz(40);toast("Your planner has been told")},
+ mateHelpX:async()=>{await RT("mates/"+mateKey()+"/help").remove()},
+ mateHelpOk:async el=>{await RT("mates/"+el.dataset.k+"/help/ok").set(true);toast("Marked as handled")},
+ mateFull:()=>{L.mateFull=!L.mateFull;render(true)}
 });
 
 /* ================= WEAK SIGNAL MODE ================= */
