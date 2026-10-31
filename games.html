@@ -694,6 +694,39 @@ body{background-attachment:fixed}
 .babyprev .rv-baby{filter:none;display:block}
 .bsw{width:34px;height:34px;border-radius:50%;background:var(--c);border:2px solid #fff;box-shadow:0 0 0 1px var(--line);padding:0;flex:none}
 .bsw.on{box-shadow:0 0 0 2px var(--rose),0 0 0 4px color-mix(in srgb,var(--rose) 25%,transparent)}
+/* ===== Presentations ===== */
+.prhow{padding-left:1.1em;display:grid;gap:2px}
+.prstrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px}
+.prth{flex:none;width:84px;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--ground-2);border:1px solid var(--line);display:grid;place-items:center;padding:0;font-size:.8rem;color:var(--muted)}
+.prth img{width:100%;height:100%;object-fit:cover;display:block}
+button.prth{cursor:pointer}button.prth.on{outline:3px solid var(--rose);outline-offset:1px}
+.prstrip.jump{flex-wrap:wrap;overflow:visible}
+.prmore{align-self:center;font-size:.85rem;color:var(--muted);padding:0 6px}
+.prnrow{display:flex;gap:10px;align-items:flex-start}.prnrow .prth{width:96px}
+.prnoted{border-top:1px solid var(--line);padding-top:12px}
+.prremote .prnow{border-radius:14px;overflow:hidden;background:var(--ground-2);border:1px solid var(--line);aspect-ratio:16/10;display:grid;place-items:center}
+.prremote .prnow img{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
+.prph{color:var(--muted);font-size:.9rem}
+.prnotes{background:color-mix(in srgb,var(--gold) 10%,var(--card));border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.prnote{font-size:1.06rem;line-height:1.45;white-space:pre-wrap;max-height:34vh;overflow:auto}
+.prup{display:flex;align-items:center;gap:8px}.prup img{width:64px;aspect-ratio:16/10;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.prbtns{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.prbtns .btn.big{min-height:60px;font-size:1.15rem}
+#pres{position:fixed;inset:0;z-index:31;display:none;overflow:hidden;color:var(--ink)}
+#pres.on{display:block;animation:fade .6s}
+#pres .pr-bg{position:absolute;inset:0;background:var(--ground);background-image:radial-gradient(110% 70% at 50% 0%,color-mix(in srgb,var(--rose) 22%,transparent),transparent 70%),radial-gradient(90% 70% at 0% 100%,color-mix(in srgb,var(--leaf) 18%,transparent),transparent 70%),radial-gradient(80% 70% at 100% 90%,color-mix(in srgb,var(--flame) 20%,transparent),transparent 70%)}
+#pres .pr-rib{position:absolute;inset:0;overflow:hidden}#pres .pr-rib .rb{position:absolute;inset:-6%}#pres .pr-rib svg{position:absolute;inset:0;width:100%;height:100%}#pres .pr-rib path{opacity:.3}
+.pr-stage{position:absolute;inset:0;display:grid;place-items:center;padding:3vh 3vw 7vh}
+.pr-frame{display:grid;padding:1.1vh;border-radius:24px;min-width:30vw;min-height:30vh;place-items:center;
+  background:linear-gradient(160deg,rgba(255,255,255,.7),rgba(255,255,255,.38));-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);border:1px solid rgba(255,255,255,.75);
+  box-shadow:0 40px 80px -30px color-mix(in srgb,var(--violet) 50%,transparent),0 12px 26px -14px rgba(40,10,50,.3),inset 0 1px 0 rgba(255,255,255,.95)}
+.pr-img{grid-area:1/1;max-width:90vw;max-height:82vh;object-fit:contain;border-radius:14px;opacity:0;transition:opacity .7s ease;display:block;background:#fff}
+.pr-img:not([src]){display:none}
+.pr-img.show{opacity:1}
+.pr-wait{grid-area:1/1;color:var(--muted);font-family:var(--f-caps);letter-spacing:.12em}
+.pr-frame.has .pr-wait{display:none}
+.pr-foot{position:absolute;left:0;right:0;bottom:2.4vh;text-align:center;font-family:var(--f-caps);letter-spacing:.14em;color:var(--muted);font-size:clamp(.8rem,1.5vw,1.1rem)}
+@media (prefers-reduced-motion:reduce){.pr-img{transition:none}}
 </style>
 </head><body>
 <div class="wrap">
@@ -3339,9 +3372,9 @@ mLive=function(){const items=rosItems().filter(x=>!(D.rosDone||{})[x.k]);const n
 
 moderator=function(){
  const tab=(k,l)=>`<button data-act="mtab" data-k="${k}" aria-pressed="${L.mtab===k}">${l}</button>`;
- const body=({live:mLive,tonight:mTonight,moments:mMoments,teams:mTeams,scores:mScores,content:mContent,custom:mCustom,event:mEvent,memories:mMemories,menu:mMenu,party:mParty}[L.mtab]||mLive)();
+ const body=({live:mLive,tonight:mTonight,pres:mPres,moments:mMoments,teams:mTeams,scores:mScores,content:mContent,custom:mCustom,event:mEvent,memories:mMemories,menu:mMenu,party:mParty}[L.mtab]||mLive)();
  const pr=D.meta&&D.meta.practice?`<div class="banner soft"><span><b>Practice run</b> with pretend guests. Open a <a href="${esc(eventURL(EV))}" target="_blank" rel="noopener">guest view</a> or the <a href="${esc(eventURL(EV,"screen"))}" target="_blank" rel="noopener">big screen</a> to see what they see.</span><button class="btn sm" data-act="endPractice">End practice</button></div>`:"";
- return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${tab("tonight","Tonight")}${tab("moments","Moments")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("menu","Menu")}${tab("party",adultOn()?"Party & 21+":"Party games")}${tab("custom","Custom games")}${tab("event","Event")}${tab("memories","Memories")}</nav><div class="stack mw0">${body}</div></div>`};
+ return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${tab("tonight","Tonight")}${tab("moments","Moments")}${tab("pres","Presentations")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("menu","Menu")}${tab("party",adultOn()?"Party & 21+":"Party games")}${tab("custom","Custom games")}${tab("event","Event")}${tab("memories","Memories")}</nav><div class="stack mw0">${body}</div></div>`};
 
 /* ---- guest list: import, check-in, and name suggestions ---- */
 D.guests={};
@@ -3523,6 +3556,150 @@ const _rvPanelDL=revealPanel;revealPanel=function(){const h=_rvPanelDL(),rv=reve
  const rows=`<div class="stack tight"><span class="small"><b>Packaging</b> · how the answer gets unwrapped</span><div class="pkopts">${Object.keys(RV_PACKS).map(p=>{const i=RV_PACK_INFO[p]||["★",""];return `<button class="pkopt ${p===pack?"on":""}" data-act="rvPack" data-v="${p}" aria-pressed="${p===pack}"><span class="pkic" aria-hidden="true">${i[0]}</span><span class="pktx"><b>${esc(RV_PACKS[p])}</b><span class="small muted">${i[1]}</span></span>${p===pack?'<span class="pkck" aria-hidden="true">✓</span>':""}</button>`}).join("")}</div></div>`;
  return h.replace(/<div class="stack tight"><span class="small"><b>Packaging<\/b><\/span><div class="row">[\s\S]*?<\/div><\/div>/,()=>rows+(kind==="gender"?babyPicker(ans==="boy"?"boy":"girl"):""))};
 ACT.babySet=el=>{const k=el.dataset.k,v=el.dataset.v;ER("content/reveal/baby/"+k).set(k==="ear"?v==="1":v)};
+
+/* ================= PRESENTATIONS: upload slides, pick a presenter, phone remote, big screen ================= */
+/* Slides are stored as pictures: a PDF is turned into one picture per page right in the browser, and images are used as they are.
+   decks/<id> = {title,count,total,processing,kind,by,t,notes:{0:"..."}} · deckImg/<id>/<i> = full slide · deckThumb/<id>/<i> = small preview
+   state/pres = {did,i,on,pid (guest) or mid (helper),name,t} */
+D.decks={};
+const PR={cache:{},thumbs:{},pend:{},meta:{},sub:{},key:null};
+const PDFJS_SRC=["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/","https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/"];
+const PR_MAX=80,PR_W=1600,PR_TW=360;
+Object.assign(ES,{"You're presenting":"Estás presentando","Your notes":"Tus notas","No notes for this slide.":"No hay notas para esta diapositiva.","Up next":"Sigue","slide {n}":"diapositiva {n}","This is the last slide.":"Esta es la última diapositiva.","Back":"Atrás","Next":"Siguiente","Current slide":"Diapositiva actual","The moderator will end the presentation when you're done.":"El moderador terminará la presentación cuando acabes."});
+const _subPres=subscribeEvent;
+subscribeEvent=function(){_subPres();if(VIEW==="moderator")ER("decks").on("value",s=>{D.decks=s.val()||{};renderSoon()})};
+const deckList=()=>Object.keys(D.decks||{}).map(k=>Object.assign({k},D.decks[k])).sort((a,b)=>(b.t||0)-(a.t||0));
+const deckCount=did=>((D.decks||{})[did]||{}).count||(PR.meta[did]||{}).count||0;
+function watchDeck(did){if(!did||PR.sub[did])return;PR.sub[did]=1;ER("decks/"+did).on("value",s=>{D.decks=Object.assign({},D.decks,{[did]:s.val()});renderSoon()})}
+function prImg(did,i,kind){const full=kind!=="t",store=full?PR.cache:PR.thumbs,k=did+"/"+i;if(store[k]!==undefined)return Promise.resolve(store[k]);if(PR.pend[kind+k])return PR.pend[kind+k];
+ PR.pend[kind+k]=ER(`${full?"deckImg":"deckThumb"}/${did}/${i}`).once("value").then(s=>{store[k]=s.val()||null;delete PR.pend[kind+k];renderSoon();return store[k]});return PR.pend[kind+k]}
+function thumbSrc(did,i){const k=did+"/"+i;if(PR.thumbs[k]!==undefined)return PR.thumbs[k];prImg(did,i,"t");return null}
+const presOn=()=>{const p=st().pres;return p&&p.on?p:null};
+const presMe=()=>{const p=presOn();if(!p)return false;if(p.pid)return VIEW==="guest"&&(p.pid===L.me||(L.profiles||[]).includes(p.pid));return VIEW==="moderator"&&!!p.mid&&(p.mid===L.modId||(p.mid==="admin"&&L.isAdmin&&!L.modId))};
+function presStep(d){const p=presOn();if(!p)return;const n=deckCount(p.did)||1;ER("state/pres/i").transaction(v=>Math.max(0,Math.min(n-1,(v||0)+d)));buzz(25)}
+
+/* --- reading files --- */
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+async function loadPdfJs(){if(window.pdfjsLib)return window.pdfjsLib;
+ for(const base of PDFJS_SRC){try{await loadScript(base+"pdf.min.js");for(let w=0;w<50&&!window.pdfjsLib;w++)await new Promise(r=>setTimeout(r,100));if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc=base+"pdf.worker.min.js";return pdfjsLib}}catch(e){}}
+ throw new Error("The PDF reader couldn't load. Check the internet connection and try again.")}
+function canvasJPG(src,w,q){const c=document.createElement("canvas"),s=Math.min(1,w/src.width);c.width=Math.max(1,Math.round(src.width*s));c.height=Math.max(1,Math.round(src.height*s));const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(src,0,0,c.width,c.height);return c.toDataURL("image/jpeg",q)}
+function fileImage(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error("bad image"));im.src=fr.result};fr.readAsDataURL(f)})}
+const PR_FIX={ppt:"PowerPoint",pptx:"PowerPoint",key:"Keynote",doc:"Word",docx:"Word",xls:"Excel",xlsx:"Excel",csv:"spreadsheet",pages:"Pages",numbers:"Numbers",odp:"slides",odt:"document",ods:"spreadsheet",gslides:"Google Slides"};
+const extOf=f=>(String(f.name||"").split(".").pop()||"").toLowerCase();
+const isPdf=f=>f.type==="application/pdf"||extOf(f)==="pdf";
+const isImg=f=>/^image\//.test(f.type)&&!/heic|heif/.test(f.type)||["jpg","jpeg","png","gif","webp"].includes(extOf(f));
+async function prSaveSlides(did,title,kind,total,make){const by=L.modName||"";L.prBusy={title,i:0,n:total};L.prErr=null;renderSoon();
+ await ER("decks/"+did).set({title,count:0,total,processing:true,kind,by,t:Date.now()});
+ for(let i=0;i<total;i++){const r=await make(i);await ER(`deckImg/${did}/${i}`).set(r.full);await ER(`deckThumb/${did}/${i}`).set(r.thumb);PR.cache[did+"/"+i]=r.full;PR.thumbs[did+"/"+i]=r.thumb;
+  await ER(`decks/${did}/count`).set(i+1);L.prBusy={title,i:i+1,n:total};renderSoon()}
+ await ER("decks/"+did).update({processing:false});L.prBusy=null;toast(`“${title}” is ready: ${total} slide${total===1?"":"s"}`);renderSoon()}
+async function prFromPdf(f,title){const lib=await loadPdfJs();const pdf=await lib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+ const n=Math.min(pdf.numPages,PR_MAX);if(pdf.numPages>PR_MAX)toast(`Only the first ${PR_MAX} pages are used`);const did="d"+Date.now().toString(36);
+ await prSaveSlides(did,title,"pdf",n,async i=>{const page=await pdf.getPage(i+1);const v1=page.getViewport({scale:1});const vp=page.getViewport({scale:Math.min(3,PR_W/v1.width)});
+  const c=document.createElement("canvas");c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
+  await page.render({canvasContext:x,viewport:vp}).promise;return {full:c.toDataURL("image/jpeg",.8),thumb:canvasJPG(c,PR_TW,.66)}})}
+async function prFromImages(fs,title){fs=fs.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),undefined,{numeric:true})).slice(0,PR_MAX);const did="d"+Date.now().toString(36);
+ await prSaveSlides(did,title,"images",fs.length,async i=>{const im=await fileImage(fs[i]);return {full:canvasJPG(im,PR_W,.82),thumb:canvasJPG(im,PR_TW,.66)}})}
+
+/* --- presenter notes --- */
+function parseNotes(txt,count){txt=String(txt||"").replace(/\r/g,"");const out=[];const hdr=/^\s*(?:slide|page)\s*#?\s*(\d+)\s*[:.\-–)]?\s*(.*)$/i;const lines=txt.split("\n");
+ if(lines.some(l=>hdr.test(l))){let idx=-1;lines.forEach(l=>{const m=hdr.exec(l);if(m){idx=+m[1]-1;out[idx]=m[2]||""}else if(idx>=0)out[idx]=(out[idx]?out[idx]+"\n":"")+l})}
+ else{const parts=/^\s*-{3,}\s*$/m.test(txt)?txt.split(/^\s*-{3,}\s*$/m):txt.split(/\n\s*\n/);parts.forEach((p,i)=>out[i]=p)}
+ const o={};for(let i=0;i<Math.min(out.length,count||out.length);i++){const s=String(out[i]||"").trim();if(s)o[i]=s.slice(0,2000)}return o}
+
+/* --- who's presenting --- */
+function whoOptions(sel){const mods=D.mods||{},pl=ids().filter(i=>!P(i).bot).sort((a,b)=>String(P(a).name).localeCompare(String(P(b).name)));
+ const o=(v,l)=>`<option value="${esc(v)}" ${sel===v?"selected":""}>${esc(l)}</option>`;
+ return o("me","Me, on this phone")+(Object.keys(mods).filter(k=>k!==L.modId).length?`<optgroup label="Helpers">${Object.keys(mods).filter(k=>k!==L.modId).map(k=>o("m:"+k,mods[k].name)).join("")}</optgroup>`:"")+(pl.length?`<optgroup label="Guests in the games">${pl.map(i=>o("p:"+i,P(i).name)).join("")}</optgroup>`:"")}
+function whoObj(v){if(v&&v.startsWith("m:")){const m=(D.mods||{})[v.slice(2)];if(m)return {mid:v.slice(2),pid:null,name:m.name}}
+ if(v&&v.startsWith("p:")&&D.players[v.slice(2)])return {pid:v.slice(2),mid:null,name:P(v.slice(2)).name};
+ return {mid:L.modId||"admin",pid:null,name:L.modName||"Moderator"}}
+
+/* --- the remote (presenter's phone) --- */
+function presRemote(noBtns){const p=presOn();if(!p)return "";watchDeck(p.did);const d=(D.decks||{})[p.did]||{},n=d.count||0,i=p.i||0,note=(d.notes||{})[i]||"";const cur=thumbSrc(p.did,i),nx=i+1<n?thumbSrc(p.did,i+1):null;
+ return `<div class="stack prremote">${noBtns?"":`<div class="row between"><span class="eyebrow">${t("You're presenting")}</span><span class="pill live">${i+1} / ${n||"…"}</span></div><h2 class="m0">${esc(d.title||"")}</h2>`}
+ <div class="prnow">${cur?`<img src="${cur}" alt="${t("Current slide")}">`:`<div class="prph">${t("Loading…")}</div>`}</div>
+ <div class="prnotes"><span class="small muted">${t("Your notes")}</span><div class="prnote">${note?esc(note):`<span class="muted">${t("No notes for this slide.")}</span>`}</div></div>
+ <div class="prup small muted">${i+1<n?`${t("Up next")}: ${nx?`<img src="${nx}" alt="">`:""} ${t("slide {n}",{n:i+2})}`:t("This is the last slide.")}</div>
+ ${noBtns?"":`<div class="prbtns"><button class="btn big" data-act="presPrev" ${i<=0?"disabled":""}>◀ ${t("Back")}</button><button class="btn primary big" data-act="presNext" ${i>=n-1?"disabled":""}>${t("Next")} ▶</button></div><p class="small muted m0 tc">${t("The moderator will end the presentation when you're done.")}</p>`}</div>`}
+const _playerPres=player;player=function(){if(VIEW==="guest"&&presMe())return `<div class="phone">${status()}<section class="card stack gilt">${presRemote()}</section></div>`;return _playerPres()};
+
+/* --- moderator: live card, tab --- */
+function presLiveCard(){const p=presOn();if(!p)return "";watchDeck(p.did);const d=(D.decks||{})[p.did]||{},n=d.count||0,i=p.i||0,me=presMe();
+ return `<section class="card stack gilt"><div class="row between"><span class="eyebrow">On the big screen now</span><span class="pill live">Slide ${i+1} of ${n||"…"}</span></div>
+ <h2 class="m0">${esc(d.title||"Presentation")}</h2><p class="small muted m0">Presenting: <b>${esc(p.name||"")}</b>${me?" (you)":p.pid?" · their phone is the remote":""}. You can always take over here.</p>
+ ${me?presRemote(true):""}
+ <div class="prbtns"><button class="btn big" data-act="presPrev" ${i<=0?"disabled":""}>◀ Back</button><button class="btn primary big" data-act="presNext" ${i>=n-1?"disabled":""}>Next ▶</button></div>
+ <details><summary class="small">Jump to a slide</summary><div class="prstrip jump">${Array.from({length:n},(_,k)=>{const s=thumbSrc(p.did,k);return `<button class="prth ${k===i?"on":""}" data-act="presGo" data-i="${k}" aria-label="Slide ${k+1}">${s?`<img src="${s}" alt="">`:`<span>${k+1}</span>`}</button>`}).join("")}</div></details>
+ <div class="row"><select data-draft="pr_hand" aria-label="Hand over to">${whoOptions(dv("pr_hand","me"))}</select><button class="btn sm" data-act="presHand">Hand over</button><button class="btn sm" data-act="presEnd">End presentation</button></div></section>`}
+function deckCard(d){const did=d.k,n=d.count||0,open=L.prNotes===did,stale=d.processing&&Date.now()-(d.t||0)>10*60000&&!(L.prBusy&&L.prBusy.title===d.title);
+ const strip=Array.from({length:Math.min(n,8)},(_,k)=>{const s=thumbSrc(did,k);return `<span class="prth">${s?`<img src="${s}" alt="">`:`<span>${k+1}</span>`}</span>`}).join("")+(n>8?`<span class="prmore">+${n-8}</span>`:"");
+ const nn=Object.keys(d.notes||{}).length;
+ return `<section class="card stack"><div class="row between"><div class="mw0"><h3>${esc(d.title||"Untitled")}</h3><span class="small muted">${n} slide${n===1?"":"s"}${nn?` · notes on ${nn}`:""}${d.by?` · added by ${esc(d.by)}`:""}${d.processing?(stale?" · <b>upload didn't finish, delete it and try again</b>":" · still uploading…"):""}</span></div></div>
+ ${n?`<div class="prstrip">${strip}</div>`:""}
+ ${n&&!d.processing?`<label class="stack tight"><span class="small"><b>Who's presenting?</b> Their phone becomes the remote.</span><select data-draft="pr_who_${did}">${whoOptions(dv("pr_who_"+did,"me"))}</select></label>
+ <div class="row"><button class="btn primary" data-act="presStart" data-k="${did}">Present on the big screen</button><button class="btn sm" data-act="prNotesOpen" data-k="${did}">${open?"Close notes":"Presenter notes"}</button>${L.confirm==="prdel:"+did?`<span class="small">Delete this presentation?</span><button class="btn sm gold" data-act="prDel" data-k="${did}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm" data-act="prAskDel" data-k="${did}">Delete</button>`}</div>`:
+  `<div class="row">${L.confirm==="prdel:"+did?`<button class="btn sm gold" data-act="prDel" data-k="${did}">Yes, delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm" data-act="prAskDel" data-k="${did}">Delete</button>`}</div>`}
+ ${open?notesEditor(d):""}</section>`}
+function notesEditor(d){const did=d.k,n=d.count||0,notes=d.notes||{};
+ return `<div class="stack tight prnoted"><p class="small m0"><b>Presenter notes</b> show on the presenter's phone, under each slide. Type them below, or paste them all at once.</p>
+ <details><summary class="small">Paste or import all the notes</summary><div class="stack tight"><p class="small muted m0">Start each slide's notes with <b>Slide 1:</b>, <b>Slide 2:</b> and so on, or put a line with three dashes (<b>---</b>) between slides.</p>
+ <textarea rows="5" data-draft="pn_bulk_${did}" placeholder="Slide 1: Welcome everyone and thank the hosts&#10;Slide 2: How Raveen and Stafford met">${esc(dv("pn_bulk_"+did,""))}</textarea>
+ <div class="row"><button class="btn sm primary" data-act="prNotesApply" data-k="${did}">Use these notes</button><label class="btn sm upl">Import a .txt file<input type="file" data-act="prNotesFile" data-k="${did}"></label></div></div></details>
+ <div class="stack tight">${Array.from({length:n},(_,k)=>{const s=thumbSrc(did,k);return `<div class="prnrow"><span class="prth">${s?`<img src="${s}" alt="">`:`<span>${k+1}</span>`}</span><label class="stack tight grow"><span class="small muted">Slide ${k+1}</span><textarea rows="2" data-draft="pn_${did}_${k}">${esc(dv(`pn_${did}_${k}`,notes[k]||""))}</textarea></label></div>`}).join("")}</div>
+ <button class="btn primary as" data-act="prNotesSave" data-k="${did}">Save notes</button></div>`}
+function mPres(){const decks=deckList(),b=L.prBusy;
+ return `${presLiveCard()}<section class="card stack"><h2>Presentations</h2><p class="small muted m0">Show slides on the big screen. Pick who's presenting, and their phone becomes the remote, with their notes and a peek at the next slide.</p>
+ <div class="nudge stack tight"><b>Ask every presenter to send you their slides as a PDF.</b> PDFs show up exactly as designed. PowerPoint, Word and Excel files can't be shown directly.
+  <ul class="small m0 prhow"><li>PowerPoint or Word: File → Save As → PDF</li><li>Google Slides or Docs: File → Download → PDF</li><li>Keynote or Pages: File → Export To → PDF</li><li>Excel: File → Save As → PDF</li><li>Canva: Share → Download → PDF</li></ul>
+  <span class="small">Photos and images can be uploaded as they are. Each one becomes a slide, in file-name order.</span>
+  <button class="btn sm as" data-act="prCopyAsk">Copy a message to send presenters</button></div>
+ <label class="stack tight"><span class="small"><b>Title</b> (optional)</span><input type="text" data-draft="pr_title" value="${esc(dv("pr_title",""))}" placeholder="Our love story"></label>
+ ${b?`<div class="stack tight"><span class="small">Preparing “${esc(b.title)}”: slide ${b.i} of ${b.n}…</span><div class="bar"><i style="width:${b.n?Math.round(100*b.i/b.n):0}%"></i></div><span class="small muted">Keep this page open until it finishes.</span></div>`:`<label class="btn primary upl as">Upload a PDF or images<input type="file" multiple data-act="prFile"></label>`}
+ ${L.prErr?`<p class="small m0" style="color:var(--bad)">${esc(L.prErr)}</p>`:""}</section>
+ ${decks.length?decks.map(deckCard).join(""):`<section class="card"><p class="small muted m0">No presentations yet.</p></section>`}`}
+const _mLivePres=mLive;mLive=function(){return presLiveCard()+_mLivePres()};
+(function(){const i=TOUR.findIndex(x=>/k=moments/.test(x.sel));TOUR.splice(i<0?TOUR.length:i+1,0,{sel:'[data-act=mtab][data-k=pres]',title:"Presentations",text:"Upload slides as a PDF, pick who's presenting, and their phone becomes the remote with their notes."})})();
+
+/* --- big screen --- */
+function updatePres(){if(VIEW!=="screen")return;const p=presOn();let el=$("#pres");
+ if(!p){if(el&&el.classList.contains("on")){el.classList.remove("on");PR.key=null;setTimeout(()=>{if(!PR.key&&el)el.innerHTML=""},700)}return}
+ if(!el){el=document.createElement("div");el.id="pres";document.body.appendChild(el)}
+ if(!el.querySelector(".pr-bg")){const r=document.getElementById("ribbons");el.innerHTML=`<div class="pr-bg"></div><div class="mo-rib pr-rib">${r?r.innerHTML.replace(/id="rg(\d)"/g,'id="prg$1"').replace(/url\(#rg(\d)\)/g,"url(#prg$1)"):""}</div><div class="pr-stage"><div class="pr-frame"><img class="pr-img a" alt=""><img class="pr-img b" alt=""><div class="pr-wait">Loading slide…</div></div></div><div class="pr-foot"></div>`}
+ el.classList.add("on");
+ if(!PR.meta[p.did]){PR.meta[p.did]={};ER("decks/"+p.did).once("value").then(s=>{const v=s.val()||{};PR.meta[p.did]={title:v.title,count:v.count};renderSoon()})}
+ const m=PR.meta[p.did]||{},foot=el.querySelector(".pr-foot");if(foot)foot.textContent=`${m.title||""}${m.count?` · ${(p.i||0)+1} / ${m.count}`:""}`;
+ const key=p.did+"|"+(p.i||0);if(key===PR.key)return;PR.key=key;
+ prImg(p.did,p.i||0,"f").then(src=>{if(PR.key!==key||!src)return;const a=el.querySelector(".pr-img.a"),b=el.querySelector(".pr-img.b");const on=a.classList.contains("show")?b:a,off=on===a?b:a;
+  on.onload=()=>{on.classList.add("show");off.classList.remove("show");el.querySelector(".pr-frame").classList.add("has")};on.src=src});
+ prImg(p.did,(p.i||0)+1,"f");if((p.i||0)>0)prImg(p.did,(p.i||0)-1,"f")}
+const _renderPres=render;render=function(f){_renderPres(f);try{updatePres()}catch(e){console.warn(e)}};
+if(VIEW==="screen")addEventListener("keydown",e=>{if(!presOn())return;if(["ArrowRight","ArrowDown","PageDown"," ","Enter"].includes(e.key)){e.preventDefault();presStep(1)}else if(["ArrowLeft","ArrowUp","PageUp","Backspace"].includes(e.key)){e.preventDefault();presStep(-1)}});
+
+Object.assign(ACT,{
+ prFile:async el=>{const fs=[...(el.files||[])];el.value="";try{const ae=document.activeElement;if(ae&&ae.blur&&ae.closest&&ae.closest("#app"))ae.blur()}catch(e){}if(!fs.length)return;if(L.prBusy)return toast("Wait for the current upload to finish");L.prErr=null;
+  const bad=fs.find(f=>!isPdf(f)&&!isImg(f));if(bad){const kind=PR_FIX[extOf(bad)];L.prErr=kind?`That's a ${kind} file, which can't be shown directly. Save it as a PDF first (File → Save As or Download → PDF), then upload the PDF.`:`“${bad.name}” can't be shown. Upload a PDF, or images like JPG or PNG.`;render(true);return}
+  const title0=dv("pr_title","").trim();delete L.drafts.pr_title;const nameOf=f=>String(f.name||"Slides").replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").trim().slice(0,60)||"Slides";
+  try{const pdfs=fs.filter(isPdf),imgs=fs.filter(f=>!isPdf(f));
+   for(let k=0;k<pdfs.length;k++)await prFromPdf(pdfs[k],(k===0&&title0)||nameOf(pdfs[k]));
+   if(imgs.length)await prFromImages(imgs,(!pdfs.length&&title0)||(imgs.length===1?nameOf(imgs[0]):"Photo slides"))}
+  catch(e){console.warn(e);L.prBusy=null;L.prErr=(e&&/PDF reader/.test(e.message))?e.message:"Couldn't read that file. If it's a PDF, try saving it again as a PDF and upload the new copy.";render(true)}},
+ prCopyAsk:()=>copyText(`Hi! I'm putting together the slides for ${C().title||"the event"}. Could you send me your presentation as a PDF? PowerPoint or Word: File → Save As → PDF. Google Slides: File → Download → PDF. Keynote: File → Export To → PDF. Thank you!`),
+ prNotesOpen:el=>{L.prNotes=L.prNotes===el.dataset.k?null:el.dataset.k;render(true)},
+ prNotesApply:async el=>{const did=el.dataset.k,n=deckCount(did),o=parseNotes(dv("pn_bulk_"+did,""),n);if(!Object.keys(o).length)return toast("No notes found");
+  await ER(`decks/${did}/notes`).set(o);delete L.drafts["pn_bulk_"+did];for(let k=0;k<n;k++)delete L.drafts[`pn_${did}_${k}`];toast(`Notes added to ${Object.keys(o).length} slide${Object.keys(o).length===1?"":"s"}`);render(true)},
+ prNotesFile:el=>{const f=el.files&&el.files[0],did=el.dataset.k;el.value="";if(!f)return;const fr=new FileReader();fr.onload=()=>{L.drafts["pn_bulk_"+did]=String(fr.result||"");ACT.prNotesApply({dataset:{k:did}})};fr.readAsText(f)},
+ prNotesSave:async el=>{const did=el.dataset.k,n=deckCount(did),cur=((D.decks||{})[did]||{}).notes||{},o={};for(let k=0;k<n;k++){const v=String(dv(`pn_${did}_${k}`,cur[k]||"")).trim();if(v)o[k]=v.slice(0,2000)}
+  await ER(`decks/${did}/notes`).set(o);for(let k=0;k<n;k++)delete L.drafts[`pn_${did}_${k}`];toast("Notes saved");render(true)},
+ prAskDel:el=>{L.confirm="prdel:"+el.dataset.k;render(true)},
+ prDel:async el=>{const did=el.dataset.k;L.confirm=null;const p=presOn();if(p&&p.did===did)await setState({pres:null});await ER("decks/"+did).remove();await ER("deckImg/"+did).remove();await ER("deckThumb/"+did).remove();toast("Presentation deleted");render(true)},
+ presStart:el=>{const did=el.dataset.k,w=whoObj(dv("pr_who_"+did,"me"));setState({moment:null,pres:{did,i:0,on:true,t:now(),pid:w.pid||null,mid:w.mid||null,name:w.name}});toast(`On the big screen. ${w.pid?w.name+"'s phone is the remote.":""}`);L.mtab="pres";render(true)},
+ presNext:()=>presStep(1),presPrev:()=>presStep(-1),
+ presGo:el=>{ER("state/pres/i").set(+el.dataset.i)},
+ presHand:()=>{const w=whoObj(dv("pr_hand","me"));ER("state/pres").update({pid:w.pid||null,mid:w.mid||null,name:w.name});toast(`${w.name} is presenting now`)},
+ presEnd:()=>{setState({pres:null});toast("Presentation ended")}
+});
 
 /* ================= WEAK SIGNAL MODE ================= */
 /* Firebase keeps working without signal: writes wait on the phone and send when it reconnects.
