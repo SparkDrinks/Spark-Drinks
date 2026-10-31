@@ -4315,17 +4315,17 @@ newEventView=function(){const h=_newEvBrand();if(!L.loaded||L.newInv)return h;
 /* ================= DEMO EVENT (?e=DEMO) =================
    demo.js swaps in a pretend database kept in this browser only. The first visit fills it with a
    ready-made birthday party so visitors can see every screen; "Start the demo over" resets it. */
-const DEMO_V=3;
+const DEMO_V=4;
 const demoOn=()=>!!window.__HMDEMO&&EV==="DEMO";
 function demoSeed(){const dbr=firebase.database();const cur=JSON.parse(localStorage.getItem("hm_demo_db")||"{}");
  if(cur.demoV===DEMO_V&&cur.partygames)return;
  const iso=n=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+n);return plIso(d)};
  const date=iso(14);
- const content=Object.assign(templateFor("birthday","Jordan's 30th"),{title:"Jordan's 30th",honorees:"Jordan",date,tagline:"Thirty, flirty and thriving"});
+ const content=Object.assign(templateFor("birthday","Rosa's 30th"),{title:"Rosa's 30th",honorees:"Rosa",date,tagline:"Thirty, flirty and thriving"});
  content.ros={};[["18:30","Doors open, check-in at the welcome table",""],["19:00","Welcome and the first game",""],["19:45","Dinner is served",""],["20:30","Toasts and the birthday slideshow",""],["21:00","Cake and candles",""],["21:30","Team trivia finale and crowning the winners",""]].forEach((r,i)=>content.ros["r"+i]={time:r[0],title:r[1],note:r[2],who:"",t:1+i});
  const names=[["Alicia R","🦋",3,4],["Marcus T","🌻",7,19],["Tasha W","🌸",1,22],["Devon K","⭐",9,2],["Priya S","🍓",4,30],["Andre M","🎈",11,11],["Keisha L","🌙",2,14],["Omar J","🐝",8,8],["Lauren B","🦄",5,5],["Chris P","🧸",10,27]];
  const players={},scores={},pods={};names.forEach(([n,e,m,d],i)=>{const id="p"+i;players[id]={name:n,m,d,fq:i%6,fa:i%3,word:n[0],t:1000+i,av:{e},bot:true};scores[id]=[18,15,14,12,11,10,9,8,7,6][i]});
- const guests={};names.concat([["Maya B"],["Jordan's mom"],["Uncle Ray"]]).forEach((x,i)=>guests["g"+i]={name:x[0],rsvp:"yes",t:i,...(i<6?{arrived:{t:Date.now()-6e5,by:"Alicia"}}:{})});
+ const guests={};names.concat([["Maya B"],["Rosa's mom"],["Uncle Ray"]]).forEach((x,i)=>guests["g"+i]={name:x[0],rsvp:"yes",t:i,...(i<6?{arrived:{t:Date.now()-6e5,by:"Alicia"}}:{})});
  guests.gw1={name:"Kendra F",rsvp:"maybe",t:40};guests.gw2={name:"Luis O",rsvp:"maybe",t:41};
  const now=Date.now(),album={},albumFull={};(window.HM_DEMO_PHOTOS||[]).forEach((p,i)=>{album["a"+i]={thumb:p.thumb,t:now-i*6e4,name:names[[6,1,4][i]][0]};albumFull["a"+i]=p.full});
  const plan={budgetTotal:2500,capacity:60,
@@ -4336,11 +4336,11 @@ function demoSeed(){const dbr=firebase.database();const cur=JSON.parse(localStor
   dishes:{f1:{dish:"Sliders",course:"Mains",from:"Caterer",serves:40,t:1},f2:{dish:"Mac and cheese",course:"Sides",from:"Tasha",serves:30,contains:"dairy, gluten",t:2},f3:{dish:"Birthday cake",course:"Desserts",from:"Sugar & Spoon Bakery",serves:50,contains:"dairy, eggs, gluten",t:3}},
   diet:{d1:{name:"Priya S",need:"Vegetarian",t:1}},
   colors:["#7b3fb8","#e8338f","#f6892f","#ffd166"],
-  notes:"Surprise toast from Jordan's college friends at 8:30. Venue says no open flames except the cake candles."};
- const ev={meta:{name:"Jordan's 30th",created:now,demo:true,setup:{details:true,content:true,moments:true,menu:true,pin:true,practice:true,share:true}},
+  notes:"Surprise toast from Rosa's college friends at 8:30. Venue says no open flames except the cake candles."};
+ const ev={meta:{name:"Rosa's 30th",created:now,demo:true,setup:{details:true,content:true,moments:true,menu:true,pin:true,practice:true,share:true}},
   mods:{m1:{name:"You",pinHash:"demo",owner:true},m2:{name:"Alicia",pinHash:"demo-helper"}},
   content,players,scores,team:{A:64,B:51},state:{teamNames:{A:"Team Cake",B:"Team Candles"}},guests,album,albumFull,plan};
- const all={demoV:DEMO_V,partygames:{admin:{defaultEvent:"DEMO"},index:{DEMO:{name:"Jordan's 30th",created:now}},events:{DEMO:ev}}};
+ const all={demoV:DEMO_V,partygames:{admin:{defaultEvent:"DEMO"},index:{DEMO:{name:"Rosa's 30th",created:now}},events:{DEMO:ev}}};
  localStorage.setItem("hm_demo_db",JSON.stringify(all));dbr.ref("demoV").set(DEMO_V);
  Object.keys(localStorage).filter(k=>/^pg_.*DEMO/.test(k)).forEach(k=>localStorage.removeItem(k));
  store.set("mod_DEMO",{h:"demo",id:"m1",r:"mod"})}
