@@ -2898,9 +2898,9 @@ function archiveList(code){const a=(D.archives||{})[code]||{};const ks=Object.ke
 /* --- admin console views --- */
 function hEvents(){const ev=D.events||{},def=D.admin.defaultEvent;const keys=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));
  return `<section class="card stack"><div class="row between"><h2>Your events</h2><span class="small muted">You're the administrator. Moderators work under you.</span></div>${keys.length?keys.map(k=>{const open=L.hostOpen===k;
-  return `<div class="gamerow evrow ${open?"on":""}"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}${ev[k].invite?` · made with invite ${esc(ev[k].invite)}${ev[k].by?" by "+esc(ev[k].by):""}`:""}</div></div>
+  return `<div class="gamerow evrow ${open?"on":""}"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}${ev[k].invite?` · made with invite ${esc(ev[k].invite)}${ev[k].by?" by "+esc(ev[k].by):""}`:""}${ev[k].planner?` · in ${esc(plName(ev[k].planner))}'s planner portal`:""}</div></div>
   <div class="row">${L.confirm==="del:"+k?`<span class="small">Delete everything?</span><button class="btn sm gold" data-act="delEvent" data-k="${k}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm primary" data-act="openMod" data-k="${k}">Console</button><a class="btn sm" href="${esc(eventURL(k))}" target="_blank" rel="noopener">Guest view</a><a class="btn sm" href="${esc(eventURL(k,"screen"))}" target="_blank" rel="noopener">Big screen</a><button class="btn sm ${open?"gold":""}" data-act="hostOpen" data-k="${k}">${open?"Close":"Manage"}</button>${def===k?"":`<button class="btn sm" data-act="setMain" data-k="${k}">Make main</button>`}<button class="btn sm" data-act="askDel" data-k="${k}">Delete</button>`}</div>
-  ${open?`<div class="stack evfull adminbox"><h3>Moderators</h3>${modsPanel(k,(D.hostMods||{})[k],(D.hostMeta||{})[k])}
+  ${open?`<div class="stack evfull adminbox"><h3>Planner portal</h3>${plMovePanel(k,ev[k])}<h3>Moderators</h3>${modsPanel(k,(D.hostMods||{})[k],(D.hostMeta||{})[k])}
    <h3>21+ section</h3><div class="row between small"><span>Drinking games for guests who confirm they're 21 or older. Off by default.</span><button class="toggle tg-sm" data-act="adultToggle" data-code="${k}" aria-pressed="${!!((D.hostEv||{})[k]||{}).adultOn}"><span>${((D.hostEv||{})[k]||{}).adultOn?"On":"Off"}</span><i></i></button></div>
    <h3>Start fresh</h3>${freshPanel(k)}<h3>Archives</h3>${archiveList(k)}</div>`:""}</div>`}).join(""):'<p class="small muted m0">No events yet.</p>'}</section>
  <section class="card stack"><div class="row between"><h2>New events</h2><a class="btn sm primary" href="${esc(baseURL())}#new" target="_blank" rel="noopener">Open the new-event page</a></div><p class="small muted m0">New events are made on their own page, so nothing here or in your shower changes. Give people an invite code from the Invite codes tab.</p></section>`}
@@ -5657,9 +5657,9 @@ const _checkAuthOwner=checkAuth;
 checkAuth=function(){_checkAuthOwner();if(VIEW==="host"&&AUTH()&&!window.__HMPDEMO)L.hostOK=!!(L.user&&D.owner&&L.user.uid===D.owner)};
 let ownerSubbed=false;
 function ownerSubs(){if(ownerSubbed||!db)return;ownerSubbed=true;
- RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()},()=>{L.loaded=true;renderSoon()});
+ RT("invites").on("value",s=>{D.invites=s.val()||{};renderSoon()});RT("index").on("value",s=>{D.events=s.val()||{};L.loaded=true;plAutoAttach();renderSoon()},()=>{L.loaded=true;renderSoon()});
  RT("themes").on("value",s=>{D.themes=s.val()||{};renderSoon()});RT("library").on("value",s=>{D.library=s.val()||{};renderSoon()});
- RT("leads").on("value",s=>{D.leads=s.val()||{};renderSoon()});RT("pinvites").on("value",s=>{D.pinvites=s.val()||{};renderSoon()});RT("plist").on("value",s=>{D.plist=s.val()||{};renderSoon()});
+ RT("leads").on("value",s=>{D.leads=s.val()||{};renderSoon()});RT("pinvites").on("value",s=>{D.pinvites=s.val()||{};plAutoAttach();renderSoon()});RT("plist").on("value",s=>{D.plist=s.val()||{};renderSoon()});
  Promise.all(["clients","mates"].map(n=>RT(n).once("value").then(x=>Object.keys(x.val()||{}).length).catch(()=>0))).then(([c,m])=>{L.legacy={c,m};renderSoon()})}
 function hostConnect(){RT("owner").on("value",s=>{D.owner=s.val()||null;checkAuth();if(L.hostOK)ownerSubs();else L.loaded=true;renderSoon()});
  const a=AUTH();if(!a){/* no sign-in available (offline test copy): fall back to the PIN */L.authReady=true;ownerSubs();return}
@@ -5673,11 +5673,38 @@ hostView=function(){const a=AUTH();if(!a||window.__HMPDEMO)return _hostView0();
   return card("Sign in",`<p class="small muted m0">The admin console is for the Host Mode owner.</p>${acctForm("signin")}`)}
  const h=_hostView0();return h.replace('<div class="stack mw0">',`<div class="stack mw0"><div class="row between small acctbar"><span class="muted">Signed in as ${esc(L.user.email||"")}</span><span class="row"><a class="btn xs" href="index.html">Home</a><a class="btn xs" href="${esc(baseURL())}#planner">My planner portal</a><button class="btn xs" data-act="acOut">Sign out</button></span></div>`)};
 
+/* ---- owner: upgrade a host to the planner portal, or move an event into one ---- */
+function plName(uid){const p=(D.plist||{})[uid];return (p&&(p.name||p.biz))||"a planner"}
+function plUpgradeCode(ev){const pv=D.pinvites||{};return Object.keys(pv).find(c=>pv[c].ev===ev&&!pv[c].by&&pv[c].active)}
+function plMovePanel(k,e){e=e||{};const pl=D.plist||{},ids=Object.keys(pl).sort((a,b)=>(pl[a].name||"").localeCompare(pl[b].name||""));
+ if(e.planner)return `<div class="row between small"><span>In <b>${esc(plName(e.planner))}</b>'s planner portal. They see it under Events there.</span><button class="btn xs" data-act="evFromPl" data-k="${esc(k)}">Take it out</button></div>`;
+ const up=plUpgradeCode(k);
+ return `<div class="stack tight"><p class="small muted m0">Upgrade this host to the planner portal. They get a planner code, and this event moves into their portal as soon as they sign up.</p>
+ ${up?`<div class="row between small"><span>Planner code <b class="mono">${esc(up)}</b> sent for this event. Waiting for them to sign up.</span><span class="row"><button class="btn xs" data-act="copyText" data-t="${esc(baseURL()+"#planner")}  Planner code: ${esc(up)}">Copy</button><button class="btn xs" data-act="piToggle" data-k="${esc(up)}">Cancel</button></span></div>`
+  :`<div class="row"><button class="btn sm primary" data-act="evUpgrade" data-k="${esc(k)}">Upgrade to planner portal</button></div>`}
+ ${ids.length?`<div class="row small"><span>Or move it to a planner who already has an account:</span><select data-draft="mvpl_${esc(k)}"><option value="">Choose a planner</option>${ids.map(id=>`<option value="${esc(id)}" ${dv("mvpl_"+k,"")===id?"selected":""}>${esc(pl[id].name||"")}${pl[id].biz?" · "+esc(pl[id].biz):""}</option>`).join("")}</select><button class="btn xs" data-act="evToPl" data-k="${esc(k)}">Move</button></div>`:""}</div>`}
+async function plAttach(ev,uid){const e=(D.events||{})[ev];if(!e||!uid)return;const u={};
+ u["index/"+ev+"/planner"]=uid;u["events/"+ev+"/meta/planner"]=uid;u["planners/"+uid+"/events/"+ev]={name:e.name||ev,created:e.created||Date.now()};
+ await db.ref(ROOT).update(u)}
+async function plDetach(ev){const e=(D.events||{})[ev];if(!e||!e.planner)return;const u={};
+ u["index/"+ev+"/planner"]=null;u["events/"+ev+"/meta/planner"]=null;u["planners/"+e.planner+"/events/"+ev]=null;await db.ref(ROOT).update(u)}
+/* when an upgrade code gets used, move its event into the new planner's portal */
+let plAutoBusy=false;
+async function plAutoAttach(){if(plAutoBusy||!L.hostOK)return;const pv=D.pinvites||{},ev=D.events||{};
+ const todo=Object.keys(pv).filter(c=>pv[c].ev&&pv[c].by&&ev[pv[c].ev]&&!ev[pv[c].ev].planner&&!pv[c].moved);if(!todo.length)return;plAutoBusy=true;
+ try{for(const c of todo){await plAttach(pv[c].ev,pv[c].by);await RT("pinvites/"+c+"/moved").set(Date.now());toast((pv[c].name||"The planner")+"'s event "+pv[c].ev+" moved into their planner portal")}}catch(e){console.warn(e)}plAutoBusy=false}
+Object.assign(ACT,{
+ evUpgrade:async el=>{const k=el.dataset.k,e=(D.events||{})[k]||{};if(plUpgradeCode(k))return;const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";const code="P"+[...Array(7)].map(()=>A[rnd(A.length)]).join("");
+  await RT("pinvites/"+code).set({label:((e.by||"Host")+" · upgrade for "+(e.name||k)).slice(0,60),active:true,t:Date.now(),ev:k});toast("Planner code "+code+" made. Tap Copy and send it to them.")},
+ evToPl:async el=>{const k=el.dataset.k,uid=dv("mvpl_"+k,"");if(!uid)return toast("Choose a planner first");try{await plAttach(k,uid);delete L.drafts["mvpl_"+k];toast("Moved into "+plName(uid)+"'s planner portal")}catch(e){toast("Couldn't move it. Try again.")}},
+ evFromPl:async el=>{try{await plDetach(el.dataset.k);toast("Taken out of the planner portal")}catch(e){toast("Couldn't change it. Try again.")}}
+});
+
 /* ---- owner: Planners tab ---- */
 function hPlanners(){const pv=D.pinvites||{},pl=D.plist||{},ks=Object.keys(pv).sort((a,b)=>(pv[b].t||0)-(pv[a].t||0)),ids=Object.keys(pl).sort((a,b)=>(pl[b].t||0)-(pl[a].t||0)),lg=L.legacy||{};
  return `<section class="card stack"><h2>Planners</h2><p class="small muted m0">Planners and venues get their own portal with their own clients, teammates and events. They can't see your owner tools or anyone else's data. Give each one a planner code to create their account at <b>${esc(baseURL())}#planner</b>.</p>
  <div class="row"><input type="text" class="grow" data-draft="pi_label" maxlength="60" value="${esc(dv("pi_label",""))}" placeholder="Who it's for, e.g. Claire at Northlight Events"><button class="btn primary" data-act="piNew">New planner code</button></div>
- ${ks.length?`<div class="stack tight">${ks.map(k=>{const v=pv[k];return `<div class="row between small clrow"><span class="mw0"><b class="mono">${esc(k)}</b> · ${esc(v.label||"")}<span class="db muted">${v.by?`Used by ${esc(v.name||"a planner")}`:v.active?"Not used yet":"Turned off"}</span></span><span class="row">${v.by?"":`<button class="btn xs" data-act="copyText" data-t="${esc(baseURL()+"#planner")}  Planner code: ${esc(k)}">Copy</button><button class="btn xs" data-act="piToggle" data-k="${esc(k)}">${v.active?"Turn off":"Turn on"}</button>`}</span></div>`}).join("")}</div>`:""}</section>
+ ${ks.length?`<div class="stack tight">${ks.map(k=>{const v=pv[k];return `<div class="row between small clrow"><span class="mw0"><b class="mono">${esc(k)}</b> · ${esc(v.label||"")}<span class="db muted">${v.by?`Used by ${esc(v.name||"a planner")}`:v.active?"Not used yet":"Turned off"}${v.ev?` · moves event ${esc(v.ev)} into their portal`:""}</span></span><span class="row">${v.by?"":`<button class="btn xs" data-act="copyText" data-t="${esc(baseURL()+"#planner")}  Planner code: ${esc(k)}">Copy</button><button class="btn xs" data-act="piToggle" data-k="${esc(k)}">${v.active?"Turn off":"Turn on"}</button>`}</span></div>`}).join("")}</div>`:""}</section>
  <section class="card stack"><h3>Planner accounts</h3>${ids.length?`<div class="stack tight">${ids.map(id=>`<div class="clrow small"><b>${esc(pl[id].name||"")}</b>${pl[id].biz?` · ${esc(pl[id].biz)}`:""}<div class="muted">${esc(pl[id].email||"")}${pl[id].t?" · joined "+esc(clAgo(pl[id].t)):""}</div></div>`).join("")}</div>`:'<p class="small muted m0">No planners yet.</p>'}</section>
  ${(lg.c||lg.m)?`<section class="card stack"><h3>Move your earlier clients and teammates</h3><p class="small muted m0">You have ${lg.c} client${lg.c===1?"":"s"} and ${lg.m} teammate${lg.m===1?"":"s"} from before planner portals existed. Move them into your own planner portal so they keep working after the database is locked. Their old links will stop working; send the new ones from your portal.</p><button class="btn primary as" data-act="piMigrate">Move them to my planner portal</button></section>`:""}`}
 Object.assign(ACT,{
