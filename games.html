@@ -1289,7 +1289,7 @@ function createEvent(code,name,content,pinHash,practice){const tm=Date.now();con
 
 function subscribeEvent(){
  const on=(p,fn)=>ER(p).on("value",s=>{fn(s.val());renderSoon()});
- ER("meta").on("value",s=>{D.meta=s.val();L.missing=!D.meta;L.loaded=true;checkAuth();renderSoon()});
+ ER("meta").on("value",s=>{D.meta=s.val();L.missing=!D.meta;if(!D.meta&&EV)ER("movedTo").once("value").then(m=>{const to=m.val();if(to&&to!==EV)location.replace(eventURL(to,location.hash.slice(1)))}).catch(()=>{});L.loaded=true;checkAuth();renderSoon()});
  on("content",v=>{D.content=v||null;D.contentLoaded=true;cwCache.key=null;applyTheme()});
  on("state",v=>{D.state=v||{};onState()});
  on("players",v=>{D.players=v||{};L.playersLoaded=true});
@@ -2900,7 +2900,7 @@ function hEvents(){const ev=D.events||{},def=D.admin.defaultEvent;const keys=Obj
  return `<section class="card stack"><div class="row between"><h2>Your events</h2><span class="small muted">You're the administrator. Moderators work under you.</span></div>${keys.length?keys.map(k=>{const open=L.hostOpen===k;
   return `<div class="gamerow evrow ${open?"on":""}"><span class="gnum">${def===k?"★":""}</span><div class="mw0"><b>${esc(ev[k].name||k)}</b> ${ev[k].practice?'<span class="pill warn">practice</span>':""}<div class="small muted">Code ${esc(k)}${def===k?" · opens from the main link":""}${ev[k].invite?` · made with invite ${esc(ev[k].invite)}${ev[k].by?" by "+esc(ev[k].by):""}`:""}${ev[k].planner?` · in ${esc(plName(ev[k].planner))}'s planner portal`:""}</div></div>
   <div class="row">${L.confirm==="del:"+k?`<span class="small">Delete everything?</span><button class="btn sm gold" data-act="delEvent" data-k="${k}">Delete</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm primary" data-act="openMod" data-k="${k}">Console</button><a class="btn sm" href="${esc(eventURL(k))}" target="_blank" rel="noopener">Guest view</a><a class="btn sm" href="${esc(eventURL(k,"screen"))}" target="_blank" rel="noopener">Big screen</a><button class="btn sm ${open?"gold":""}" data-act="hostOpen" data-k="${k}">${open?"Close":"Manage"}</button>${def===k?"":`<button class="btn sm" data-act="setMain" data-k="${k}">Make main</button>`}<button class="btn sm" data-act="askDel" data-k="${k}">Delete</button>`}</div>
-  ${open?`<div class="stack evfull adminbox"><h3>Planner portal</h3>${plMovePanel(k,ev[k])}<h3>Moderators</h3>${modsPanel(k,(D.hostMods||{})[k],(D.hostMeta||{})[k])}
+  ${open?`<div class="stack evfull adminbox"><h3>Event code</h3>${codePanel(k)}<h3>Planner portal</h3>${plMovePanel(k,ev[k])}<h3>Moderators</h3>${modsPanel(k,(D.hostMods||{})[k],(D.hostMeta||{})[k])}
    <h3>21+ section</h3><div class="row between small"><span>Drinking games for guests who confirm they're 21 or older. Off by default.</span><button class="toggle tg-sm" data-act="adultToggle" data-code="${k}" aria-pressed="${!!((D.hostEv||{})[k]||{}).adultOn}"><span>${((D.hostEv||{})[k]||{}).adultOn?"On":"Off"}</span><i></i></button></div>
    <h3>Start fresh</h3>${freshPanel(k)}<h3>Archives</h3>${archiveList(k)}</div>`:""}</div>`}).join(""):'<p class="small muted m0">No events yet.</p>'}</section>
  <section class="card stack"><div class="row between"><h2>New events</h2><a class="btn sm primary" href="${esc(baseURL())}#new" target="_blank" rel="noopener">Open the new-event page</a></div><p class="small muted m0">New events are made on their own page, so nothing here or in your shower changes. Give people an invite code from the Invite codes tab.</p></section>`}
@@ -5672,6 +5672,38 @@ hostView=function(){const a=AUTH();if(!a||window.__HMPDEMO)return _hostView0();
   if(!D.owner)return card("Set up the owner account",`<p class="small muted m0">One time only. Prove it's you with the current host PIN, then choose the email and password you'll sign in with from now on.</p>${acctForm("owner")}`);
   return card("Sign in",`<p class="small muted m0">The admin console is for the Host Mode owner.</p>${acctForm("signin")}`)}
  const h=_hostView0();return h.replace('<div class="stack mw0">',`<div class="stack mw0"><div class="row between small acctbar"><span class="muted">Signed in as ${esc(L.user.email||"")}</span><span class="row"><a class="btn xs" href="index.html">Home</a><a class="btn xs" href="${esc(baseURL())}#planner">My planner portal</a><button class="btn xs" data-act="acOut">Sign out</button></span></div>`)};
+
+/* ---- owner: change an event's code (copies everything, leaves a redirect behind) ---- */
+function codePanel(k){if(k==="SHOWER")return '<p class="small muted m0">The shower\'s code stays SHOWER because the main link depends on it.</p>';
+ const nc=dv("cc_"+k,"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10),ask=L.confirm==="code:"+k;
+ return `<div class="stack tight"><p class="small muted m0">Current code <b class="mono">${esc(k)}</b>. Changing it moves everything to the new code. Links and QR codes already shared keep working and forward to the new one. Moderator PINs stay the same.</p>
+ <div class="row"><input type="text" class="w110 mono" data-draft="cc_${esc(k)}" value="${esc(dv("cc_"+k,""))}" maxlength="10" autocapitalize="characters" placeholder="New code">${ask?`<span class="small">Change to <b class="mono">${esc(nc)}</b>?</span><button class="btn sm gold" data-act="codeGo" data-k="${esc(k)}">${L.codeBusy?"Moving…":"Yes, change it"}</button><button class="btn sm" data-act="cancelConfirm">Keep</button>`:`<button class="btn sm" data-act="codeAsk" data-k="${esc(k)}">Change code</button>`}</div></div>`}
+async function changeEventCode(old,nw){const R=db.ref(ROOT),get=async p=>(await RT(p).once("value")).val();
+ if(await get("events/"+nw+"/meta")||await get("index/"+nw))throw new Error("taken");
+ const ev=await get("events/"+old),ix=await get("index/"+old);if(!ev||!ev.meta)throw new Error("missing");
+ await RT("events/"+nw).set(ev);
+ const chk=await get("events/"+nw+"/meta");if(!chk||chk.name!==ev.meta.name)throw new Error("copy");
+ const u={},arc=await get("archives/"+old),pl=(ix&&ix.planner)||ev.meta.planner;
+ u["index/"+nw]=ix||{name:ev.meta.name||nw,created:ev.meta.created||Date.now()};u["index/"+old]=null;
+ if(arc){u["archives/"+nw]=arc;u["archives/"+old]=null}
+ const inv=D.invites||{};Object.keys(inv).forEach(c=>{if(inv[c].event===old)u["invites/"+c+"/event"]=nw});
+ const pv=D.pinvites||{};Object.keys(pv).forEach(c=>{if(pv[c].ev===old)u["pinvites/"+c+"/ev"]=nw});
+ if(D.admin&&D.admin.defaultEvent===old)u["admin/defaultEvent"]=nw;
+ if(pl){const pe=await get("planners/"+pl+"/events/"+old),tv=await get("planners/"+pl+"/tv/"+old),cl=await get("planners/"+pl+"/clients")||{};
+  u["planners/"+pl+"/events/"+nw]=pe||{name:ev.meta.name||nw,created:ev.meta.created||Date.now()};u["planners/"+pl+"/events/"+old]=null;
+  if(tv){u["planners/"+pl+"/tv/"+nw]=tv;u["planners/"+pl+"/tv/"+old]=null}
+  Object.keys(cl).forEach(id=>{if(cl[id]&&cl[id].ev===old)u["planners/"+pl+"/clients/"+id+"/ev"]=nw})}
+ await R.update(u);
+ await RT("events/"+old).set({movedTo:nw,t:Date.now()})}
+Object.assign(ACT,{
+ codeAsk:el=>{const k=el.dataset.k,nc=dv("cc_"+k,"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(nc.length<4)return toast("Use at least 4 letters or numbers");if(nc===k)return toast("That's already the code");if((D.events||{})[nc])return toast("That code is taken. Try another.");
+  L.confirm="code:"+k;render()},
+ codeGo:async el=>{const k=el.dataset.k,nc=dv("cc_"+k,"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);if(L.codeBusy)return;L.codeBusy=true;render();
+  try{await changeEventCode(k,nc);delete L.drafts["cc_"+k];L.confirm=null;if(L.hostOpen===k)L.hostOpen=nc;toast("Code changed to "+nc+". Old links forward to it.")}
+  catch(e){toast(e.message==="taken"?"That code is taken. Try another.":"Couldn't change the code. Nothing was lost; try again.");console.warn(e)}
+  L.codeBusy=false;render()}
+});
 
 /* ---- owner: upgrade a host to the planner portal, or move an event into one ---- */
 function plName(uid){const p=(D.plist||{})[uid];return (p&&(p.name||p.biz))||"a planner"}
