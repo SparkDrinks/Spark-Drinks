@@ -4980,7 +4980,7 @@ Object.assign(ACT,{
   if(logo.length>120000)return toast("That logo is too big. Try a simpler picture.");
   await RT(PSP+"brand").set({name,color,logo});L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Branding saved");render(true)},
  brClear:async()=>{await RT(PSP+"brand").remove();L.brLogo=undefined;["br_name","br_color"].forEach(k=>delete L.drafts[k]);toast("Back to the Host Mode look");render(true)},
- dayOfToggle:async()=>{await RT(PSP+"dayOf").set(!D.dayOf);toast(D.dayOf?"Day-of mode is off":"Day-of mode is on")},
+ dayOfToggle:async()=>{const on=!D.dayOf;await RT(PSP+"dayOf").set(on);toast(on?"Day-of mode is on":"Day-of mode is off")},
  mateDone:async el=>{const id=mateKey(),k=el.dataset.k;await RT(PSP+`mateTasks/${id}/${k}`).update({done:true,doneAt:Date.now(),by:"mate"});buzz(30)},
  mateHelp:async()=>{const id=mateKey();await RT(PSP+"mates/"+id+"/help").set({t:Date.now(),msg:"Needs help now",ok:false});buzz(40);toast("Your planner has been told")},
  mateHelpX:async()=>{await RT(PSP+"mates/"+mateKey()+"/help").remove()},
