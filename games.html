@@ -5574,7 +5574,11 @@ if(pdemoOn()){
  if(window.top===window){addEventListener("scroll",demoFloat,{passive:true});addEventListener("resize",demoFloat);setInterval(demoFloat,400)}
 }
 function pdemoBar(){if(!pdemoOn()||window.top!==window)return "";const on=VIEW;const a=(href,l,v)=>`<a class="${on===v?"on":""}" href="${href}">${l}</a>`;
- return `<div class="demoslot"><div class="demobar"><div class="dbrow"><span class="dbt">Planner demo</span><span class="dbkeys"><a href="index.html">Home</a><button data-act="pdemoReset">Start over</button></span></div><div class="dbscreens">${a("games.html?pdemo=1#planner","Planner","planner")}${a("games.html?pdemo=1&p=northlight&client=dublin","Client","client")}${a("games.html?pdemo=1&p=northlight&mate=liam","Teammate","mate")}</div></div></div>`}
+ return `<div class="demoslot"><div class="demobar"><div class="dbrow"><span class="dbt">Planner demo</span><span class="dbkeys"><a href="index.html">Home</a><button data-act="pdemoReset">Start over</button></span></div><div class="dbscreens">${a("games.html?pdemo=1#planner","Planner","planner")}${a("games.html?pdemo=1&p=northlight&client=dublin","Client","client")}${a("games.html?pdemo=1&p=northlight&mate=liam","Teammate","mate")}</div>${pdemoEvRow()}</div></div>`}
+/* inside an event, a second row flips between that event's three screens */
+function pdemoEvRow(){if(!EV||!["moderator","guest","screen"].includes(VIEW))return "";const nm=(D.meta&&D.meta.name)||(C()&&C().title)||EV;
+ const e=(h,l,v)=>`<a class="${VIEW===v?"on":""}" href="${esc(eventURL(EV,h))}">${l}</a>`;
+ return `<div class="dbrow"><span class="dbt">This event</span><span class="small" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700">${esc(nm)}</span></div><div class="dbscreens">${e("moderator","Console","moderator")}${e("","Guest phone","guest")}${e("screen","Big screen","screen")}</div>`}
 const _hvPD=headerView;headerView=function(){return pdemoBar()+_hvPD()};
 
 /* ================= ACCOUNTS + PLANNER PORTAL =================

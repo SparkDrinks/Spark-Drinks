@@ -203,10 +203,6 @@
         ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
         ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
       },
-      "$other": {
-        ".read": true,
-        ".write": true
-      },
       "clientInvoices": {
         ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
         ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
@@ -214,11 +210,66 @@
       "packages": {
         ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
         ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
+      },
+      "events": {
+        "$ev": {
+          ".read": true,
+          ".write": "newData.exists() || $ev.endsWith('-P') || (auth != null && (auth.uid === root.child('partygames/owner').val() || auth.uid === data.child('meta/planner').val()))"
+        }
+      },
+      "themes": {
+        ".read": true,
+        "$id": {
+          ".write": "!data.exists() || (auth != null && auth.uid === root.child('partygames/owner').val())"
+        }
+      },
+      "library": {
+        ".read": true,
+        "$id": {
+          ".write": true
+        }
+      },
+      "archives": {
+        ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        "$code": {
+          "$t": {
+            ".write": "!data.exists() || (auth != null && auth.uid === root.child('partygames/owner').val())"
+          }
+        }
+      },
+      "tv": {
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        "$ev": {
+          ".read": true
+        }
+      },
+      "imMaps": {
+        ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
+      },
+      "imports": {
+        ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
+      },
+      "invSettings": {
+        ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
+      },
+      "profile": {
+        ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
       }
     },
-    "$top": {
+    "menu": {
       ".read": true,
       ".write": true
+    },
+    "orders": {
+      ".read": true,
+      "$id": {
+        ".write": true
+      }
     }
   }
 }
