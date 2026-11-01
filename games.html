@@ -4740,121 +4740,241 @@ async function clDoImport(id,k,mode){const c=(D.clients||{})[id];if(!c||!c.ev)re
  if(mode==="replace")await ER("guests",c.ev).set(u);else if(added)await ER("guests",c.ev).update(u);
  await RT(PSP+`clientFiles/${id}/${k}/status`).set("imported");toast(mode==="replace"?`Guest list replaced with ${added} names`:added?`${added} guest${added===1?"":"s"} added`:"Everyone was already on the list");render(true)}
 
-/* ---- importing clients from another app or spreadsheet (CSV or Excel) ----
-   Upload, match columns, preview with problems flagged, import, then undo for 24 hours.
-   Every imported client is tagged with its batch (imp) so the whole batch can be rolled back. */
-const IM_F=[
- {k:"email",l:"Email",re:/e-?mail/},
- {k:"phone",l:"Phone",re:/phone|mobile|cell|\btel/},
- {k:"first",l:"First name",re:/first|given/},
- {k:"last",l:"Last name",re:/last|surname|family/},
- {k:"date",l:"Event date",re:/date|when|\bday\b/,not:/creat|book|added|since|paid|sign|birth|modif|updat|due/},
- {k:"guests",l:"Guest count",re:/guest|head ?count|attend|\bpax\b|count/},
- {k:"budget",l:"Budget",re:/budget|price|total|amount|cost|value/},
- {k:"status",l:"Status",re:/status|stage/},
- {k:"venue",l:"Venue",re:/venue|location|place/},
- {k:"evType",l:"Event type",re:/type|occasion|category|kind/},
- {k:"evTitle",l:"Event name",re:/event|party|project|title/},
- {k:"notes",l:"Notes",re:/note|comment|detail|descr|memo/},
- {k:"name",l:"Client name",re:/name|client|customer|couple|contact|lead/}
-];
-const IMF=Object.fromEntries(IM_F.map(f=>[f.k,f]));
-const IM_ORDER=["name","first","last","email","phone","date","evTitle","evType","venue","guests","budget","status","notes"];
-const IM_KEEP=["email","phone","evTitle","evType","venue","guests","budget","status","notes"];
-function imGuess(head){const used=new Set(),map={};const h=head.map(x=>String(x||"").toLowerCase().trim());
- IM_F.forEach(f=>{const i=h.findIndex((x,j)=>x&&!used.has(j)&&f.re.test(x)&&!(f.not&&f.not.test(x)));if(i>=0){map[f.k]=String(i);used.add(i)}});
- if(map.name==null&&map.first==null&&map.last==null&&head.length)map.name="0";return map}
+/* ---- importing from another app or spreadsheet: clients, vendors and guests ----
+   Sources: CSV, Excel (.xlsx), a shared Google Sheets link, or a typed PDF that holds a table.
+   Steps: upload, match columns (auto-guessed, or the matches saved last time for the same headers),
+   preview with problems flagged, import, then undo for 24 hours.
+   Each import is logged at imports/<batch> with the keys it wrote, so the whole batch can be rolled back. */
+const IM_FIELDS={
+ email:{l:"Email",re:/e-?mail/},
+ phone:{l:"Phone",re:/phone|mobile|cell|\btel/},
+ first:{l:"First name",re:/first|given/},
+ last:{l:"Last name",re:/last|surname|family/},
+ date:{l:"Event date",re:/date|when|\bday\b/,not:/creat|book|added|since|paid|sign|birth|modif|updat|due/},
+ guests:{l:"Guest count",re:/guest|head ?count|attend|\bpax\b|count/},
+ budget:{l:"Budget",re:/budget|price|total|amount|cost|value/},
+ status:{l:"Status",re:/status|stage/},
+ venue:{l:"Venue",re:/venue|location|place/},
+ evType:{l:"Event type",re:/type|occasion|category|kind/},
+ evTitle:{l:"Event name",re:/event|party|project|title/},
+ notes:{l:"Notes",re:/note|comment|detail|descr|memo/},
+ name:{l:"Client name",re:/name|client|customer|couple|contact|lead/},
+ client:{l:"Client",re:/client|customer|couple|event/},
+ vname:{l:"Vendor name",re:/vendor|company|business|name/},
+ role:{l:"Role or category",re:/role|category|service|type|trade/},
+ arrive:{l:"Arrival time",re:/arriv|time|load.?in|set.?up/},
+ delivers:{l:"What they bring",re:/deliver|bring|provid|item|package/},
+ vnote:{l:"Notes",re:/note|comment|rate|price|cost|website|\bweb|detail/},
+ gname:{l:"Guest name",re:/guest|name|attendee|invitee/},
+ rsvp:{l:"RSVP",re:/rsvp|status|going|attending|respon|reply|coming|accept/},
+ invited:{l:"Invitation sent",re:/invit|sent/},
+ plusOf:{l:"Plus-one of",re:/plus|guest of|companion|\bwith\b/}
+};
+const IM_T={
+ clients:{l:"Clients",one:"client",many:"clients",
+  guess:["email","phone","first","last","date","guests","budget","status","venue","evType","evTitle","notes","name"],
+  show:["name","first","last","email","phone","date","evTitle","evType","venue","guests","budget","status","notes"],need:["name","first","last"],
+  about:"Your client list from another app or spreadsheet. Each client gets a portal, with their event details on their card.",
+  tpl:[["Client name","Email","Phone","Event date","Event name","Event type","Venue","Guest count","Budget","Status","Notes"],["Maya and Jordan","maya@example.com","555-201-3344","2027-06-12","Maya and Jordan's wedding","Wedding","The Grand Room","150","25000","Booked","Prefers texts"]]},
+ vendors:{l:"Vendors",one:"vendor",many:"vendors",
+  guess:["email","phone","arrive","delivers","role","client","vnote","vname"],
+  show:["vname","role","phone","email","arrive","delivers","vnote","client"],need:["vname"],
+  about:"Caterers, DJs, florists and the rest, added to a client's Vendors tab.",
+  tpl:[["Vendor name","Role","Phone","Email","Arrival time","What they bring","Notes","Client"],["Sunrise Catering","Catering","555-310-2200","hello@sunrise.example","3:30 PM","Dinner for 150","Needs a power outlet","Maya and Jordan"]]},
+ guests:{l:"Guests",one:"guest",many:"guests",
+  guess:["rsvp","invited","plusOf","first","last","gname"],
+  show:["gname","first","last","rsvp","invited","plusOf"],need:["gname","first","last"],
+  about:"A guest list from an RSVP site or spreadsheet, added to one of your events.",
+  tpl:[["Guest name","RSVP","Invitation sent","Plus-one of"],["Ana Ruiz","Yes","Yes",""],["Leo Ruiz","Yes","Yes","Ana Ruiz"]]}
+};
+function imGuess(type,head){const T=IM_T[type],used=new Set(),map={},h=head.map(x=>String(x||"").toLowerCase().trim());
+ T.guess.forEach(k=>{const f=IM_FIELDS[k],i=h.findIndex((x,j)=>x&&!used.has(j)&&f.re.test(x)&&!(f.not&&f.not.test(x)));if(i>=0){map[k]=String(i);used.add(i)}});
+ if(!T.need.some(k=>map[k]!=null)&&head.length){const free=head.findIndex((x,j)=>!used.has(j));if(free>=0)map[T.need[0]]=String(free)}return map}
+function imSig(type,head){let h=5381;const s=type+"|"+head.map(x=>String(x||"").toLowerCase().trim()).join("|");for(const c of s)h=((h<<5)+h+c.charCodeAt(0))|0;return type+"_"+(h>>>0).toString(36)}
 function imYMD(y,mo,d){if(mo<1||mo>12||d<1||d>31||y<1900||y>2200)return null;const dt=new Date(Date.UTC(y,mo-1,d));return dt.getUTCDate()===d?dt.toISOString().slice(0,10):null}
-/* "" = no date given, null = a date we couldn't read */
+/* "" = nothing given, null = something we couldn't read */
 function imDate(v){v=String(v||"").trim();if(!v)return "";let m;
  if(/^\d{5}(\.\d+)?$/.test(v)&&+v>20000&&+v<80000)return new Date(Date.UTC(1899,11,30)+Math.floor(+v)*864e5).toISOString().slice(0,10);
  if((m=v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/)))return imYMD(+m[1],+m[2],+m[3]);
  if((m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4}|\d{2})\b/))){let y=+m[3],a=+m[1],b=+m[2];if(y<100)y+=2000;return a>12?imYMD(y,b,a):imYMD(y,a,b)}
  const t=Date.parse(v.replace(/(\d)(st|nd|rd|th)\b/i,"$1"));if(!isNaN(t)){const d=new Date(t);return imYMD(d.getFullYear(),d.getMonth()+1,d.getDate())}
  return null}
+function imTime(v){v=String(v||"").trim().toLowerCase();if(!v)return "";let m;
+ if(/^0?\.\d+$/.test(v)){const mins=Math.round(parseFloat(v)*1440);return String(Math.floor(mins/60)%24).padStart(2,"0")+":"+String(mins%60).padStart(2,"0")}
+ if((m=v.match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?|a|p)?$/))){let h=+m[1],mi=+(m[2]||0);const ap=m[3]?m[3][0]:"";if(!ap&&!m[2])return null;if(h>23||mi>59||(ap&&(h<1||h>12)))return null;if(ap==="p"&&h<12)h+=12;if(ap==="a"&&h===12)h=0;return String(h).padStart(2,"0")+":"+String(mi).padStart(2,"0")}
+ if(v==="noon")return "12:00";return null}
 function imNum(v){const s=String(v||"").replace(/[$£€,\s]/g,"").replace(/usd$/i,"");if(!s)return "";const m=s.match(/^(-?\d*\.?\d+)(k)?$/i);return m?parseFloat(m[1])*(m[2]?1000:1):null}
+const imOkEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 function imBuild(){const I=L.im,m=I.map,g=(r,k)=>m[k]!=null&&m[k]!==""?String(r[+m[k]]==null?"":r[+m[k]]).replace(/\s+/g," ").trim():"";
  const used=new Set(Object.values(m).filter(v=>v!==""&&v!=null).map(Number));
- const cs=D.clients||{},byEm={},byNd={};Object.keys(cs).forEach(id=>{const c=cs[id];if(c.email)byEm[String(c.email).toLowerCase()]=1;byNd[normName(c.name)+"|"+(c.date||"")]=1});
- const evs=D.events||{},evBy={};Object.keys(evs).forEach(k=>{evBy[normName(k)]=k;evBy[normName(evs[k].name||k)]=k});
- const seenE={},seenN={};
- return I.rows.map((r,i)=>{let name=g(r,"name");if(!name)name=[g(r,"first"),g(r,"last")].filter(Boolean).join(" ");
-  const o={line:I.start+i+2,name:name.slice(0,40),warn:[],skip:""};if(!name){o.skip="no name";return o}
-  const em=g(r,"email").toLowerCase();if(em){if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))o.email=em.slice(0,120);else o.warn.push("email doesn't look right")}
-  const ph=g(r,"phone");if(ph)o.phone=ph.slice(0,40);
-  const dr=g(r,"date"),d=imDate(dr);if(d)o.date=d;else if(d===null)o.warn.push(`couldn't read the date "${dr.slice(0,20)}"`);
-  const et=g(r,"evTitle");if(et){const k=evBy[normName(et)];if(k){o.ev=k;o.evName=evs[k].name||k}else o.evTitle=et.slice(0,80)}
-  [["evType",40],["venue",120],["status",40]].forEach(([k,n])=>{const v=g(r,k);if(v)o[k]=v.slice(0,n)});
-  [["guests","guest count"],["budget","budget"]].forEach(([k,l])=>{const raw=g(r,k),n=imNum(raw);if(n===null)o.warn.push(`couldn't read the ${l} "${raw.slice(0,20)}"`);else if(n!==""&&n>=0)o[k]=k==="guests"?Math.round(n):Math.round(n*100)/100});
-  const notes=[g(r,"notes")];if(I.keep)I.head.forEach((h,j)=>{if(used.has(j))return;const v=String(r[j]==null?"":r[j]).trim();if(v)notes.push(`${h||"Column "+(j+1)}: ${v}`)});
-  const nt=notes.filter(Boolean).join("\n");if(nt)o.notes=nt.slice(0,1000);
-  const nd=normName(o.name)+"|"+(o.date||"");if((o.email&&(byEm[o.email]||seenE[o.email]))||byNd[nd]||seenN[nd])o.dup=true;if(o.email)seenE[o.email]=1;seenN[nd]=1;
+ const extras=r=>I.keep?I.head.map((h,j)=>{if(used.has(j))return "";const v=String(r[j]==null?"":r[j]).trim();return v?`${h||"Column "+(j+1)}: ${v}`:""}).filter(Boolean):[];
+ const cs=D.clients||{},seen={};
+ const person=(r,k)=>(g(r,k)||[g(r,"first"),g(r,"last")].filter(Boolean).join(" "));
+ if(I.type==="clients"){const byEm={},byNd={};Object.keys(cs).forEach(id=>{const c=cs[id];if(c.email)byEm[String(c.email).toLowerCase()]=1;byNd[normName(c.name)+"|"+(c.date||"")]=1});
+  const evs=D.events||{},evBy={};Object.keys(evs).forEach(k=>{evBy[normName(k)]=k;evBy[normName(evs[k].name||k)]=k});
+  return I.rows.map((r,i)=>{const name=person(r,"name"),o={line:I.start+i+2,name:name.slice(0,40),warn:[],skip:""};if(!name){o.skip="no name";return o}
+   const em=g(r,"email").toLowerCase();if(em){if(imOkEmail(em))o.email=em.slice(0,120);else o.warn.push("email doesn't look right")}
+   const ph=g(r,"phone");if(ph)o.phone=ph.slice(0,40);
+   const dr=g(r,"date"),d=imDate(dr);if(d)o.date=d;else if(d===null)o.warn.push(`couldn't read the date "${dr.slice(0,20)}"`);
+   const et=g(r,"evTitle");if(et){const k=evBy[normName(et)];if(k){o.ev=k;o.evName=evs[k].name||k}else o.evTitle=et.slice(0,80)}
+   [["evType",40],["venue",120],["status",40]].forEach(([k,n])=>{const v=g(r,k);if(v)o[k]=v.slice(0,n)});
+   [["guests","guest count"],["budget","budget"]].forEach(([k,l])=>{const raw=g(r,k),n=imNum(raw);if(n===null)o.warn.push(`couldn't read the ${l} "${raw.slice(0,20)}"`);else if(n!==""&&n>=0)o[k]=k==="guests"?Math.round(n):Math.round(n*100)/100});
+   const nt=[g(r,"notes")].concat(extras(r)).filter(Boolean).join("\n");if(nt)o.notes=nt.slice(0,1000);
+   const nd=normName(o.name)+"|"+(o.date||"");if((o.email&&(byEm[o.email]||seen["e"+o.email]))||byNd[nd]||seen[nd])o.dup=true;if(o.email)seen["e"+o.email]=1;seen[nd]=1;
+   return o})}
+ if(I.type==="vendors"){const cBy={};Object.keys(cs).forEach(id=>{cBy[normName(cs[id].name)]=id});const have={};
+  return I.rows.map((r,i)=>{const name=g(r,"vname"),o={line:I.start+i+2,name:name.slice(0,60),warn:[],skip:""};if(!name){o.skip="no vendor name";return o}
+   let cid=I.target;if(cid==="col"){const cn=g(r,"client");cid=cBy[normName(cn)];if(!cid){o.skip=cn?`no client named "${cn.slice(0,30)}"`:"no client given";return o}}
+   if(!cs[cid]){o.skip="pick a client";return o}o.cid=cid;o.cname=cs[cid].name;
+   const ro=g(r,"role");if(ro)o.role=ro.slice(0,40);const ph=g(r,"phone");if(ph)o.phone=ph.slice(0,30);
+   const em=g(r,"email").toLowerCase();if(em){if(imOkEmail(em))o.email=em.slice(0,80);else o.warn.push("email doesn't look right")}
+   const ar=g(r,"arrive"),t=imTime(ar);if(t)o.arrive=t;else if(t===null)o.warn.push(`couldn't read the arrival time "${ar.slice(0,20)}"`);
+   const dl=g(r,"delivers");if(dl)o.delivers=dl.slice(0,80);
+   const nt=[g(r,"vnote")].concat(extras(r)).filter(Boolean).join("; ");if(nt)o.note=nt.slice(0,300);
+   if(!have[cid]){have[cid]={};clVendors(cid).forEach(v=>have[cid][normName(v.name)]=1)}const nk=cid+"|"+normName(o.name);if(have[cid][normName(o.name)]||seen[nk])o.dup=true;seen[nk]=1;
+   return o})}
+ /* guests */
+ const have=Object.assign({},I.have||{});
+ return I.rows.map((r,i)=>{const name=person(r,"gname"),o={line:I.start+i+2,name:name.slice(0,80),warn:[],skip:""};if(!name){o.skip="no name";return o}
+  if(m.rsvp!=null&&m.rsvp!==""){const raw=g(r,"rsvp");o.rsvp=rsvpOf(raw)}else o.rsvp="yes";
+  if(m.invited!=null&&m.invited!==""){const v=g(r,"invited");o.invited=/^(y|yes|true|sent|x|✓|1)/i.test(v)}
+  const po=g(r,"plusOf");if(po&&normName(po)!==normName(name))o.plusOf=po.slice(0,80);
+  const n=normName(o.name);if(have[n]>0){o.dup=true;have[n]--}else if(seen[n])o.dup=true;seen[n]=1;
   return o})}
-function imBatches(){const cs=D.clients||{},b={},cut=now()-864e5;Object.keys(cs).forEach(id=>{const c=cs[id];if(!c.imp||!(c.impT>cut))return;(b[c.imp]=b[c.imp]||{id:c.imp,t:c.impT,n:0}).n++});
- return Object.values(b).sort((x,y)=>y.t-x.t)}
+function imLog(){const l=D.imLog||{},cut=now()-864e5;return Object.keys(l).map(k=>Object.assign({id:k},l[k])).filter(x=>x.t>cut).sort((a,b)=>b.t-a.t)}
+function imSubLog(){if(L.imSub===PSP||!db)return;L.imSub=PSP;RT(PSP+"imports").on("value",s=>{D.imLog=s.val()||{};const cut=Date.now()-864e5;Object.keys(D.imLog).forEach(k=>{if(!(D.imLog[k].t>cut))RT(PSP+"imports/"+k).remove()});renderSoon()})}
+async function imLoadHave(){const I=L.im;if(!I||I.type!=="guests"||!I.target||I.haveFor===I.target)return;const code=I.target;I.haveFor=code;I.have=null;
+ const snap=(await ER("guests",code).once("value")).val()||{},h={};Object.values(snap).forEach(x=>{const n=normName(x&&x.name);if(n)h[n]=(h[n]||0)+1});
+ if(L.im===I&&I.haveFor===code){I.have=h;render(true)}}
+async function imLoadRows(name,rows){rows=(rows||[]).map(r=>(r||[]).map(c=>String(c==null?"":c).replace(/\s+/g," ").trim()));
+ const start=rows.findIndex(r=>r.some(Boolean));if(start<0)return toast("That file looks empty");
+ const head=rows[start];let body=rows.slice(start+1).filter(r=>r.some(Boolean));if(!body.length)return toast("We found headers but nothing under them");
+ if(body.length>5000){body=body.slice(0,5000);toast("Reading the first 5,000 rows")}
+ const type=L.imType||"clients",sig=imSig(type,head);let map=imGuess(type,head),saved=false;
+ try{const sv=(await RT(PSP+"imMaps/"+sig).once("value")).val();if(sv&&typeof sv==="object"&&Object.values(sv).every(v=>v===""||(+v>=0&&+v<head.length))){map=Object.assign({},sv);saved=true}}catch(e){}
+ const cl=Object.keys(D.clients||{});
+ L.im={type,step:"map",file:String(name).slice(0,80),head,rows:body,start,map,sig,saved,dup:"skip",keep:true,
+  target:type==="vendors"?(map.client!=null&&map.client!==""?"col":(L.cliOpen&&D.clients[L.cliOpen]?L.cliOpen:"")):type==="guests"?((L.cliOpen&&(D.clients[L.cliOpen]||{}).ev)||""):""};
+ render(true)}
+/* PDFs: pdf.js reads the text and where it sits on the page; lines become rows and the header line's positions become the columns. */
+async function imPdfLib(){if(window.pdfjsLib)return window.pdfjsLib;const base="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+ await new Promise((res,rej)=>{const s=document.createElement("script");s.src=base+"pdf.min.js";s.onload=res;s.onerror=()=>rej(new Error("net"));document.head.appendChild(s)});
+ window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+"pdf.worker.min.js";return window.pdfjsLib}
+async function imPdfRows(file){const lib=await imPdfLib(),pdf=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,lines=[];
+ for(let p=1;p<=Math.min(pdf.numPages,60);p++){const tc=await (await pdf.getPage(p)).getTextContent();
+  const its=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({x:i.transform[4],y:i.transform[5],w:i.width||0,s:i.str.trim()})).sort((a,b)=>b.y-a.y||a.x-b.x);
+  let cur=null,cy=0;its.forEach(i=>{if(cur&&Math.abs(cy-i.y)<=3)cur.push(i);else{cur=[i];cy=i.y;lines.push(cur)}})}
+ if(!lines.length)throw new Error("scan");
+ const cells=lines.map(l=>{l.sort((a,b)=>a.x-b.x);const out=[];l.forEach(i=>{const c=out[out.length-1];if(c&&i.x-(c.x+c.w)<6){c.s+=(i.x-(c.x+c.w)>1.5?" ":"")+i.s;c.w=i.x+i.w-c.x}else out.push({x:i.x,w:i.w,s:i.s})});return out})
+  .filter(c=>!/^(page\s*)?\d+(\s*(of|\/)\s*\d+)?$/i.test(c.map(x=>x.s).join(" ")));
+ let hi=-1,best=1;cells.slice(0,20).forEach((c,i)=>{if(c.length>best){best=c.length;hi=i}});if(hi<0)throw new Error("notable");
+ const anchors=cells[hi].map(c=>c.x),key=cells[hi].map(c=>c.s).join("|"),rows=[cells[hi].map(c=>c.s)];
+ cells.slice(hi+1).forEach(c=>{if(c.map(x=>x.s).join("|")===key)return;const r=anchors.map(()=>"");
+  c.forEach(x=>{let j=0;anchors.forEach((a,k)=>{if(a-12<=x.x)j=k});r[j]=r[j]?r[j]+" "+x.s:x.s});
+  const prev=rows.length>1?rows[rows.length-1]:null;
+  if(prev&&!r[0]&&r.filter(Boolean).length<=Math.max(1,anchors.length/2))r.forEach((v,j)=>{if(v)prev[j]=prev[j]?prev[j]+" "+v:v});else rows.push(r)});
+ return rows}
 const imPill=(n,l,cls)=>n?`<span class="pill ${cls||""}">${n} ${l}</span>`:"";
-function imRow(r){const det=[r.date?new Date(r.date+"T12:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"",r.evName||r.evTitle,r.venue,r.guests?r.guests+" guests":"",r.budget?clMoney(r.budget):"",r.email,r.phone].filter(Boolean);
- const flags=(r.skip?[`skipped: ${r.skip}`]:[]).concat(r.dup?[L.im.dup==="skip"?"already a client, will be skipped":"already a client, will be added again"]:[],r.warn);
- return `<div class="mrow2 small"><div class="row between"><b>${esc(r.name||"(no name)")}</b><span class="muted">row ${r.line}</span></div>${det.length?`<div class="muted">${det.map(esc).join(" · ")}</div>`:""}${flags.length?`<div class="row">${flags.map(f=>`<span class="pill warn">${esc(f)}</span>`).join("")}</div>`:""}</div>`}
-function imCard(){const I=L.im,bs=imBatches();
- const undo=bs.map(x=>`<div class="row between small"><span>Imported ${x.n} client${x.n===1?"":"s"} ${esc(clAgo(x.t))}</span><button class="btn xs" data-act="imUndo" data-k="${esc(x.id)}">${L.confirm==="iu"+x.id?`Tap again to remove those ${x.n}`:"Undo this import"}</button></div>`).join("");
- const head=`<div class="row between"><h2>Bring in your clients</h2><button class="btn sm" data-act="imTemplate">Download a template</button></div>`;
- if(!I)return `<section class="card stack">${head}<p class="small muted m0">Already keep clients in another app or a spreadsheet? Export them as a CSV or Excel file and upload it here. Host Mode sorts each column into the right place, and you check everything before it saves.</p><div class="row"><label class="btn primary upl">Upload a CSV or Excel file<input type="file" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-act="imFile"></label></div>${undo?`<div class="stack tight">${undo}</div>`:""}</section>`;
+function imRow(r){const I=L.im,fd=d=>new Date(d+"T12:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+ const det=I.type==="clients"?[r.date?fd(r.date):"",r.evName||r.evTitle,r.venue,r.guests?r.guests+" guests":"",r.budget?clMoney(r.budget):"",r.email,r.phone]
+  :I.type==="vendors"?[r.role,r.arrive?"arrives "+clFmtTime(r.arrive):"",r.delivers,r.phone,r.email,I.target==="col"&&r.cname?"for "+r.cname:""]
+  :[r.rsvp==="yes"?"coming":r.rsvp==="no"?"not coming":r.rsvp==="maybe"?"maybe":"no reply yet",r.invited===true?"invited":r.invited===false?"not invited yet":"",r.plusOf?"plus-one of "+r.plusOf:""];
+ const T=IM_T[I.type],flags=(r.skip?[`skipped: ${r.skip}`]:[]).concat(r.dup?[I.dup==="skip"?"already there, will be skipped":"already there, will be added again"]:[],r.warn);
+ return `<div class="mrow2 small"><div class="row between"><b>${esc(r.name||"(no name)")}</b><span class="muted">row ${r.line}</span></div>${det.filter(Boolean).length?`<div class="muted">${det.filter(Boolean).map(esc).join(" · ")}</div>`:""}${flags.length?`<div class="row">${flags.map(f=>`<span class="pill warn">${esc(f)}</span>`).join("")}</div>`:""}</div>`}
+function imTargetSel(){const I=L.im,cs=D.clients||{},ev=D.events||{};
+ if(I.type==="vendors"){const ids=Object.keys(cs).sort((a,b)=>String(cs[a].name).localeCompare(String(cs[b].name)));const hasCol=I.map.client!=null&&I.map.client!=="";
+  return `<label class="stack tight"><span class="small"><b>Add these vendors to</b></span><select data-act="imTarget"><option value="">Pick a client</option>${hasCol?`<option value="col" ${I.target==="col"?"selected":""}>Each row's client, from the Client column</option>`:""}${ids.map(id=>`<option value="${esc(id)}" ${I.target===id?"selected":""}>${esc(cs[id].name)}</option>`).join("")}</select></label>`}
+ if(I.type==="guests"){const ks=Object.keys(ev);return `<label class="stack tight"><span class="small"><b>Add these guests to</b></span><select data-act="imTarget"><option value="">Pick an event</option>${ks.map(k=>`<option value="${esc(k)}" ${I.target===k?"selected":""}>${esc(ev[k].name||k)}</option>`).join("")}</select>${ks.length?"":'<span class="small bad">Create an event first, then import its guests.</span>'}</label>`}
+ return ""}
+function imCard(){imSubLog();const I=L.im,type=(I&&I.type)||L.imType||"clients",T=IM_T[type],log=imLog();
+ const undo=log.map(x=>{const t=IM_T[x.type]||IM_T.clients;return `<div class="row between small"><span>Imported ${x.n} ${x.n===1?t.one:t.many}${x.where?" to "+esc(x.where):""} ${esc(clAgo(x.t))}</span><button class="btn xs" data-act="imUndo" data-k="${esc(x.id)}">${L.confirm==="iu"+x.id?`Tap again to remove those ${x.n}`:"Undo this import"}</button></div>`}).join("");
+ const undoBox=undo?`<div class="stack tight">${undo}</div>`:"";
+ const head=`<div class="row between"><h2>Import from another app</h2><button class="btn sm" data-act="imTemplate">Download a ${T.one} template</button></div>`;
+ if(!I)return `<section class="card stack">${head}
+  <div class="row">${Object.keys(IM_T).map(k=>`<button class="btn sm ${type===k?"primary":""}" data-act="imType" data-k="${k}">${IM_T[k].l}</button>`).join("")}</div>
+  <p class="small muted m0">${T.about} Export from the app you use now, upload the file here, and Host Mode sorts each column into the right place. You check everything before it saves.</p>
+  <div class="row"><label class="btn primary upl">Upload a file<input type="file" accept=".csv,.tsv,.txt,.xlsx,.pdf,text/csv,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-act="imFile"></label><span class="small muted">CSV, Excel or PDF</span></div>
+  <div class="row"><input type="url" class="grow" data-draft="im_url" value="${esc(dv("im_url",""))}" placeholder="Or paste a Google Sheets link"><button class="btn sm" data-act="imSheet">Open sheet</button></div>
+  ${undoBox}</section>`;
  let body="";
  if(I.step==="map"){const used=new Set(Object.values(I.map).filter(v=>v!==""&&v!=null).map(Number)),rest=I.head.map((h,i)=>used.has(i)?"":(h||"Column "+(i+1))).filter(Boolean);
   const opts=sel=>`<option value="">Don't import</option>`+I.head.map((h,i)=>`<option value="${i}" ${String(sel)===String(i)?"selected":""}>${esc(h||"Column "+(i+1))}${I.rows[0]&&I.rows[0][i]?` (e.g. ${esc(String(I.rows[0][i]).slice(0,24))})`:""}</option>`).join("");
-  body=`<p class="small muted m0"><b>${esc(I.file)}</b> · ${I.rows.length} row${I.rows.length===1?"":"s"}. We matched your columns where we could. Fix any that look wrong.</p>
-  <div class="grid2 g8">${IM_ORDER.map(k=>`<label class="stack tight"><span class="small">${IMF[k].l}${k==="name"?" <span class='muted'>(or use first + last)</span>":""}</span><select data-act="imMap" data-k="${k}">${opts(I.map[k])}</select></label>`).join("")}</div>
-  ${rest.length?`<label class="row small"><input type="checkbox" data-act="imKeep" ${I.keep?"checked":""}> Keep the other columns in each client's notes (${esc(rest.slice(0,4).join(", "))}${rest.length>4?` and ${rest.length-4} more`:""})</label>`:""}
+  body=`<p class="small muted m0"><b>${esc(I.file)}</b> · ${I.rows.length} ${T.l.toLowerCase()} row${I.rows.length===1?"":"s"}. ${I.saved?"We used the matches you saved for this kind of file.":"We matched your columns where we could."} Fix any that look wrong.</p>
+  ${imTargetSel()}
+  <div class="grid2 g8">${T.show.map(k=>`<label class="stack tight"><span class="small">${IM_FIELDS[k].l}${k===T.need[0]&&T.need.length>1?" <span class='muted'>(or use first + last)</span>":""}${k==="client"?" <span class='muted'>(optional)</span>":""}</span><select data-act="imMap" data-k="${k}">${opts(I.map[k])}</select></label>`).join("")}</div>
+  ${rest.length&&type!=="guests"?`<label class="row small"><input type="checkbox" data-act="imKeep" ${I.keep?"checked":""}> Keep the other columns in the notes (${esc(rest.slice(0,4).join(", "))}${rest.length>4?` and ${rest.length-4} more`:""})</label>`:""}
   <div class="row"><button class="btn primary" data-act="imStep" data-k="preview">Preview</button><button class="btn" data-act="imCancel">Start over</button></div>`}
- if(I.step==="preview"){const recs=imBuild(),sk=recs.filter(r=>r.skip).length,dup=recs.filter(r=>!r.skip&&r.dup).length,wn=recs.filter(r=>!r.skip&&r.warn.length).length,go=recs.filter(r=>!r.skip&&!(r.dup&&I.dup==="skip")).length;
-  const bad=recs.filter(r=>r.skip||r.dup||r.warn.length),good=recs.filter(r=>!(r.skip||r.dup||r.warn.length));const show=bad.slice(0,30).concat(good.slice(0,Math.max(0,8-Math.min(bad.length,8))));
-  body=`<div class="row">${imPill(go,"ready to import","ok")}${imPill(wn,"with something to check","warn")}${imPill(dup,"already in Host Mode","gold")}${imPill(sk,"will be skipped","")}</div>
-  ${dup?`<label class="stack tight"><span class="small">Clients already in Host Mode (same email, or same name and date)</span><select data-act="imDup"><option value="skip" ${I.dup==="skip"?"selected":""}>Skip them</option><option value="add" ${I.dup==="add"?"selected":""}>Add them anyway</option></select></label>`:""}
-  <label class="stack tight"><span class="small">Give each new client a checklist (optional)</span><select data-draft="im_tpl">${clTplSelect(dv("im_tpl",""))}</select></label>
-  <div class="stack tight">${show.map(imRow).join("")}</div>${recs.length>show.length?`<span class="small muted">and ${recs.length-show.length} more rows that look fine</span>`:""}
-  <span class="small muted">Fields we couldn't read are left blank. You can fill them in later.</span>
-  <div class="row"><button class="btn primary" data-act="imGo" ${go&&!I.busy?"":"disabled"}>${I.busy?"Importing…":`Import ${go} client${go===1?"":"s"}`}</button><button class="btn" data-act="imStep" data-k="map">Back</button><button class="btn" data-act="imCancel">Cancel</button></div>`}
+ if(I.step==="preview"){
+  if(type==="guests"&&I.have==null){imLoadHave();body=`<p class="small muted m0">Checking who's already on the guest list…</p>`}
+  else{const recs=imBuild(),sk=recs.filter(r=>r.skip).length,dup=recs.filter(r=>!r.skip&&r.dup).length,wn=recs.filter(r=>!r.skip&&r.warn.length).length,go=recs.filter(r=>!r.skip&&!(r.dup&&I.dup==="skip")).length;
+   const bad=recs.filter(r=>r.skip||r.dup||r.warn.length),good=recs.filter(r=>!(r.skip||r.dup||r.warn.length)),show=bad.slice(0,30).concat(good.slice(0,Math.max(0,8-Math.min(bad.length,8))));
+   const dupWhy=type==="clients"?"Clients already in Host Mode (same email, or same name and date)":type==="vendors"?"Vendors this client already has":"Guests already on this event's list";
+   body=`<div class="row">${imPill(go,"ready to import","ok")}${imPill(wn,"with something to check","warn")}${imPill(dup,"already there","gold")}${imPill(sk,"will be skipped","")}</div>
+   ${dup?`<label class="stack tight"><span class="small">${dupWhy}</span><select data-act="imDup"><option value="skip" ${I.dup==="skip"?"selected":""}>Skip them</option><option value="add" ${I.dup==="add"?"selected":""}>Add them anyway</option></select></label>`:""}
+   ${type==="clients"?`<label class="stack tight"><span class="small">Give each new client a checklist (optional)</span><select data-draft="im_tpl">${clTplSelect(dv("im_tpl",""))}</select></label>`:""}
+   <div class="stack tight">${show.map(imRow).join("")}</div>${recs.length>show.length?`<span class="small muted">and ${recs.length-show.length} more rows that look fine</span>`:""}
+   ${type!=="guests"?`<span class="small muted">Fields we couldn't read are left blank. You can fill them in later.</span>`:""}
+   <div class="row"><button class="btn primary" data-act="imGo" ${go&&!I.busy?"":"disabled"}>${I.busy?"Importing…":`Import ${go} ${go===1?T.one:T.many}`}</button><button class="btn" data-act="imStep" data-k="map">Back</button><button class="btn" data-act="imCancel">Cancel</button></div>`}}
  if(I.step==="done"){const r=I.result||{};
-  body=`<p class="m0"><b>${r.n||0} client${r.n===1?"":"s"} imported.</b>${r.nt?` ${r.nt} checklist items added.`:""}</p>
-  <div class="row">${imPill(r.dup,"duplicates skipped","gold")}${imPill(r.skip,"rows without a name skipped","")}${imPill(r.warn,"with a blank field to fill in","warn")}</div>
+  body=`<p class="m0"><b>${r.n||0} ${r.n===1?T.one:T.many} imported${r.where?" to "+esc(r.where):""}.</b>${r.nt?` ${r.nt} checklist items added.`:""}</p>
+  <div class="row">${imPill(r.dup,"duplicates skipped","gold")}${imPill(r.skip,"rows skipped","")}${imPill(r.warn,"with a blank field to fill in","warn")}</div>
   ${r.err?`<p class="small bad m0">The import stopped partway through. You can undo what was saved below and try again.</p>`:""}
-  <span class="small muted">Changed your mind? Undo removes this whole import for the next 24 hours.</span>
+  <span class="small muted">Your column matches are saved, so the next file like this one is quicker. Undo removes this whole import for the next 24 hours.</span>
   <div class="row"><button class="btn primary" data-act="imCancel">Done</button></div>`}
- return `<section class="card stack">${head}${body}${undo?`<div class="stack tight">${undo}</div>`:""}</section>`}
+ return `<section class="card stack">${head}${body}${undoBox}</section>`}
 const clInfo=c=>{const p=[c.evType,c.venue,c.guests?c.guests+" guests":"",c.budget?clMoney(c.budget)+" budget":"",c.status,c.email,c.phone].filter(Boolean);return p.length?`<div class="small muted">${p.map(esc).join(" · ")}</div>`:""};
+const IM_CL_PATHS=["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clients"];
 
 Object.assign(ACT,{
+ imType:el=>{L.imType=el.dataset.k;render(true)},
  imFile:async el=>{const f=el.files&&el.files[0];el.value="";if(!f)return;const ext=(f.name.split(".").pop()||"").toLowerCase();
-  if(ext==="pdf")return toast("PDF import is coming soon. For now, export a CSV or Excel file.");
   if(ext==="xls"||ext==="numbers")return toast("Save it as .xlsx or CSV first, then upload it");
   if(f.size>CL_MAX)return toast("That file is over 10 MB");toast("Reading the file…");
+  if(ext==="pdf"){try{return await imLoadRows(f.name,await imPdfRows(f))}catch(e){const w=e&&e.message;return toast(w==="scan"?"That PDF is a scanned picture, so there's no text to read. Export a CSV or Excel file instead.":w==="notable"?"We couldn't find a table in that PDF. Export a CSV or Excel file instead.":w==="net"?"Reading PDFs needs a connection. Try again in a moment.":"Couldn't read that PDF. Try a CSV or Excel file.")}}
   let txt="";try{txt=ext==="xlsx"?await clXlsxToCsv(f):await f.text()}catch(e){return toast("Couldn't read that file. Try saving it as CSV.")}
-  let rows=csvRows(String(txt).replace(/^﻿/,"")).map(r=>r.map(c=>String(c==null?"":c).trim()));
-  const start=rows.findIndex(r=>r.some(Boolean));if(start<0)return toast("That file looks empty");
-  const head=rows[start];rows=rows.slice(start+1).filter(r=>r.some(Boolean));if(!rows.length)return toast("We found headers but no clients under them");
-  if(rows.length>5000){rows=rows.slice(0,5000);toast("Reading the first 5,000 rows")}
-  L.im={step:"map",file:f.name.slice(0,80),head,rows,start,map:imGuess(head),dup:"skip",keep:true};render(true)},
- imMap:el=>{if(!L.im)return;L.im.map[el.dataset.k]=el.value;render(true)},
+  await imLoadRows(f.name,csvRows(String(txt).replace(/^﻿/,"")))},
+ imSheet:async()=>{const u=dv("im_url","").trim(),m=u.match(/\/spreadsheets\/d\/([\w-]{20,})/);if(!m)return toast("Paste the link to a Google Sheet");
+  const gid=(u.match(/[#&?]gid=(\d+)/)||[])[1]||"0";toast("Opening the sheet…");
+  try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv&headers=1&gid=${gid}`);const t=await r.text();if(!r.ok||/^\s*<(!doctype|html)/i.test(t))throw new Error("closed");
+   delete L.drafts.im_url;await imLoadRows("Google Sheet",csvRows(t))}catch(e){toast('Couldn\'t open it. Share the sheet as "Anyone with the link", or download it as CSV.')}},
+ imMap:el=>{const I=L.im;if(!I)return;I.map[el.dataset.k]=el.value;if(el.dataset.k==="client"){if(el.value!==""&&!I.target)I.target="col";if(el.value===""&&I.target==="col")I.target=""}render(true)},
+ imTarget:el=>{const I=L.im;if(!I)return;I.target=el.value;render(true)},
  imKeep:el=>{if(L.im){L.im.keep=el.checked;render(true)}},
  imDup:el=>{if(L.im){L.im.dup=el.value;render(true)}},
- imStep:el=>{const I=L.im;if(!I)return;const k=el.dataset.k,has=x=>I.map[x]!=null&&I.map[x]!=="";
-  if(k==="preview"&&!has("name")&&!has("first")&&!has("last"))return toast("Pick the column with the client's name");I.step=k;render(true)},
+ imStep:el=>{const I=L.im;if(!I)return;const k=el.dataset.k,T=IM_T[I.type],has=x=>I.map[x]!=null&&I.map[x]!=="";
+  if(k==="preview"){if(!T.need.some(has))return toast(`Pick the column with the ${T.one}'s name`);
+   if(I.type!=="clients"&&!I.target)return toast(I.type==="vendors"?"Pick which client these vendors are for":"Pick which event these guests are for");
+   if(I.type==="guests"&&I.haveFor!==I.target)I.have=null}
+  I.step=k;render(true)},
  imCancel:()=>{L.im=null;delete L.drafts.im_tpl;render(true)},
  imGo:async()=>{const I=L.im;if(!I||I.busy)return;const all=imBuild(),recs=all.filter(r=>!r.skip&&!(r.dup&&I.dup==="skip"));if(!recs.length)return toast("Nothing to import");
-  I.busy=true;render(true);const tm=Date.now(),batch="i"+tm.toString(36),tk=dv("im_tpl","");let n=0,nt=0,err=0;
-  try{for(let s=0;s<recs.length;s+=300){const u={},keys=[];
-    recs.slice(s,s+300).forEach((r,j)=>{const k=RT(PSP+"clients").push().key,o={name:r.name,ev:r.ev||"",evName:r.evName||"",date:r.date||"",t:tm+s+j,imp:batch,impT:tm};IM_KEEP.forEach(f=>{if(r[f]!=null&&r[f]!=="")o[f]=r[f]});u[k]=o;keys.push([k,o.date])});
-    await RT(PSP+"clients").update(u);n+=keys.length;if(tk)for(const [k,d] of keys)nt+=(await clApplyTpl(k,tk,d))||0}}catch(e){err=1}
-  I.result={n,nt,err,dup:I.dup==="skip"?all.filter(r=>!r.skip&&r.dup).length:0,skip:all.filter(r=>r.skip).length,warn:recs.filter(r=>r.warn.length).length};
-  I.busy=false;I.step="done";delete L.drafts.im_tpl;toast(err?"The import stopped partway":`${n} client${n===1?"":"s"} imported`);render(true)},
- imUndo:async el=>{const k=el.dataset.k;if(L.confirm!=="iu"+k){L.confirm="iu"+k;return render(true)}L.confirm=null;
-  const cs=D.clients||{},ids=Object.keys(cs).filter(id=>cs[id].imp===k);if(!ids.length)return toast("Those clients are already gone");
-  if(ids.includes(L.cliOpen))L.cliOpen=null;
-  await Promise.all(ids.flatMap(id=>["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clients"].map(p=>RT(PSP+p+"/"+id).remove())));
-  toast(`Removed ${ids.length} imported client${ids.length===1?"":"s"}`);render(true)},
- imTemplate:()=>{const rows=[["Client name","Email","Phone","Event date","Event name","Event type","Venue","Guest count","Budget","Status","Notes"],["Maya and Jordan","maya@example.com","555-201-3344","2027-06-12","Maya and Jordan's wedding","Wedding","The Grand Room","150","25000","Booked","Prefers texts"]];
-  download("Host Mode client import template.csv",new Blob([rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(",")).join("\r\n")],{type:"text/csv"}))}
+  I.busy=true;render(true);const tm=Date.now(),batch="i"+tm.toString(36),tk=dv("im_tpl",""),keys={};let n=0,nt=0,err=0,where="";
+  const ev=D.events||{},cs=D.clients||{};
+  try{
+   if(I.type==="clients"){for(let s=0;s<recs.length;s+=300){const u={},ks=[];
+     recs.slice(s,s+300).forEach((r,j)=>{const k=RT(PSP+"clients").push().key,o={name:r.name,ev:r.ev||"",evName:r.evName||"",date:r.date||"",t:tm+s+j,imp:batch,impT:tm};
+      ["email","phone","evTitle","evType","venue","guests","budget","status","notes"].forEach(f=>{if(r[f]!=null&&r[f]!=="")o[f]=r[f]});u[k]=o;ks.push([k,o.date])});
+     await RT(PSP+"clients").update(u);ks.forEach(([k])=>keys[k]=1);n+=ks.length;if(tk)for(const [k,d] of ks)nt+=(await clApplyTpl(k,tk,d))||0}}
+   if(I.type==="vendors"){const by={};recs.forEach((r,j)=>{const k=RT(PSP+"clientVendors/"+r.cid).push().key,o={name:r.name,role:r.role||"",phone:r.phone||"",email:r.email||"",arrive:r.arrive||"",delivers:r.delivers||"",show:true,team:true,t:tm+j,imp:batch};if(r.note)o.note=r.note;(by[r.cid]=by[r.cid]||{})[k]=o});
+     for(const cid of Object.keys(by)){await RT(PSP+"clientVendors/"+cid).update(by[cid]);Object.keys(by[cid]).forEach(k=>keys[cid+"/"+k]=1);n+=Object.keys(by[cid]).length}
+     const ids=Object.keys(by);where=ids.length===1?(cs[ids[0]]||{}).name||"":ids.length+" clients"}
+   if(I.type==="guests"){where=(ev[I.target]||{}).name||I.target;for(let s=0;s<recs.length;s+=500){const u={};
+     recs.slice(s,s+500).forEach((r,j)=>{const o={name:r.name,t:tm+s+j,imp:batch};if(r.rsvp)o.rsvp=r.rsvp;if(r.invited!=null)o.invited=r.invited;if(r.plusOf)o.plusOf=r.plusOf;u["g"+tm.toString(36)+(s+j)]=o});
+     await ER("guests",I.target).update(u);Object.keys(u).forEach(k=>keys[k]=1);n+=Object.keys(u).length}}
+  }catch(e){err=1}
+  if(n){try{await RT(PSP+"imports/"+batch).set(Object.assign({type:I.type,t:tm,n,file:I.file,keys},where?{where:String(where).slice(0,60)}:{},I.type==="guests"?{ev:I.target}:{}))}catch(e){}
+   try{await RT(PSP+"imMaps/"+I.sig).set(I.map)}catch(e){}}
+  I.result={n,nt,err,where,dup:I.dup==="skip"?all.filter(r=>!r.skip&&r.dup).length:0,skip:all.filter(r=>r.skip).length,warn:recs.filter(r=>r.warn.length).length};
+  I.busy=false;I.step="done";delete L.drafts.im_tpl;const T=IM_T[I.type];toast(err?"The import stopped partway":`${n} ${n===1?T.one:T.many} imported`);render(true)},
+ imUndo:async el=>{const id=el.dataset.k;if(L.confirm!=="iu"+id){L.confirm="iu"+id;return render(true)}L.confirm=null;
+  const x=(D.imLog||{})[id];if(!x)return toast("That import is already gone");const ks=Object.keys(x.keys||{});let refs=[];
+  if(x.type==="clients"){if(ks.includes(L.cliOpen))L.cliOpen=null;refs=ks.flatMap(k=>IM_CL_PATHS.map(p=>RT(PSP+p+"/"+k)))}
+  else if(x.type==="vendors")refs=ks.map(k=>RT(PSP+"clientVendors/"+k));
+  else if(x.type==="guests"&&x.ev)refs=ks.map(k=>ER("guests/"+k,x.ev));
+  toast("Undoing…");for(let i=0;i<refs.length;i+=200)await Promise.all(refs.slice(i,i+200).map(r=>r.remove()));
+  await RT(PSP+"imports/"+id).remove();const T=IM_T[x.type]||IM_T.clients;toast(`Removed ${x.n} imported ${x.n===1?T.one:T.many}`);render(true)},
+ imTemplate:()=>{const type=(L.im&&L.im.type)||L.imType||"clients",T=IM_T[type];
+  download(`Host Mode ${T.one} import template.csv`,new Blob([T.tpl.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(",")).join("\r\n")],{type:"text/csv"}))}
 });
 
 Object.assign(ACT,{
