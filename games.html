@@ -3662,9 +3662,9 @@ mLive=function(){const items=rosItems().filter(x=>!(D.rosDone||{})[x.k]);const n
 
 moderator=function(){
  const tab=(k,l)=>`<button data-act="mtab" data-k="${k}" aria-pressed="${L.mtab===k}">${l}</button>`;
- const body=({live:mLive,plan:mPlan,tonight:mTonight,pres:mPres,moments:mMoments,teams:mTeams,scores:mScores,content:mContent,custom:mCustom,event:mEvent,memories:mMemories,menu:mMenu,party:mParty}[L.mtab]||mLive)();
+ const body=({live:mLive,plan:mPlan,tonight:mTonight,pres:mPres,moments:mMoments,teams:mTeams,scores:mScores,content:mContent,custom:mCustom,event:mEvent,memories:mMemories,menu:mMenu,party:mParty,help:mHelp}[L.mtab]||mLive)();
  const pr=D.meta&&D.meta.practice?`<div class="banner soft"><span><b>Practice run</b> with pretend guests. Open a <a href="${esc(eventURL(EV))}" target="_blank" rel="noopener">guest view</a> or the <a href="${esc(eventURL(EV,"screen"))}" target="_blank" rel="noopener">big screen</a> to see what they see.</span><button class="btn sm" data-act="endPractice">End practice</button></div>`:"";
- return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${(()=>{const b=plBadge();return tab("plan","Plan"+(b?` <span class="pill bad">${b}</span>`:""))})()}${tab("tonight","Tonight")}${tab("moments","Moments")}${tab("pres","Presentations")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("menu","Menu")}${tab("party",adultOn()?"Party & 21+":"Party games")}${tab("custom","Custom games")}${tab("event","Event")}${tab("memories","Memories")}</nav><div class="stack mw0">${body}</div></div>`};
+ return `${status()}${pr}<div class="console"><nav class="side">${tab("live","Live")}${(()=>{const b=plBadge();return tab("plan","Plan"+(b?` <span class="pill bad">${b}</span>`:""))})()}${tab("tonight","Tonight")}${tab("moments","Moments")}${tab("pres","Presentations")}${tab("teams","Teams")}${tab("scores","Scores")}${tab("content","Content")}${tab("menu","Menu")}${tab("party",adultOn()?"Party & 21+":"Party games")}${tab("custom","Custom games")}${tab("event","Event")}${tab("memories","Memories")}${tab("help","Help desk")}</nav><div class="stack mw0">${body}</div></div>`};
 
 /* ---- guest list: import, check-in, and name suggestions ---- */
 D.guests={};
@@ -5757,6 +5757,85 @@ Object.assign(ACT,{
   for(const n of nodes)await RT(n).remove();L.legacy={c:0,m:0};toast("Moved. Open your planner portal to see them.");render(true)}
 });
 
+/* ---- Help desk tab (planner portal and host console): type a question, get short answers with quick links ---- */
+const HELP={
+ pl:[
+  ["Add a new client","Clients tab → add the client's name and details. Each client gets their own private portal.","clients","new client add customer couple person create"],
+  ["Share a client's portal link","Open the client in Clients and copy their portal link. They need no account or app to open it.","clients","client link portal share send url access"],
+  ["Send an invoice","Open the client in Clients, then the Money tab. Add a package or line items and send the invoice.","clients","invoice bill billing charge send money"],
+  ["See what's paid and what's due","Open the client, then Money. Payments, balances and due dates are listed there.","clients","payment paid due deposit balance owe track money"],
+  ["Message a client","Open the client in Clients. The message thread is on their page, and they reply from their portal.","clients","message chat talk text contact reply conversation"],
+  ["Get approvals and sign-offs","Open the client and send a menu, floor plan or design. They tap Approve or Request changes.","clients","approve approval sign off signoff design menu floor plan"],
+  ["Keep vendor contacts","Open the client, then Vendors. Add the DJ, caterer, florist and more, with arrival times.","clients","vendor dj caterer florist photographer rentals contact"],
+  ["Client checklist and uploads","Open the client to see their checklist and the files they've uploaded, like guest lists and photos.","clients","checklist tasks to-do upload file photo pdf document"],
+  ["See what needs your attention","Home shows overdue items, unread messages and what's coming up this week.","home","attention overdue late reminder today week upcoming dashboard"],
+  ["Handle new inquiries","Leads lists everyone who filled in your inquiry form. One tap turns a lead into a client.","leads","lead inquiry inquiries form website instagram new business prospect"],
+  ["Set up your public page","Showcase is your public page: story, past-event photos, packages, reviews and an inquiry form.","show","showcase public page profile gallery portfolio website photos reviews"],
+  ["Create an event","Events → New event. Each event gets its own code, games, big screen and guest check-in.","events","event party create new make game code"],
+  ["Run an event on the day","Events → Run it opens the event console. Guest view and Big screen open what guests and the TV see.","events","run console live day night big screen tv projector guest view"],
+  ["Start from a ready-made event","Templates has events with the look, moments, games and run of show already set up.","tpl","template ready-made ready made starter wedding birthday baby shower corporate"],
+  ["See your calendar","Calendar shows every event and key client date. You can download dates to Google or Apple Calendar.","cal","calendar dates schedule upcoming month google apple"],
+  ["Add teammates","Teammates lets you add your crew. Each gets a private link with only their tasks.","team","teammate team staff crew helper assistant employee task"],
+  ["Day-of mode for your crew","Branding → Day-of mode gives teammates a simple view of just what to do now, with a help button.","brand","day of day-of event day teammates crew mode"],
+  ["Build your packages","Packages holds your services and prices. Add them to clients and invoices from the client's Money tab.","pkg","package packages pricing price services offer bundle"],
+  ["Add your logo and colors","Branding puts your logo, colors and contact details on client portals, teammate pages and invoices.","brand","brand branding logo colors look business name contact"],
+  ["Add a booking link","Branding → Booking link. Paste your Calendly or Google booking link to show a Book a meeting button.","brand","booking meeting calendly consultation tasting appointment schedule zoom call"],
+  ["Bring in your data","Import & export takes spreadsheets, Google Sheets and PDFs and puts clients, events and vendors in place.","data","import upload spreadsheet excel csv google sheets pdf honeybook dubsado move switch data"],
+  ["Download a backup","Import & export lets you download your clients as a spreadsheet for Excel, Google Sheets or Numbers.","data","export download backup spreadsheet copy save excel"],
+  ["See how your business is doing","Reports shows money collected and new clients by month, best-selling packages and where leads come from.","rep","report reports revenue income money made stats numbers sales"],
+  ["Collect reviews and feedback","Feedback gathers ratings from guests and clients. Feature the best ones as testimonials.","fb","feedback review reviews testimonial rating survey stars"],
+  ["Change your profile or password","Settings has your profile, account email, password and sign out.","set","settings profile password account email sign out log out name"]],
+ m:[
+  ["Start the games","Live is where you run the night: start games, go to the next moment and watch what's happening.","live","start live begin go game now run tonight"],
+  ["Open the big screen","Open this link on the TV or projector. It shows games, scores and photos for the room.","@screen","big screen tv projector display monitor"],
+  ["Let guests join","Event → Links has the guest link and QR code. Guests scan it with their phone camera to join.","event","guest join qr code link scan phone invite"],
+  ["Set the date and to-dos","Plan holds the date, countdown and your to-do list with due dates and reminders.","plan","plan date countdown checklist to-do todo reminder due"],
+  ["Run of show and timing","Tonight has the evening order with times, so everyone knows what's next.","tonight","run of show schedule timeline order program agenda time next"],
+  ["Check guests in","Tonight → Guest list. Import your list from a spreadsheet and check people in at the door.","tonight","guest list rsvp check in check-in door arrive import spreadsheet names"],
+  ["Raffle and gifts","Tonight also has the raffle and the gift list.","tonight","raffle drawing gift gifts presents prize"],
+  ["Moments, reveal and songs","Moments sets up special moments, your photos, the big reveal and the songs that play.","moments","moment moments reveal gender songs music photos slideshow entrance"],
+  ["Show slides","Presentations shows slides on the big screen. The presenter's phone becomes the remote.","pres","presentation slides powerpoint speech toast speaker remote"],
+  ["Split guests into teams","Teams sets how many teams, how the room splits, tiebreakers and prizes.","teams","teams team split groups pods tables tiebreaker"],
+  ["Scores and prizes","Scores shows points, the leaderboard and prizes.","scores","score scores points winner leaderboard prize prizes ranking"],
+  ["Change game questions","Content has the questions, words and answers for each game.","content","content questions trivia crossword words answers edit game"],
+  ["Change the look and colors","Event → Look. Upload your flyer or invitation to pull its colors, then fine-tune.","event","look colors theme flyer invitation design font style"],
+  ["Make your own game","Custom games lets you create a game or add one from the library, then test it.","custom","custom game create make own library build"],
+  ["Party games and 21+","Party games are for any crowd. The 21+ section is off unless the admin turns it on.","party","party games drinking adult 21 sip fun"],
+  ["Menu and drink orders","Menu shows guests the menu and collects their food and drink orders.","menu","menu drinks drink orders food bar order"],
+  ["Photos, album and wishes","Memories holds the shared photo album and guests' wishes.","memories","photos album pictures wishes messages keepsake memories"],
+  ["Practice before the event","Event → Rehearsal runs the whole night with pretend guests, so you can practice.","event","practice rehearsal rehearse test trial dry run"],
+  ["Add moderators","Event → Moderators. Give a helper their own PIN so they can run things too.","event","moderator moderators helper pin co-host access"],
+  ["Change your event code","Ask Host Mode or your planner. They can change it, and old links keep working.","","code change rename event code link"]]};
+const helpNorm=t=>(t||"").toLowerCase().replace(/[^a-z0-9+ ]/g," ").replace(/\s+/g," ").trim();
+const HELP_STOP=new Set("how do i to the a an my can where is what of in on for it you your get find see does with".split(" "));
+function helpScore(item,q){const words=helpNorm(q).split(" ").filter(w=>w&&!HELP_STOP.has(w));if(!words.length)return 1;
+ const ti=helpNorm(item[0]),hay=(ti+" "+helpNorm(item[1])+" "+helpNorm(item[3])).split(" ");let sc=0;
+ for(const w of words){const stem=w.replace(/(ing|es|s)$/,"");const hit=hay.some(h=>h.startsWith(w)||(stem.length>2&&h.startsWith(stem)));if(!hit)continue;sc+=10+(ti.includes(stem)?3:0)}
+ return sc}
+function helpView(who){const list=HELP[who]||[],q=dv("help_q_"+who,""),chips=who==="pl"?["invoice","client link","import","teammates","booking link","reports"]:["start games","big screen","guest QR code","check in","scores","practice"];
+ const tabName=k=>who==="pl"?((PL_TABS.find(t=>t[0]===k)||[])[1]||""):({live:"Live",plan:"Plan",tonight:"Tonight",moments:"Moments",pres:"Presentations",teams:"Teams",scores:"Scores",content:"Content",menu:"Menu",party:"Party games",custom:"Custom games",event:"Event",memories:"Memories"})[k]||"";
+ const rows=list.map((it,i)=>{const go=it[2];let btn="";
+  if(go==="@screen")btn=`<a class="btn xs primary" href="${esc(eventURL(EV,"screen"))}" target="_blank" rel="noopener">Open big screen</a>`;
+  else if(go)btn=`<button class="btn xs primary" data-act="helpGo" data-v="${who}" data-k="${go}">Go to ${esc(tabName(go))}</button>`;
+  const sc=helpScore(it,q);return {sc,i,h:`<div class="clrow" data-hrow="${i}" data-hk="${esc(it[0]+" | "+it[1]+" | "+it[3])}"${sc?"":" hidden"}><div class="row between"><div class="mw0"><b>${esc(it[0])}</b><div class="small muted">${esc(it[1])}</div></div>${btn}</div></div>`}});
+ const shown=helpNorm(q)?rows.filter(r=>r.sc).sort((a,b)=>b.sc-a.sc||a.i-b.i).concat(rows.filter(r=>!r.sc)):rows;
+ return `<section class="card stack"><h2>Help desk</h2><p class="small muted m0">Type a question or a few words, like “send an invoice” or “where is the QR code”.</p>
+ <input type="search" data-help="${who}" data-draft="help_q_${who}" value="${esc(q)}" placeholder="What do you need help with?" aria-label="Search the help desk" autocomplete="off">
+ <div class="row small">${chips.map(c=>`<button class="btn xs" data-act="helpChip" data-v="${who}" data-k="${esc(c)}">${esc(c)}</button>`).join("")}</div>
+ <div class="stack tight" data-hlist="${who}">${shown.map(r=>r.h).join("")}</div>
+ <p class="small muted m0" data-hnone="${who}"${!helpNorm(q)||rows.some(r=>r.sc)?" hidden":""}>Nothing matched. Try other words, like ${who==="pl"?"“client”, “money” or “calendar”":"“games”, “guests” or “screen”"}.</p>
+ <p class="small muted m0">${who==="pl"?"Still stuck? Contact Host Mode and we'll help.":"Still stuck? Ask your planner or whoever gave you your event code."}</p></section>`}
+function helpFilter(who,q){const box=document.querySelector(`[data-hlist="${who}"]`);if(!box)return;const list=HELP[who]||[],rows=[...box.querySelectorAll("[data-hrow]")];
+ const sc=rows.map(r=>({r,i:+r.dataset.hrow,s:helpScore(list[+r.dataset.hrow],q)}));const has=!!helpNorm(q);
+ sc.sort((a,b)=>has?(b.s-a.s||a.i-b.i):a.i-b.i).forEach(x=>{x.r.hidden=!x.s;box.appendChild(x.r)});
+ const none=document.querySelector(`[data-hnone="${who}"]`);if(none)none.hidden=!has||sc.some(x=>x.s)}
+addEventListener("input",e=>{const w=e.target.dataset&&e.target.dataset.help;if(w)helpFilter(w,e.target.value)});
+Object.assign(ACT,{
+ helpGo:el=>{if(el.dataset.v==="pl")L.plTab=el.dataset.k;else L.mtab=el.dataset.k;L.confirm=null;render();window.scrollTo({top:0})},
+ helpChip:el=>{L.drafts["help_q_"+el.dataset.v]=el.dataset.k;const i=document.querySelector(`[data-help="${el.dataset.v}"]`);if(i)i.value=el.dataset.k;helpFilter(el.dataset.v,el.dataset.k)}
+});
+const plHelp=()=>helpView("pl"),mHelp=()=>helpView("m");
+
 /* ---- the planner portal ---- */
 let plSubbed=false;
 function plSubs(){if(plSubbed||!db)return;plSubbed=true;
@@ -5799,7 +5878,7 @@ ACT.plTab=el=>{L.plTab=el.dataset.k;L.confirm=null;render();scrollTo(0,0)};
 /* ---- planner portal: one tab per part of the business ----
    Home (what needs attention and this week), Clients, Events, Calendar, Teammates, Packages (and every invoice),
    Templates (ready-made events and checklists), Import & export, Branding, Feedback, Settings. */
-const PL_TABS=[["home","Home"],["clients","Clients"],["leads","Leads"],["events","Events"],["cal","Calendar"],["team","Teammates"],["pkg","Packages"],["show","Showcase"],["rep","Reports"],["tpl","Templates"],["data","Import & export"],["brand","Branding"],["fb","Feedback"],["set","Settings"]];
+const PL_TABS=[["home","Home"],["clients","Clients"],["leads","Leads"],["events","Events"],["cal","Calendar"],["team","Teammates"],["pkg","Packages"],["show","Showcase"],["rep","Reports"],["tpl","Templates"],["data","Import & export"],["brand","Branding"],["fb","Feedback"],["set","Settings"],["help","Help desk"]];
 const CAL_K={event:["🎉","Event day"],date:["📌","Key date"],pay:["💵","Payment due"],task:["☑️","Checklist"]};
 function plCalItems(){const out=[],cs=D.clients||{};
  Object.keys(cs).forEach(id=>{const c=cs[id],nm=c.name||"Client";
@@ -5861,7 +5940,7 @@ function plSettings(){const me=D.plMe||{},st=D.invSet||{},fld=(k,l,v,ph,tp,mx)=>
  <button class="btn primary as" data-act="seInv">Save invoice settings</button><span class="small muted">Your next invoice will be ${esc(invNo())}.</span></section>
  <section class="card stack"><h2>Your account</h2>${L.user&&L.user.email?`<p class="small muted m0">Signed in as ${esc(L.user.email)}</p>`:""}${me.code&&me.code!=="OWNER"&&me.code!=="DEMO"?`<p class="small muted m0">Planner code: ${esc(me.code)}</p>`:""}
  ${window.__HMPDEMO?`<p class="small muted m0">This is the demo, so there's nothing to sign out of.</p>`:`<button class="btn as" data-act="acOut">Sign out</button>`}</section>`}
-function plTabBody(k){return ({home:plHome,clients:hClients,leads:plLeadsTab,events:plEvents,cal:plCal,team:hTeam,pkg:plPkgTab,show:plShowTab,rep:plReports,tpl:plTplTab,data:plDataTab,brand:hBrandCard,fb:hFeedbackCard,set:plSettings}[k]||plHome)()}
+function plTabBody(k){return ({home:plHome,clients:hClients,leads:plLeadsTab,events:plEvents,cal:plCal,team:hTeam,pkg:plPkgTab,show:plShowTab,rep:plReports,tpl:plTplTab,data:plDataTab,brand:hBrandCard,fb:hFeedbackCard,set:plSettings,help:plHelp}[k]||plHome)()}
 function plTabBadge(k){const n=k==="home"?0:k==="leads"?inqNew():k==="clients"?clAttention():k==="team"?mateBehind():k==="pkg"?Object.keys(D.clients||{}).reduce((s,id)=>s+invList(id).filter(x=>invStatus(id,x)==="Overdue").length,0):0;return n?` <span class="pill warn">${n}</span>`:""}
 /* ================= LEADS, SHOWCASE, REPORTS =================
    planners/{uid}/inquiries/{id} = {name, email, phone, type, date, guests, budget, msg, src, t, status: new|contacted|booked|lost, cid}
