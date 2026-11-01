@@ -5869,7 +5869,7 @@ function plannerView(){
   return card(mode==="new"?"Create your planner account":"Sign in",`${mode==="new"?`<p class="small muted m0">You'll need the planner code Host Mode sent you.</p>${acctForm("planner")}<button class="btn xs as" data-act="acMode" data-k="signin">I already have an account</button>`:`${acctForm("signin")}<button class="btn xs as" data-act="acMode" data-k="new">New planner? Create your account</button>`}`)}
  const cur=PL_TABS.some(([k])=>k===L.plTab)?L.plTab:"home",tab=(k,l)=>`<button data-act="plTab" data-k="${k}" aria-pressed="${cur===k}">${l}${plTabBadge(k)}</button>`;
  const body=plTabBody(cur);const me=D.plMe||{};
- return `${L.viewAs?`<div class="banner soft"><span>You're viewing <b>${esc(me.name||"this planner")}</b>'s planner portal as the admin. Changes you make save to their account.</span><a class="btn sm" href="${esc(baseURL())}#host">Back to admin console</a></div>`:""}<div class="console"><nav class="side" aria-label="Planner sections">${PL_TABS.map(([k,l])=>tab(k,l)).join("")}</nav><div class="stack mw0"><div class="row between small acctbar"><span class="muted">${esc(me.name||"")}${me.biz?" · "+esc(me.biz):""}</span>${window.__HMPDEMO?"":`<span class="row">${L.user&&D.owner&&L.user.uid===D.owner?`<a class="btn xs" href="${esc(baseURL())}#host">Admin console</a>`:""}<button class="btn xs" data-act="acOut">Sign out</button></span>`}</div>${body}</div></div>`}
+ return `${L.viewAs?`<div class="banner soft"><span>You're viewing <b>${esc(me.name||"this planner")}</b>'s planner portal as the admin. Changes you make save to their account.</span><a class="btn sm" href="${esc(baseURL())}#host">Back to admin console</a></div>`:""}${PL_PW?`<div class="stack mw0"><div class="row between small acctbar"><span><b>${esc(plTabLabel(cur))}</b> <span class="muted">· ${esc(me.biz||me.name||"Planner portal")}</span></span><button class="btn xs" data-act="plPopClose">Close window</button></div>${body}</div>`:`<div class="console"><nav class="side" aria-label="Planner sections">${PL_TABS.map(([k,l])=>tab(k,l)).join("")}</nav><div class="stack mw0"><div class="row between small acctbar"><span class="muted">${esc(me.name||"")}${me.biz?" · "+esc(me.biz):""}</span><span class="row">${plMultiOn()&&cur!=="set"?`<button class="btn xs" data-act="plPop" data-k="${cur}">Pop out ${esc(plTabLabel(cur))}</button>`:""}</span>${window.__HMPDEMO?"":`<span class="row">${L.user&&D.owner&&L.user.uid===D.owner?`<a class="btn xs" href="${esc(baseURL())}#host">Admin console</a>`:""}<button class="btn xs" data-act="acOut">Sign out</button></span>`}</div>${body}</div></div>`}`}
 function plEvents(){const ev=D.events||{},ks=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));
  const nu=baseURL()+"?"+(window.__HMPDEMO?"pdemo=1&":"")+(L.viewAs?"as="+encodeURIComponent(PLID())+"&":"")+"planner=1#new";
  return `<section class="card stack"><div class="row between"><h2>Your events</h2><a class="btn primary" href="${esc(nu)}">New event</a></div><p class="small muted m0">Each event gets its own code, games, big screen and guest check-in. Link an event to a client in the Clients tab.</p>
@@ -5938,8 +5938,32 @@ function plSettings(){const me=D.plMe||{},st=D.invSet||{},fld=(k,l,v,ph,tp,mx)=>
  <section class="card stack"><h2>Invoices</h2><div class="grid2 g8"><label class="stack tight"><span class="small">Next invoice number</span><input type="text" inputmode="numeric" data-draft="se_next" value="${esc(dv("se_next",String(st.next||1001)))}"></label>
  <label class="stack tight" style="grid-column:1/-1"><span class="small">How to pay (shown on every invoice)</span><textarea rows="2" data-draft="se_pay" maxlength="400" placeholder="Zelle to pay@yourbusiness.com, or pay by card at yourbusiness.com/pay">${esc(dv("se_pay",st.pay||""))}</textarea></label></div>
  <button class="btn primary as" data-act="seInv">Save invoice settings</button><span class="small muted">Your next invoice will be ${esc(invNo())}.</span></section>
+ ${plMultiSection()}
  <section class="card stack"><h2>Your account</h2>${L.user&&L.user.email?`<p class="small muted m0">Signed in as ${esc(L.user.email)}</p>`:""}${me.code&&me.code!=="OWNER"&&me.code!=="DEMO"?`<p class="small muted m0">Planner code: ${esc(me.code)}</p>`:""}
  ${window.__HMPDEMO?`<p class="small muted m0">This is the demo, so there's nothing to sign out of.</p>`:`<button class="btn as" data-act="acOut">Sign out</button>`}</section>`}
+/* ---- multi-window mode: pop planner modules into their own windows (for desktops with more than one monitor) ---- */
+const PL_PW=(()=>{const k=QS.get("pw")||"";return PL_TABS.some(t=>t[0]===k)?k:""})();
+if(PL_PW)L.plTab=PL_PW;
+const plMultiOn=()=>!!store.get("plMulti",false);
+const plDesktop=()=>window.matchMedia&&matchMedia("(pointer:fine)").matches&&window.innerWidth>=900;
+const plTabLabel=k=>(PL_TABS.find(t=>t[0]===k)||[])[1]||"";
+async function plPopOut(k){const u=new URL(location.href);u.searchParams.set("pw",k);
+ let f="popup,width=1200,height=860";
+ if(store.get("plScreen",false)&&"getScreenDetails" in window){try{const sd=await getScreenDetails(),cur=sd.currentScreen,o=sd.screens.find(x=>x!==cur);
+  if(o)f=`popup,left=${o.availLeft+40},top=${o.availTop+40},width=${Math.min(1400,o.availWidth-80)},height=${Math.min(1000,o.availHeight-80)}`}catch(e){}}
+ const w=window.open(u.toString(),"hm_"+k,f);if(!w)toast("Your browser blocked the window. Allow pop-ups for this site, then try again.");else try{w.focus()}catch(e){}}
+function plMultiSection(){const on=plMultiOn(),scr="getScreenDetails" in window;
+ return `<section class="card stack"><h2>Multi-window mode</h2><p class="small muted m0">For computers with more than one monitor. Pop any module, like Clients or Calendar, into its own window and move it to another screen. Every window stays in sync as you work.</p>
+ <div class="row between small"><span>Multi-window mode</span><button class="toggle tg-sm" data-act="plMultiToggle" aria-pressed="${on}"><span>${on?"On":"Off"}</span><i></i></button></div>
+ ${on&&!plDesktop()?'<p class="small muted m0">This works best on a computer. On a phone or tablet, modules open in new tabs.</p>':""}
+ ${on&&scr?`<div class="row between small"><span>Open new windows on my other monitor<span class="db muted">Your browser asks once for permission to see your screens.</span></span><button class="toggle tg-sm" data-act="plScreenToggle" aria-pressed="${!!store.get("plScreen",false)}"><span>${store.get("plScreen",false)?"On":"Off"}</span><i></i></button></div>`:""}
+ ${on?`<div class="stack tight"><span class="small"><b>Open a module in its own window</b></span><div class="row small">${PL_TABS.filter(t=>t[0]!=="set").map(([k,l])=>`<button class="btn xs" data-act="plPop" data-k="${k}">${esc(l)}</button>`).join("")}</div><p class="small muted m0">You'll also see a <b>Pop out</b> button at the top of each module.</p></div>`:""}</section>`}
+Object.assign(ACT,{
+ plMultiToggle:()=>{store.set("plMulti",!plMultiOn());render()},
+ plScreenToggle:async()=>{const on=!store.get("plScreen",false);if(on&&"getScreenDetails" in window){try{await getScreenDetails()}catch(e){return toast("Your browser didn't allow it. You can still drag windows to another monitor.")}}store.set("plScreen",on);render()},
+ plPop:el=>plPopOut(el.dataset.k),
+ plPopClose:()=>{try{window.close()}catch(e){}setTimeout(()=>toast("Close this window from your browser"),300)}
+});
 function plTabBody(k){return ({home:plHome,clients:hClients,leads:plLeadsTab,events:plEvents,cal:plCal,team:hTeam,pkg:plPkgTab,show:plShowTab,rep:plReports,tpl:plTplTab,data:plDataTab,brand:hBrandCard,fb:hFeedbackCard,set:plSettings,help:plHelp}[k]||plHome)()}
 function plTabBadge(k){const n=k==="home"?0:k==="leads"?inqNew():k==="clients"?clAttention():k==="team"?mateBehind():k==="pkg"?Object.keys(D.clients||{}).reduce((s,id)=>s+invList(id).filter(x=>invStatus(id,x)==="Overdue").length,0):0;return n?` <span class="pill warn">${n}</span>`:""}
 /* ================= LEADS, SHOWCASE, REPORTS =================
