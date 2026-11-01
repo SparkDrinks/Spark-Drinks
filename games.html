@@ -1258,6 +1258,7 @@ function connect(){
  if(!window.firebase||!FIREBASE_CONFIG.apiKey){L.offline=true;render();return}
  try{firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database()}catch(e){L.offline=true;render();return}
  db.ref(".info/connected").on("value",s=>{L.connected=!!s.val();renderSoon()});
+ if(VIEW==="moderator"){try{const a=firebase.auth&&firebase.auth();if(a)a.onAuthStateChanged(u=>{L.navUid=u?u.uid:null;renderSoon()})}catch(e){}}
  db.ref(".info/serverTimeOffset").on("value",s=>{L.offset=s.val()||0});
  hashPin(DEFAULT_MASTER_PIN).then(h=>{L.defaultHash=h;RT("admin").on("value",s=>{D.admin=s.val()||{};L.masterHash=D.admin.pinHash||L.defaultHash;checkAuth();renderSoon()})});
  if(VIEW==="new"){L.loaded=true;renderSoon();return}
@@ -1411,7 +1412,10 @@ function headerView(){
  const c=C();const noEv=(!EV||L.missing)&&VIEW==="guest";const title=noEv||VIEW==="host"||VIEW==="planner"||VIEW==="new"||VIEW==="mate"||VIEW==="client"||VIEW==="fb"?"Host Mode":(c.title||"Host Mode");
  const sub=VIEW==="mate"?"Your tasks":VIEW==="client"?"Your event portal":VIEW==="planner"?"Planner portal":VIEW==="fb"?"Quick feedback":VIEW==="host"?"Admin console":VIEW==="new"?"Create your event":noEv?"Plan it. Run it. Remember it.":(c.tagline||"");
  const showAa=VIEW==="guest"||VIEW==="album"||VIEW==="keepsake";
- return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span><button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
+ return `<div class="brand"><h1>${esc(title)}</h1>${sub?`<p>${esc(sub)}</p>`:""}</div>${showAa?`<button class="btn sm aa" data-act="settings" aria-label="${t("Settings")}">Aa</button>`:""}${VIEW==="moderator"&&L.modOK?`<span class="row"><span class="pill ${D.meta&&D.meta.practice?"warn":"live"}">${D.meta&&D.meta.practice?"Practice run":L.isAdmin?"Administrator":"Moderator"} · ${esc(EV)}</span><span class="small muted">${esc(L.isAdmin?"":L.modName||"")}</span>${modBackLinks()}<button class="btn xs" data-act="modSignOut">Sign out</button></span>`:""}`}
+/* back buttons from an event console to the admin console and the planner portal */
+function modBackLinks(){if(window.__HMDEMO||window.__HMPDEMO)return "";const pl=D.meta&&D.meta.planner;
+ return (L.isAdmin?`<a class="btn xs" href="${esc(baseURL())}#host">Admin console</a>`:"")+(pl&&L.navUid&&L.navUid===pl?`<a class="btn xs" href="${esc(baseURL())}#planner">My planner portal</a>`:"")}
 function loadingView(){return `<div class="card muted">${t("Loading…")}</div>`}
 const status=()=>L.connected||!db||!L.everConnected||VIEW==="guest"?"":`<div class="banner soft"><span>Weak signal. Changes are saved on this device and send when the signal is back.</span></div>`;
 function landing(notFound){return `<section class="card stack narrow"><div class="eyebrow">${t("Welcome")}</div><h2>${t("Enter your event code")}</h2>${notFound?`<p class="small" style="color:var(--bad);margin:0">${t("We couldn't find that event. Check the code and try again.")}</p>`:""}
@@ -5782,7 +5786,7 @@ function plannerView(){
   return card(mode==="new"?"Create your planner account":"Sign in",`${mode==="new"?`<p class="small muted m0">You'll need the planner code Host Mode sent you.</p>${acctForm("planner")}<button class="btn xs as" data-act="acMode" data-k="signin">I already have an account</button>`:`${acctForm("signin")}<button class="btn xs as" data-act="acMode" data-k="new">New planner? Create your account</button>`}`)}
  const cur=PL_TABS.some(([k])=>k===L.plTab)?L.plTab:"home",tab=(k,l)=>`<button data-act="plTab" data-k="${k}" aria-pressed="${cur===k}">${l}${plTabBadge(k)}</button>`;
  const body=plTabBody(cur);const me=D.plMe||{};
- return `<div class="console"><nav class="side" aria-label="Planner sections">${PL_TABS.map(([k,l])=>tab(k,l)).join("")}</nav><div class="stack mw0"><div class="row between small acctbar"><span class="muted">${esc(me.name||"")}${me.biz?" · "+esc(me.biz):""}</span>${window.__HMPDEMO?"":`<button class="btn xs" data-act="acOut">Sign out</button>`}</div>${body}</div></div>`}
+ return `<div class="console"><nav class="side" aria-label="Planner sections">${PL_TABS.map(([k,l])=>tab(k,l)).join("")}</nav><div class="stack mw0"><div class="row between small acctbar"><span class="muted">${esc(me.name||"")}${me.biz?" · "+esc(me.biz):""}</span>${window.__HMPDEMO?"":`<span class="row">${L.user&&D.owner&&L.user.uid===D.owner?`<a class="btn xs" href="${esc(baseURL())}#host">Admin console</a>`:""}<button class="btn xs" data-act="acOut">Sign out</button></span>`}</div>${body}</div></div>`}
 function plEvents(){const ev=D.events||{},ks=Object.keys(ev).sort((a,b)=>(ev[b].created||0)-(ev[a].created||0));
  const nu=baseURL()+"?"+(window.__HMPDEMO?"pdemo=1&":"")+"planner=1#new";
  return `<section class="card stack"><div class="row between"><h2>Your events</h2><a class="btn primary" href="${esc(nu)}">New event</a></div><p class="small muted m0">Each event gets its own code, games, big screen and guest check-in. Link an event to a client in the Clients tab.</p>
