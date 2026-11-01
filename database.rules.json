@@ -140,6 +140,18 @@
             "$id": {
               ".read": true
             }
+          },
+          "inquiries": {
+            "$id": {
+              ".write": "!data.exists() && newData.exists() && root.child('partygames/planners/' + $uid + '/profile').exists()",
+              ".validate": "newData.hasChildren(['name','email','t']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && newData.child('email').isString() && newData.child('email').val().length <= 120 && newData.child('t').isNumber() && (!newData.child('msg').exists() || (newData.child('msg').isString() && newData.child('msg').val().length <= 2000))"
+            }
+          },
+          "showcase": {
+            ".read": true
+          },
+          "showImg": {
+            ".read": true
           }
         }
       },

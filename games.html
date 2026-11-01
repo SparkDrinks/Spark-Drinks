@@ -864,6 +864,11 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .calday.today{border:2px solid var(--btn1)}.calday.sel{background:var(--btn1);color:#fff;border-color:var(--btn1)}.calday.sel b{box-shadow:0 0 0 1px #fff}
 .cd-event{background:#e0338f}.cd-pay{background:#e8a20c}.cd-date{background:#3f74d6}.cd-task{background:#2f9e44}
 .landed{animation:landed 1.4s ease-out}@keyframes landed{0%{box-shadow:0 0 0 3px var(--btn1)}100%{box-shadow:0 0 0 3px transparent}}
+.shhero{text-align:center;align-items:center}.shlogo{max-height:84px;max-width:220px;border-radius:14px}
+.shgal{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px}.shgal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block}
+.shev+.shev{border-top:1px solid var(--line);padding-top:14px}.shq{margin:0;padding:12px 14px;border-left:4px solid var(--btn1);background:var(--ground);border-radius:10px}
+.shthumb{position:relative;display:inline-block}.shthumb img{width:76px;height:57px;object-fit:cover;border-radius:8px;display:block}.shthumb button{position:absolute;top:2px;right:2px;min-height:0;padding:0 7px}
+.rpbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:4px}.rpbar i{display:block;height:100%;background:var(--btn1);border-radius:99px}
 </style>
 </head><body>
 <div class="wrap">
@@ -1085,7 +1090,7 @@ const QS=new URLSearchParams(location.search);
 const EV=((QS.get("e")||"").toUpperCase().replace(/[^A-Z0-9-]/g,""))||null;
 /* planner space: client, teammate and feedback links carry ?p=<planner id>; the planner portal sets it after sign-in */
 let PSP=/^[A-Za-z0-9_-]{1,64}$/.test(QS.get("p")||"")?"planners/"+QS.get("p")+"/":"";
-const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";if(new URLSearchParams(location.search).has("client"))return "client";if(new URLSearchParams(location.search).has("fb"))return "fb";return ["host","planner","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
+const VIEW=(()=>{const h=location.hash.slice(1);if(new URLSearchParams(location.search).has("mate"))return "mate";if(new URLSearchParams(location.search).has("client"))return "client";if(new URLSearchParams(location.search).has("fb"))return "fb";{const q=new URLSearchParams(location.search);if(q.has("p")&&(q.has("show")||q.has("inquire")))return "show"}return ["host","planner","moderator","screen","album","print","keepsake","new"].includes(h)?h:"guest"})();
 const baseURL=()=>location.origin+location.pathname;
 const eventURL=(code,hash)=>baseURL()+"?"+(window.__HMPDEMO?"pdemo=1&":"")+"e="+encodeURIComponent(code)+(hash?"#"+hash:"");
 
@@ -1258,6 +1263,7 @@ function connect(){
  if(VIEW==="mate"){mateConnect();return}
  if(VIEW==="client"){clConnect();return}
  if(VIEW==="fb"){fbConnect();return}
+ if(VIEW==="show"){shConnect();return}
  if(VIEW==="planner"){plConnect();return}
  if(VIEW==="host"){hostConnect();return}
  if(!EV){routeWithoutCode();return}
@@ -1366,6 +1372,7 @@ function render(force){
  else if(VIEW==="client")html=clientView();
  else if(VIEW==="fb")html=fbView();
  else if(VIEW==="planner")html=plannerView();
+ else if(VIEW==="show")html=showView();
  else if(!EV)html=L.loaded?landing():loadingView();
  else if(L.missing)html=landing(true);
  else if(!L.loaded)html=loadingView();
@@ -4797,7 +4804,7 @@ function hClients(){
    <div class="row"><textarea class="grow" rows="2" data-draft="cl_msg_${id}" maxlength="1000" placeholder="Reply to ${esc(c.name)}">${esc(dv("cl_msg_"+id,""))}</textarea><button class="btn primary" data-act="clSend" data-from="planner" data-m="${id}">Send</button></div>`}
   if(open&&tab==="files"){const fs=clFilesOf(id);body=`${fs.length?`<div class="stack tight">${fs.map(f=>`${clFileRow(id,f,"planner")}${f.kind==="guests"&&f.status==="pending"?clGuestApprove(id,f,c):""}${f.by==="planner"?`<div class="small muted">${f.share?"Visible to the client":"Private"} · <button class="btn xs" data-act="clFileShare" data-m="${id}" data-k="${f.k}">${f.share?"Make private":"Share with client"}</button></div>`:""}`).join("")}</div>`:'<p class="small muted m0">No files yet.</p>'}
    <div class="row"><label class="btn sm upl">Upload for the client<input type="file" data-act="clPlanFile"></label><span class="small muted">PDFs and photos, up to 10 MB. Private until you share.</span></div>`}
-  return `<section class="card stack"><div class="row between"><div class="mw0"><h3>${esc(c.name)}</h3><div class="small muted">${esc(c.evName||c.evTitle||"No event linked")} · ${s2.total?`${s2.done} of ${s2.total} done`:"no checklist yet"}</div>${clInfo(c)}</div>
+  return `<section class="card stack${L.landId===id&&Date.now()-(L.landT||0)<1500?" landed":""}"><div class="row between"><div class="mw0"><h3>${esc(c.name)}</h3><div class="small muted">${esc(c.evName||c.evTitle||"No event linked")} · ${s2.total?`${s2.done} of ${s2.total} done`:"no checklist yet"}</div>${clInfo(c)}</div>
   <div class="row">${un?`<span class="pill warn">${un} new</span>`:""}${pd?`<span class="pill gold">${pd} guest list${pd===1?"":"s"}</span>`:""}<button class="btn sm" data-act="copyLink" data-url="${esc(clLink(id))}">Copy link</button><a class="btn sm" href="${esc(clLink(id))}" target="_blank" rel="noopener">Preview as client</a><button class="btn sm" data-act="clExport" data-m="${id}">Export</button><button class="btn sm" data-act="cliOpen" data-k="${id}" aria-expanded="${open}">${open?"Hide":"Open"}</button></div></div>
   ${s2.total?mateBar(s2.pct):""}
   ${open?`${c.notes?`<p class="small muted m0" style="white-space:pre-line">${esc(c.notes)}</p>`:""}<div class="row">${sub("list","Checklist")}${sub("approve","Approvals",apN)}${sub("money","Money")}${sub("dates","Dates")}${sub("ven","Vendors")}${sub("chat","Messages",un)}${sub("files","Files",pd)}</div><div class="row small"><span>Event:</span>${evSel(c.ev||"","clSetEv",`data-m="${id}"`)}<span>Date:</span><input type="date" data-act="clSetDate" data-m="${id}" value="${esc(c.date||"")}" aria-label="Event date"></div>${body}<div class="row small"><button class="btn xs" data-act="clDelete" data-k="${id}">${L.confirm==="cd"+id?"Tap again to remove "+esc(c.name):"Remove client"}</button></div>`:""}</section>`};
@@ -5364,7 +5371,7 @@ Object.assign(ACT,{
    partygames/dayOf = true | false             (planner's switch: teammates see the stripped "do now" view)
    partygames/mates/{id}/help = {t, msg, ok}   (teammate tapped "Need help") */
 D.brand=null;D.dayOf=false;
-const brandOn=(v=VIEW)=>(v==="client"||v==="mate"||v==="fb")&&D.brand&&(D.brand.name||D.brand.logo||D.brand.color);
+const brandOn=(v=VIEW)=>(v==="client"||v==="mate"||v==="fb"||v==="show")&&D.brand&&(D.brand.name||D.brand.logo||D.brand.color);
 const brandHex=c=>/^#[0-9a-f]{6}$/i.test(c||"")?c.toLowerCase():"";
 function brandLum(h){const n=parseInt(h.slice(1),16),f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(n>>16)+.7152*f(n>>8&255)+.0722*f(n&255)}
 function brandMix(h,to,p){const a=parseInt(h.slice(1),16),b=parseInt(to.slice(1),16),m=(x,y)=>Math.round(x+(y-x)*p);return "#"+[m(a>>16,b>>16),m(a>>8&255,b>>8&255),m(a&255,b&255)].map(v=>v.toString(16).padStart(2,"0")).join("")}
@@ -5377,7 +5384,7 @@ const _headerView5=headerView;
 headerView=function(){const h=_headerView5();if(!brandOn())return h;const b=D.brand,name=esc(b.name||"");
  return h.replace("<h1>Host Mode</h1>",`<h1 class="brandrow">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}${name||(b.logo?"":"Host Mode")}</h1>`).replace(/<p>(Your event portal|Your tasks)<\/p>/,'<p>$1 · powered by Host Mode</p>')};
 function brandLogo(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej();fr.onload=()=>{const img=new Image();img.onerror=()=>rej();img.onload=()=>{const k=Math.min(1,240/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/png"))};img.src=fr.result};fr.readAsDataURL(file)})}
-const BR_KEYS=["name","color","tag","email","phone","web","city","ig","fb"];
+const BR_KEYS=["name","color","tag","email","phone","web","city","ig","fb","book"];
 function hBrandCard(){const b=D.brand||{},v=(k,d)=>dv("br_"+k,b[k]||d||""),c=brandHex(v("color","#0f2c5c"))||"#0f2c5c",lg=L.brLogo!==undefined?L.brLogo:b.logo||"";
  const fld=(k,l,ph,tp,mx)=>`<label class="stack tight"><span class="small">${l}</span><input type="${tp||"text"}" data-draft="br_${k}" maxlength="${mx||80}" value="${esc(v(k))}" placeholder="${esc(ph)}"></label>`;
  const pv={name:v("name"),tag:v("tag"),city:v("city"),phone:v("phone"),email:v("email"),web:v("web"),ig:v("ig").replace(/^@/,""),fb:v("fb")},links=brLinks(pv);
@@ -5387,6 +5394,7 @@ function hBrandCard(){const b=D.brand||{},v=(k,d)=>dv("br_"+k,b[k]||d||""),c=bra
  <label class="btn upl">${lg?"Change logo":"Add logo"}<input type="file" accept="image/*" data-act="brLogo"></label>${lg?`<img class="brandlogo" src="${esc(lg)}" alt="Your logo"><button class="btn xs" data-act="brLogoX">Remove logo</button>`:""}</div>
  <h3 class="m0">Contact details</h3><p class="small muted m0">Clients see these on their portal and on your invoices. Leave out anything you don't want to share.</p>
  <div class="grid2 g8">${fld("email","Email","hello@brightday.com","email",120)}${fld("phone","Phone","704-555-0100","tel",30)}${fld("web","Website","brightdayevents.com","text",120)}${fld("city","City","Charlotte, NC","text",60)}${fld("ig","Instagram","@brightdayevents","text",40)}${fld("fb","Facebook page","brightdayevents","text",120)}</div>
+ <h3 class="m0">Booking link</h3><p class="small muted m0">Paste your Calendly or Google Calendar booking link. Clients see a "Book a meeting" button on their portal and your Showcase page.</p><div class="grid2 g8">${fld("book","Booking link","calendly.com/brightday/consult","text",200)}</div>
  <h3 class="m0">Preview</h3><div style="border-radius:14px;overflow:hidden;border:1px solid var(--line)"><div style="background:${c};height:10px"></div><div class="stack tight" style="padding:14px 16px;background:#fff;color:#1d2433">
   <div class="row">${lg?`<img class="brandlogo" src="${esc(lg)}" alt="">`:""}<div class="mw0"><b style="color:${c};font-size:18px">${esc(pv.name||"Your business name")}</b>${pv.tag?`<div class="small" style="color:#5a6072">${esc(pv.tag)}</div>`:""}${pv.city?`<div class="small" style="color:#5a6072">${esc(pv.city)}</div>`:""}</div></div>
   ${links.length?`<div class="small" style="color:#33415c">${links.map(([,l])=>esc(l)).join(" · ")}</div>`:`<div class="small" style="color:#8a90a0">Your contact details will show here.</div>`}</div></div>
@@ -5421,7 +5429,7 @@ Object.assign(ACT,{
   if(logo.length>120000)return toast("That logo is too big. Try a simpler picture.");
   const email=g("email",120);if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast("That email doesn't look right");
   const ig=g("ig",40).replace(/^https?:\/\/(www\.)?instagram\.com\//i,"").replace(/^@/,"").replace(/\/.*$/,"");
-  await RT(PSP+"brand").set({name,color,logo,tag:g("tag",80),email,phone:g("phone",30),web:g("web",120),city:g("city",60),ig,fb:g("fb",120)});L.brLogo=undefined;BR_KEYS.forEach(k=>delete L.drafts["br_"+k]);toast("Branding saved");render(true)},
+  await RT(PSP+"brand").set({name,color,logo,tag:g("tag",80),email,phone:g("phone",30),web:g("web",120),city:g("city",60),ig,fb:g("fb",120),book:g("book",200)});L.brLogo=undefined;BR_KEYS.forEach(k=>delete L.drafts["br_"+k]);toast("Branding saved");render(true)},
  brClear:async()=>{await RT(PSP+"brand").remove();L.brLogo=undefined;BR_KEYS.forEach(k=>delete L.drafts["br_"+k]);toast("Back to the Host Mode look");render(true)},
  dayOfToggle:async()=>{const on=!D.dayOf;await RT(PSP+"dayOf").set(on);toast(on?"Day-of mode is on":"Day-of mode is off")},
  mateDone:async el=>{const id=mateKey(),k=el.dataset.k;await RT(PSP+`mateTasks/${id}/${k}`).update({done:true,doneAt:Date.now(),by:"mate"});buzz(30)},
@@ -5488,7 +5496,7 @@ Object.assign(ACT,{
    A pretend planning business, Northlight Events, with Dublin Investments as its main client.
    Runs on demo.js's in-browser database (its own storage, separate from the Rosa's 30th demo).
    The console opens without a PIN; client and teammate portals are one tap away in the demo bar. */
-const PDEMO_V=5;
+const PDEMO_V=6;
 const pdemoOn=()=>!!window.__HMPDEMO;
 function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"{}");if(cur.pdemoV===PDEMO_V&&cur.partygames)return;
  const day=n=>{const x=new Date();x.setHours(12,0,0,0);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)},ago=h=>Date.now()-h*36e5;
@@ -5499,10 +5507,10 @@ function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"
  const pl={
   profile:{name:"Claire Moran",biz:"Northlight Events",email:"claire@northlight.example",phone:"704-555-0142",code:"DEMO",t:ago(2000)},
   events:{DUBLIN:{name:"Annual Company Conference",created:ago(400)},WHELAN:{name:"Sarah & James's Wedding",created:ago(300)},OCONNOR:{name:"Margaret's 50th",created:ago(900)}},
-  brand:{name:"Northlight Events",color:"#0f5e63",logo:svgLogo,tag:"Weddings, celebrations and corporate events",email:"hello@northlight.example",phone:"704-555-0142",web:"northlight.example",city:"Charlotte, NC",ig:"northlightevents"},dayOf:false,
+  brand:{name:"Northlight Events",color:"#0f5e63",logo:svgLogo,tag:"Weddings, celebrations and corporate events",email:"hello@northlight.example",phone:"704-555-0142",web:"northlight.example",city:"Charlotte, NC",ig:"northlightevents",book:"calendly.com/northlight-events/consult"},dayOf:false,
   packages:{"pk_baby_1":{"name":"Baby Shower Essentials","price":650,"deposit":200,"items":"Planning consultation\nTheme, color and decor plan\nVendor recommendations\n3 hours of day-of coordination","t":1},"pk_baby_2":{"name":"Baby Shower Signature","price":1450,"deposit":450,"items":"Everything in Essentials\nVendor booking and contracts\nInvitation design and RSVP tracking\nSetup and teardown\n5 hours of day-of coordination","t":2},"pk_baby_3":{"name":"Baby Shower Luxe","price":2800,"deposit":850,"items":"Full-service planning\nPremium decor and balloon installation\nDessert table styling\nPhotographer and catering coordination\nFull-day coordination with an assistant","t":3},"pk_birthday_1":{"name":"Birthday Essentials","price":550,"deposit":150,"items":"Planning consultation\nTheme and decor plan\nVendor recommendations\n3 hours of day-of coordination","t":1},"pk_birthday_2":{"name":"Birthday Signature","price":1250,"deposit":400,"items":"Everything in Essentials\nVendor booking\nInvitations and RSVP tracking\nSetup and teardown\n5 hours of day-of coordination","t":2},"pk_birthday_3":{"name":"Birthday Luxe","price":2600,"deposit":800,"items":"Full-service planning\nCustom decor and lighting\nDJ and entertainment booking\nCake and dessert table styling\nFull-day coordination with an assistant","t":3},"pk_wedding_1":{"name":"Wedding Essentials","price":1800,"deposit":500,"items":"Month-of planning (starts 6 weeks out)\nFinal vendor confirmations\nTimeline and floor plan\nRehearsal coordination\n10 hours of wedding-day coordination","t":1},"pk_wedding_2":{"name":"Wedding Signature","price":3800,"deposit":1200,"items":"Partial planning (starts 6 months out)\nVendor recommendations and booking\nDesign and decor plan\nBudget tracking\nRehearsal and 12 hours of wedding-day coordination with an assistant","t":2},"pk_wedding_3":{"name":"Wedding Luxe","price":7500,"deposit":2500,"items":"Full planning from engagement to send-off\nUnlimited planning meetings\nFull design, styling and decor management\nGuest and travel management\nRehearsal and full wedding-day coordination with two assistants","t":3},"pk_anniversary_1":{"name":"Anniversary Essentials","price":700,"deposit":200,"items":"Planning consultation\nVenue and menu recommendations\nDecor plan\n3 hours of day-of coordination","t":1},"pk_anniversary_2":{"name":"Anniversary Signature","price":1600,"deposit":500,"items":"Everything in Essentials\nVendor booking\nInvitations and RSVP tracking\nPhoto slideshow production\n5 hours of day-of coordination","t":2},"pk_anniversary_3":{"name":"Anniversary Luxe","price":3200,"deposit":1000,"items":"Full-service planning\nVow renewal ceremony coordination\nPremium florals and table styling\nLive music booking\nFull-day coordination with an assistant","t":3},"pk_corporate_1":{"name":"Corporate Essentials","price":1500,"deposit":500,"items":"Planning consultation\nVenue sourcing\nRun of show and agenda\n4 hours of day-of coordination","t":1},"pk_corporate_2":{"name":"Corporate Signature","price":3500,"deposit":1000,"items":"Everything in Essentials\nVendor booking: catering, AV and rentals\nRegistration and name badges\nBranded signage\n8 hours of day-of coordination with an assistant","t":2},"pk_corporate_3":{"name":"Corporate Luxe","price":7500,"deposit":2500,"items":"Full-service event management\nSpeaker and awards coordination\nCustom staging and branding\nGuest travel and hotel blocks\nFull-day coordination with an on-site team","t":3}},
-  invSettings:{next:1002,pay:"Zelle to pay@northlight.example, or pay by card at northlight.example/pay"},
-  clientInvoices:{whelan:{inv1:{no:"INV-1001",lines:[{d:"Deposit: Wedding Signature",amt:1200}],total:1200,issued:day(-52),due:day(-45),note:"Thank you for choosing Northlight Events!",pay:"Zelle to pay@northlight.example, or pay by card at northlight.example/pay",status:"paid",paidAt:ago(1250),payKeys:{p1:1},t:ago(1260)}}},
+  invSettings:{next:1009,pay:"Zelle to pay@northlight.example, or pay by card at northlight.example/pay"},
+  clientInvoices:{whelan:{inv1:{no:"INV-1008",lines:[{d:"Deposit: Wedding Signature",amt:1200}],total:1200,issued:day(-52),due:day(-45),note:"Thank you for choosing Northlight Events!",pay:"Zelle to pay@northlight.example, or pay by card at northlight.example/pay",status:"paid",paidAt:ago(1250),payKeys:{p1:1},t:ago(1260)}}},
   /* events: */ _idx:{DUBLIN:{name:"Annual Company Conference",created:ago(400),planner:"northlight"},WHELAN:{name:"Sarah & James's Wedding",created:ago(300)},OCONNOR:{name:"Margaret's 50th",created:ago(900)}},
   events_:{DUBLIN:{meta:{name:"Annual Company Conference",created:ago(400),planner:"northlight"},mods:{m1:{name:"Claire",pinHash:"demo",owner:true}},content:dub},
    WHELAN:{meta:{name:"Sarah & James's Wedding",created:ago(300)},mods:{m1:{name:"Claire",pinHash:"demo",owner:true}},content:{title:"Sarah & James",honorees:"Sarah & James",tagline:"Forever starts here",eventType:"wedding",date:day(220)}},
@@ -5556,6 +5564,26 @@ function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"
    niamh:{a:{title:"Call the caterer about dietary needs",ev:"DUBLIN",evName:"Annual Company Conference",due:day(-1),done:false,t:1},
     b:{title:"Run registration and hand out badges",ev:"DUBLIN",evName:"Annual Company Conference",due:day(EVD),done:false,t:2},
     c:{title:"Update the seating chart",ev:"WHELAN",evName:"Sarah & James's Wedding",due:day(60),done:false,t:3}}}};
+ /* a year of past clients, leads and a published Showcase page, so Reports and Showcase have something to show */
+ const art=(a,b,e)=>"data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><circle cx="320" cy="60" r="70" fill="#fff" opacity=".18"/><circle cx="70" cy="250" r="90" fill="#fff" opacity=".12"/><text x="200" y="182" font-size="96" text-anchor="middle">${e}</text></svg>`);
+ const past=[["Keisha & Andre Brooks","pk_wedding_2",11,-320],["The Patel family","pk_baby_2",10,-290],["Marcus Hill's 40th","pk_birthday_3",9,-262],["Queen City Credit Union","pk_corporate_2",7,-200],["Tonya & Ray Simmons","pk_anniversary_1",6,-170],["Lauren & Mike Chen","pk_wedding_2",4,-110],["Ashley Grant","pk_baby_2",2,-50]];
+ past.forEach(([nm,pk,mAgo,dOff],i)=>{const pp=pl.packages[pk],id="past"+i,t=Date.now()-mAgo*30*864e5;
+  pl.clients[id]={name:nm,ev:"",evName:"",date:day(dOff),t,plSeen:t,pkg:{k:pk,name:pp.name,price:pp.price,deposit:pp.deposit,items:pp.items}};
+  const iss=new Date(t).toISOString().slice(0,10),paidT=t+12*864e5;
+  pl.clientInvoices[id]={i1:{no:"INV-"+(1001+i),lines:[{d:pp.name+" package",amt:pp.price}],total:pp.price,issued:iss,due:iss,status:"paid",paidAt:paidT,t}};
+  pl.clientPayments[id]={p1:{title:"Invoice INV-"+(1001+i),amount:pp.price,due:iss,paid:true,paidAt:paidT,inv:"i1",auto:true,t}}});
+ pl.inquiries={q1:{name:"Brianna Lewis",email:"brianna.lewis@example.com",phone:"704-555-0181",type:"Wedding",date:day(410),guests:160,budget:"$30,000",msg:"We love your garden weddings on Instagram! Looking at Myers Park or somewhere outdoors next spring. Do you do full planning?",src:"Showcase page",status:"new",t:ago(3)},
+  q2:{name:"Derrick Owens",email:"derrick@owensco.example",phone:"980-555-0144",type:"Corporate event",date:day(75),guests:120,budget:"$12,000",msg:"Holiday party for our team. Need venue help, catering and some kind of entertainment.",src:"website form",status:"new",t:ago(20)},
+  q3:{name:"Jasmine Carter",email:"jasmine.c@example.com",type:"Baby shower",date:day(48),guests:40,budget:"$2,500",msg:"Enchanted garden theme, brunch style.",src:"form link",status:"contacted",t:ago(70)},
+  q4:{name:"Sarah Whelan",email:"sarah.whelan@example.com",type:"Wedding",date:day(220),guests:140,msg:"Engaged! Looking for help with everything.",src:"Showcase page",status:"booked",cid:"whelan",t:ago(320)},
+  q5:{name:"Kevin Tran",email:"kevin.tran@example.com",type:"Birthday",date:day(-20),guests:30,msg:"Surprise 50th for my wife.",src:"form link",status:"lost",t:ago(900)}};
+ pl.showcase={on:true,headline:"Celebrations Charlotte talks about for years",about:"Northlight Events plans weddings, showers, milestone birthdays and corporate events across Charlotte. We handle the planning, the vendors and the day itself, so you get to enjoy your own party.\n\nEvery event also gets Host Mode games and a big screen, so guests are mixing and laughing from the moment they walk in.",
+  pkgs:["pk_wedding_2","pk_baby_2","pk_corporate_2"].map(k=>({k,name:pl.packages[k].name,price:pl.packages[k].price,items:pl.packages[k].items})),
+  reviews:[{text:"Claire thought of everything. Our guests are still talking about the trivia and the photo slideshow.",name:"Lauren C.",rating:5},{text:"The portal kept us organized for eight months. We always knew what was next and what we owed.",name:"Keisha B.",rating:5}],t:ago(48),
+  gallery:{g1:{title:"A garden wedding in Myers Park",kind:"Wedding",date:day(-110),story:"160 guests, a string quartet and a midnight taco bar. Trivia about the couple during dinner had the whole room competing.",t:1},
+   g2:{title:"The Patel family baby shower",kind:"Baby shower",date:day(-290),story:"Enchanted garden theme with a brunch spread, a wishes wall and a gender reveal on the big screen.",t:2},
+   g3:{title:"Queen City Credit Union awards night",kind:"Corporate event",date:day(-200),story:"Networking, dinner and an awards show for 220 staff, with live voting on everyone's phones.",t:3}}};
+ pl.showImg={g1:{a:art("#c08497","#6d597a","💍"),b:art("#d4a373","#c9a227","🥂"),c:art("#6a994e","#2f5d3a","🌿")},g2:{a:art("#f2b5d4","#7bdff2","🍼"),b:art("#b8e0d2","#95b8d1","🎁")},g3:{a:art("#0b1f3a","#0f7c80","🏆"),b:art("#3b5b92","#b8a46a","🎤")}};
  const evs=pl.events_;delete pl.events_;const idx=pl._idx;delete pl._idx;
  pl.tv={DUBLIN:{}};Object.keys(pl.clientVendors.dublin).forEach(k=>{const v=pl.clientVendors.dublin[k];if(v.team)pl.tv.DUBLIN["dublin_"+k]={name:v.name,role:v.role||"",phone:v.phone||"",email:v.email||"",arrive:v.arrive||"",delivers:v.delivers||"",note:v.note||""}});
  const pg={admin:{},index:idx,events:evs,planners:{northlight:pl}};
@@ -5669,7 +5697,7 @@ function plSubs(){if(plSubbed||!db)return;plSubbed=true;
  RT(PSP+"events").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});
  RT(PSP+"feedback").on("value",s=>{D.fbk=s.val()||{};renderSoon()});RT(PSP+"brand").on("value",s=>{D.brand=s.val();renderSoon()});RT(PSP+"dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});
  RT(PSP+"mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});RT(PSP+"mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});
- [["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"],["clientInvoices","cinv"],["packages","pkgs"]].forEach(([p,k])=>RT(PSP+p).on("value",s=>{D[k]=s.val()||{};if(k==="cven"||k==="clients")tvSyncSoon();renderSoon()}))}
+ [["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"],["clientInvoices","cinv"],["packages","pkgs"],["inquiries","inq"],["showcase","show"],["showImg","showImg"]].forEach(([p,k])=>RT(PSP+p).on("value",s=>{D[k]=s.val()||{};if(k==="cven"||k==="clients")tvSyncSoon();renderSoon()}))}
 /* teammates can't list a planner's clients, so the vendors marked "teammates see" are copied per event into tv/{EV} */
 let tvT=null;function tvSyncSoon(){clearTimeout(tvT);tvT=setTimeout(tvSync,600)}
 function tvSync(){if(!PSP||VIEW!=="planner")return;const out={};Object.keys(D.clients||{}).forEach(cid=>{const ev=D.clients[cid].ev;if(!ev)return;clVendors(cid).filter(v=>v.team).forEach(v=>{(out[ev]=out[ev]||{})[cid+"_"+v.k]={name:v.name,role:v.role||"",phone:v.phone||"",email:v.email||"",arrive:v.arrive||"",delivers:v.delivers||"",note:v.note||""}})});
@@ -5700,7 +5728,7 @@ ACT.plTab=el=>{L.plTab=el.dataset.k;L.confirm=null;render();scrollTo(0,0)};
 /* ---- planner portal: one tab per part of the business ----
    Home (what needs attention and this week), Clients, Events, Calendar, Teammates, Packages (and every invoice),
    Templates (ready-made events and checklists), Import & export, Branding, Feedback, Settings. */
-const PL_TABS=[["home","Home"],["clients","Clients"],["events","Events"],["cal","Calendar"],["team","Teammates"],["pkg","Packages"],["tpl","Templates"],["data","Import & export"],["brand","Branding"],["fb","Feedback"],["set","Settings"]];
+const PL_TABS=[["home","Home"],["clients","Clients"],["leads","Leads"],["events","Events"],["cal","Calendar"],["team","Teammates"],["pkg","Packages"],["show","Showcase"],["rep","Reports"],["tpl","Templates"],["data","Import & export"],["brand","Branding"],["fb","Feedback"],["set","Settings"]];
 const CAL_K={event:["🎉","Event day"],date:["📌","Key date"],pay:["💵","Payment due"],task:["☑️","Checklist"]};
 function plCalItems(){const out=[],cs=D.clients||{};
  Object.keys(cs).forEach(id=>{const c=cs[id],nm=c.name||"Client";
@@ -5720,6 +5748,7 @@ function plHome(){const me=D.plMe||{},cs=D.clients||{},ids=Object.keys(cs),today
   if(gl)att.push([`📋 <b>${nm}</b> sent a guest list to review`,id,"files"]);
   if(lt)att.push([`⏰ ${lt} of your checklist item${lt===1?"":"s"} for <b>${nm}</b> ${lt===1?"is":"are"} overdue`,id,"list"]);
   clPays(id).filter(x=>!x.paid&&x.due&&x.due<today).forEach(x=>att.push([`💵 <b>${nm}</b>: ${esc(x.title)} ${clMoney(x.amount)} was due ${esc(mateDue(x.due))}`,id,"money"]))});
+ {const nl=inqNew();if(nl)att.unshift([`📨 ${nl} new inquir${nl===1?"y":"ies"} from your form`,null,"leads"])}
  Object.keys(D.mates||{}).forEach(k=>{const m=D.mates[k];if(m&&m.help&&!m.help.ok)att.push([`🆘 <b>${esc(m.name||"A teammate")}</b> asked for help`,null,"team"])});
  const waitAp=ids.reduce((n,id)=>n+clApPending(id),0),nu=baseURL()+"?"+(window.__HMPDEMO?"pdemo=1&":"")+"planner=1#new";
  return `<section class="card stack"><div class="eyebrow">${esc(me.biz||"Planner portal")}</div><h2 class="m0">${hi}${me.name?", "+esc(String(me.name).split(" ")[0]):""}</h2>
@@ -5736,7 +5765,7 @@ function plCal(){const items=plCalItems(),by={};items.forEach(x=>(by[x.date]=by[
  const dayL=by[sel]||[],up=items.filter(x=>x.date>=today&&x.date<=clDays(14));
  return `<section class="card stack"><div class="row between"><button class="btn sm" data-act="calMove" data-k="-1" aria-label="Previous month">‹</button><h2 class="m0">${esc(first.toLocaleDateString(undefined,{month:"long",year:"numeric"}))}</h2><button class="btn sm" data-act="calMove" data-k="1" aria-label="Next month">›</button></div>
  <div class="calgrid">${["S","M","T","W","T","F","S"].map(x=>`<div class="calhd">${x}</div>`).join("")}${cells.join("")}</div>
- <div class="row small muted">${Object.keys(CAL_K).map(k=>`<span><b class="cd-${k} caldot"></b> ${CAL_K[k][1]}</span>`).join("")}</div>${ym!==today.slice(0,7)?`<button class="btn xs as" data-act="calMove" data-k="0">Back to today</button>`:""}</section>
+ <div class="row small muted">${Object.keys(CAL_K).map(k=>`<span><b class="cd-${k} caldot"></b> ${CAL_K[k][1]}</span>`).join("")}</div><div class="row">${ym!==today.slice(0,7)?`<button class="btn xs" data-act="calMove" data-k="0">Back to today</button>`:""}<button class="btn xs" data-act="calIcs">📥 Add to my calendar app</button></div><span class="small muted">Downloads everything here as a file that Google, Apple and Outlook calendars open. Download it again after you add new dates.</span></section>
  <section class="card stack"><h3>${esc(clFmtDate(sel))}</h3>${dayL.length?`<div class="stack tight">${dayL.map(plCalRow).join("")}</div>`:'<p class="small muted m0">Nothing on this day.</p>'}</section>
  <section class="card stack"><h3>Next two weeks</h3>${up.length?`<div class="stack tight">${up.map(plCalRow).join("")}</div>`:'<p class="small muted m0">Nothing in the next two weeks.</p>'}</section>`}
 function plPkgTab(){const cs=D.clients||{},all=[];Object.keys(cs).forEach(id=>invList(id).forEach(x=>all.push({id,x,st:invStatus(id,x)})));
@@ -5761,21 +5790,174 @@ function plSettings(){const me=D.plMe||{},st=D.invSet||{},fld=(k,l,v,ph,tp,mx)=>
  <button class="btn primary as" data-act="seInv">Save invoice settings</button><span class="small muted">Your next invoice will be ${esc(invNo())}.</span></section>
  <section class="card stack"><h2>Your account</h2>${L.user&&L.user.email?`<p class="small muted m0">Signed in as ${esc(L.user.email)}</p>`:""}${me.code&&me.code!=="OWNER"&&me.code!=="DEMO"?`<p class="small muted m0">Planner code: ${esc(me.code)}</p>`:""}
  ${window.__HMPDEMO?`<p class="small muted m0">This is the demo, so there's nothing to sign out of.</p>`:`<button class="btn as" data-act="acOut">Sign out</button>`}</section>`}
-function plTabBody(k){return ({home:plHome,clients:hClients,events:plEvents,cal:plCal,team:hTeam,pkg:plPkgTab,tpl:plTplTab,data:plDataTab,brand:hBrandCard,fb:hFeedbackCard,set:plSettings}[k]||plHome)()}
-function plTabBadge(k){const n=k==="home"?0:k==="clients"?clAttention():k==="team"?mateBehind():k==="pkg"?Object.keys(D.clients||{}).reduce((s,id)=>s+invList(id).filter(x=>invStatus(id,x)==="Overdue").length,0):0;return n?` <span class="pill warn">${n}</span>`:""}
+function plTabBody(k){return ({home:plHome,clients:hClients,leads:plLeadsTab,events:plEvents,cal:plCal,team:hTeam,pkg:plPkgTab,show:plShowTab,rep:plReports,tpl:plTplTab,data:plDataTab,brand:hBrandCard,fb:hFeedbackCard,set:plSettings}[k]||plHome)()}
+function plTabBadge(k){const n=k==="home"?0:k==="leads"?inqNew():k==="clients"?clAttention():k==="team"?mateBehind():k==="pkg"?Object.keys(D.clients||{}).reduce((s,id)=>s+invList(id).filter(x=>invStatus(id,x)==="Overdue").length,0):0;return n?` <span class="pill warn">${n}</span>`:""}
+/* ================= LEADS, SHOWCASE, REPORTS =================
+   planners/{uid}/inquiries/{id} = {name, email, phone, type, date, guests, budget, msg, src, t, status: new|contacted|booked|lost, cid}
+     anyone can add one (that is the inquiry form); only the planner reads or changes them
+   planners/{uid}/showcase = {on, headline, about, pkgs:[{k,name,price,items}], reviews:[{text,name,rating}], t}   public
+   planners/{uid}/showcase/gallery/{id} = {title, kind, date, story, t}   public
+   planners/{uid}/showImg/{id}/{n} = shrunk JPEG as a data URL   public
+   brand.book = the planner's Calendly or Google booking link */
+D.inq={};D.show=null;D.showImg={};
+const SH_MAX_EV=8,SH_MAX_PH=3;
+const LEAD_ST={new:["New","warn"],contacted:["Contacted",""],booked:["Booked","ok"],lost:["Not booked",""]};
+const inqList=()=>Object.keys(D.inq||{}).map(k=>Object.assign({k},D.inq[k])).sort((a,b)=>(b.t||0)-(a.t||0));
+const inqNew=()=>inqList().filter(x=>(x.status||"new")==="new").length;
+const showURL=mode=>location.origin+location.pathname.replace(/[^/]*$/,"")+"games.html?"+(window.__HMPDEMO?"pdemo=1&":"")+"p="+encodeURIComponent(PLID())+"&"+(mode==="form"?"inquire=1":"show=1");
+const bookHref=b=>b&&b.book?(/^https?:\/\//i.test(b.book)?b.book:"https://"+b.book):"";
+const shGallery=sh=>Object.keys((sh||{}).gallery||{}).map(k=>Object.assign({k},sh.gallery[k])).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))||(b.t||0)-(a.t||0));
+const shQuotes=()=>{const out=[];Object.values(D.fbk||{}).forEach(o=>Object.values(o||{}).forEach(x=>{if(x&&x.quote&&x.best)out.push({text:String(x.best).slice(0,400),name:String(x.name||"").slice(0,40),rating:+x.rating||0})}));return out};
+const EV_KINDS=["Wedding","Baby shower","Birthday","Anniversary","Engagement party","Corporate event","Family reunion","Other"];
+
+/* ---- planner: Leads tab ---- */
+function plLeadsTab(){const l=inqList(),f=L.leadF||"open",cnt=k=>l.filter(x=>(x.status||"new")===k).length,booked=cnt("booked"),decided=booked+cnt("lost");
+ const show=l.filter(x=>{const s=x.status||"new";return f==="all"||(f==="open"?s==="new"||s==="contacted":s===f)});
+ const link=showURL("form"),embed=`<iframe src="${link}&embed=1" style="width:100%;height:860px;border:0" title="Event inquiry form"></iframe>`;
+ return `<section class="card stack"><div class="row between"><h2>Leads</h2><span class="small muted">${l.length} total${decided?` · ${Math.round(booked/decided*100)}% booked`:""}</span></div>
+ <p class="small muted m0">People who fill in your inquiry form show up here. Share the form link on your website, Instagram or business card, or send people to your Showcase page, which has the form built in.</p>
+ <div class="stack tight"><b class="small">Your inquiry form</b><div class="row"><input type="text" class="grow" readonly value="${esc(link)}" aria-label="Inquiry form link"><button class="btn sm" data-act="copyLink" data-url="${esc(link)}">Copy</button><a class="btn sm" href="${esc(link)}" target="_blank" rel="noopener">Open</a></div>
+ <details><summary class="small">Put the form on your own website</summary><p class="small muted">Paste this code into your website where you want the form to show.</p><textarea readonly rows="3" style="font-family:monospace;font-size:12px">${esc(embed)}</textarea><button class="btn xs as" data-act="copyLink" data-url="${esc(embed)}">Copy the code</button></details></div></section>
+ <section class="card stack"><div class="row">${[["open","Open"],["new","New"],["booked","Booked"],["lost","Not booked"],["all","All"]].map(([k,lb])=>`<button class="btn xs ${f===k?"primary":""}" data-act="leadF" data-k="${k}">${lb}${k==="new"&&cnt("new")?` (${cnt("new")})`:""}</button>`).join("")}</div>
+ ${show.length?`<div class="stack tight">${show.map(leadRow).join("")}</div>`:`<p class="small muted m0">${l.length?"Nothing in this list.":"No inquiries yet. Share your form link to start getting them."}</p>`}</section>`}
+function leadRow(x){const st=x.status||"new",s=LEAD_ST[st]||LEAD_ST.new,open=L.leadOpen===x.k,msg=String(x.msg||"");
+ const det=[x.type,x.date?clFmtDate(x.date):"",x.guests?x.guests+" guests":"",x.budget?"budget "+x.budget:""].filter(Boolean);
+ return `<div class="mrow2 small stack tight"><div class="row between"><span class="mw0"><b>${esc(x.name)}</b> <span class="pill ${s[1]}">${s[0]}</span><span class="db muted">${esc(det.join(" · ")||"No event details yet")}</span></span><span class="muted">${esc(clAgo(x.t||0))}</span></div>
+ ${msg?`<div style="white-space:pre-line">${esc(open||msg.length<=140?msg:msg.slice(0,140)+"…")}</div>`:""}
+ ${open?`<div class="muted">${[x.email,x.phone,x.src?"came from your "+x.src:""].filter(Boolean).map(esc).join(" · ")}</div>`:""}
+ <div class="row">${st!=="booked"?`<button class="btn xs primary" data-act="leadBook" data-k="${esc(x.k)}">Make a client</button>`:x.cid&&(D.clients||{})[x.cid]?`<button class="btn xs" data-act="plJump" data-k="clients" data-m="${esc(x.cid)}">Open client</button>`:""}${x.email?`<a class="btn xs" href="mailto:${esc(x.email)}?subject=${encodeURIComponent("Your event inquiry")}">Email</a>`:""}${x.phone?`<a class="btn xs" href="tel:${esc(String(x.phone).replace(/[^+\d]/g,""))}">Call</a>`:""}
+ <select data-act="leadSt" data-k="${esc(x.k)}" aria-label="Status for ${esc(x.name)}">${Object.keys(LEAD_ST).map(k=>`<option value="${k}" ${st===k?"selected":""}>${LEAD_ST[k][0]}</option>`).join("")}</select>
+ <button class="btn xs" data-act="leadOpen" data-k="${esc(x.k)}">${open?"Less":"More"}</button><button class="btn xs" data-act="leadDel" data-k="${esc(x.k)}">${L.confirm==="ld"+x.k?"Tap again to delete":"Delete"}</button></div></div>`}
+
+/* ---- planner: Showcase tab ---- */
+function plShowTab(){const sh=D.show||{},b=D.brand||{},v=k=>dv("sh_"+k,sh[k]||""),gal=shGallery(sh),pk=pkList(),q=shQuotes(),url=showURL("show");
+ const chosen=L.shPk||new Set((sh.pkgs||[]).map(p=>p.k)),revOn=L.shRev!=null?L.shRev:sh.reviews?sh.reviews.length>0:true;
+ return `<section class="card stack"><div class="row between"><h2>Showcase</h2><span class="pill ${sh.on?"ok":""}">${sh.on?"Published":"Not published yet"}</span></div>
+ <p class="small muted m0">A public page that sells your business: your story, photos of past events, your packages, client reviews and an inquiry form. Every inquiry from it lands in Leads.</p>
+ ${sh.on?`<div class="row"><input type="text" class="grow" readonly value="${esc(url)}" aria-label="Showcase link"><button class="btn sm" data-act="copyLink" data-url="${esc(url)}">Copy</button><a class="btn sm" href="${esc(url)}" target="_blank" rel="noopener">View</a></div>`:""}
+ <label class="stack tight"><span class="small">Headline</span><input type="text" data-draft="sh_headline" maxlength="80" value="${esc(v("headline"))}" placeholder="${esc(b.name?b.name+": events people talk about for years":"Events people talk about for years")}"></label>
+ <label class="stack tight"><span class="small">About you</span><textarea rows="5" data-draft="sh_about" maxlength="1500" placeholder="Who you are, what you love planning, and what makes working with you different.">${esc(v("about"))}</textarea></label>
+ <p class="small muted m0">Your logo, tagline, contact details and booking link come from Branding. ${b.book?"":`<button class="btn xs" data-act="plJump" data-k="brand">Add a booking link</button>`}</p></section>
+ <section class="card stack"><div class="row between"><h3>Past events</h3><span class="small muted">${gal.length} of ${SH_MAX_EV}</span></div>
+ ${gal.length?`<div class="stack tight">${gal.map(shGalRow).join("")}</div>`:'<p class="small muted m0">Add the events you are proudest of. A title, a few photos and a short story is plenty.</p>'}
+ ${gal.length<SH_MAX_EV?`<details ${L.shAdd?"open":""}><summary class="small"><b>Add a past event</b></summary><div class="stack tight" style="margin-top:8px"><div class="grid2 g8"><label class="stack tight" style="grid-column:1/-1"><span class="small">Title</span><input type="text" data-draft="sg_title" maxlength="80" value="${esc(dv("sg_title",""))}" placeholder="The Whelan wedding at the Mint Museum"></label>
+  <label class="stack tight"><span class="small">Type</span><select data-draft="sg_kind"><option value="">Pick one</option>${EV_KINDS.map(x=>`<option ${dv("sg_kind","")===x?"selected":""}>${x}</option>`).join("")}</select></label><label class="stack tight"><span class="small">Date</span><input type="date" data-draft="sg_date" value="${esc(dv("sg_date",""))}"></label>
+  <label class="stack tight" style="grid-column:1/-1"><span class="small">The story</span><textarea rows="3" data-draft="sg_story" maxlength="600" placeholder="What the client wanted and how you pulled it off.">${esc(dv("sg_story",""))}</textarea></label></div>
+  <button class="btn primary as" data-act="shGalAdd">Add event</button><span class="small muted">You can add photos once it's saved.</span></div></details>`:""}
+ <p class="small muted m0">Up to ${SH_MAX_PH} photos per event. Photos are made smaller when you add them, and they show on your page right away.</p></section>
+ <section class="card stack"><h3>Packages to show</h3>${pk.length?`<div class="stack tight">${pk.map(p=>`<label class="row small"><input type="checkbox" data-act="shPk" data-k="${esc(p.k)}" ${chosen.has(p.k)?"checked":""}> ${esc(p.name)} · ${clMoney(p.price)}</label>`).join("")}</div>`:'<p class="small muted m0">Make packages in the Packages tab first.</p>'}</section>
+ <section class="card stack"><h3>Reviews</h3>${q.length?`<label class="row small"><input type="checkbox" data-act="shRev" ${revOn?"checked":""}> Show the ${q.length} review${q.length===1?"":"s"} you featured in Feedback</label>${q.slice(0,2).map(r=>`<blockquote class="shq small"><p class="m0">“${esc(r.text)}”</p>${r.name?`<span class="muted">${esc(r.name)}</span>`:""}</blockquote>`).join("")}`:'<p class="small muted m0">Reviews you mark ★ Featured in the Feedback tab show up here.</p>'}</section>
+ <section class="card stack"><div class="row"><button class="btn primary" data-act="shPublish">${sh.on?"Publish changes":"Publish my page"}</button>${sh.on?`<button class="btn" data-act="shOff">${L.confirm==="shoff"?"Tap again to unpublish":"Unpublish"}</button>`:""}</div><span class="small muted">The headline, about, packages and reviews go live when you publish.</span></section>`}
+function shGalRow(g){const ph=D.showImg[g.k]||{},ks=Object.keys(ph).filter(n=>ph[n]);
+ return `<div class="mrow2 stack tight"><div class="row between"><b>${esc(g.title)}</b><button class="btn xs" data-act="shGalDel" data-k="${esc(g.k)}">${L.confirm==="sg"+g.k?"Tap again to delete":"Delete"}</button></div>
+ ${g.kind||g.date?`<span class="small muted">${esc([g.kind,g.date?clFmtDate(g.date):""].filter(Boolean).join(" · "))}</span>`:""}${g.story?`<p class="small m0">${esc(g.story)}</p>`:""}
+ <div class="row">${ks.map(n=>`<span class="shthumb"><img src="${esc(ph[n])}" alt=""><button class="btn xs" data-act="shImgDel" data-k="${esc(g.k)}" data-n="${esc(n)}" aria-label="Remove photo">×</button></span>`).join("")}${ks.length<SH_MAX_PH?`<label class="btn xs upl">Add photo<input type="file" accept="image/*" data-act="shImg" data-k="${esc(g.k)}"></label>`:""}</div></div>`}
+
+/* ---- planner: Reports tab ---- */
+function rpMonths(){const n=new Date(),out=[];for(let i=11;i>=0;i--){const d=new Date(n.getFullYear(),n.getMonth()-i,1);out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`)}return out}
+const rpMo=t=>{const d=new Date(t);return isNaN(d)?"":`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`};
+function rpBars(ms,vals,fmt,label){const W=360,H=150,top=22,base=H-24,max=Math.max(1,...vals),bw=W/ms.length;
+ const bars=ms.map((m,i)=>{const v=vals[i]||0,h=v?Math.max(3,(base-top)*v/max):0,x=i*bw+4,mon=new Date(m+"-15T12:00").toLocaleDateString(undefined,{month:"short"});
+  return `<g><title>${esc(mon+" "+m.slice(0,4)+": "+fmt(v))}</title>${h?`<rect x="${x.toFixed(1)}" y="${(base-h).toFixed(1)}" width="${(bw-8).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="var(--btn1)"/>`:""}${v?`<text x="${(x+(bw-8)/2).toFixed(1)}" y="${(base-h-5).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--ink)">${esc(fmt(v,true))}</text>`:""}<text x="${(x+(bw-8)/2).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9" fill="var(--muted)">${esc(mon)}</text></g>`}).join("");
+ return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" style="width:100%;height:auto;display:block"><line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--line)"/>${bars}</svg>`}
+const rpShort=(v,short)=>short&&v>=1000?"$"+(Math.round(v/100)/10)+"k":clMoney(v);
+function plReports(){const cs=D.clients||{},ids=Object.keys(cs),ms=rpMonths(),inYear=m=>ms.includes(m);
+ const paid={},newC={},open={sum:0,n:0};let paidSum=0,bookedVal=0;
+ ids.forEach(id=>invList(id).forEach(x=>{if(invIsPaid(id,x)){const m=rpMo(x.paidAt||Date.parse((x.issued||"")+"T12:00")||x.t);if(inYear(m)){paid[m]=(paid[m]||0)+(+x.total||0);paidSum+=+x.total||0}}else{open.sum+=+x.total||0;open.n++}}));
+ const pk={};ids.forEach(id=>{const c=cs[id],m=rpMo(c.t||0);if(inYear(m))newC[m]=(newC[m]||0)+1;if(c.pkg&&c.pkg.name){const o=pk[c.pkg.name]=pk[c.pkg.name]||{n:0,v:0};o.n++;o.v+=+c.pkg.price||0;if(inYear(m))bookedVal+=+c.pkg.price||0}});
+ const pks=Object.keys(pk).map(n=>Object.assign({name:n},pk[n])).sort((a,b)=>b.n-a.n||b.v-a.v),pmax=Math.max(1,...pks.map(p=>p.n));
+ const lds=inqList(),src={};lds.forEach(x=>{const s=x.src||"other";src[s]=(src[s]||0)+1});const won=lds.filter(x=>x.status==="booked").length,lost=lds.filter(x=>x.status==="lost").length;
+ const newSum=ms.reduce((n,m)=>n+(newC[m]||0),0);
+ return `<section class="card stack"><h2>Reports</h2><p class="small muted m0">The last 12 months, from your invoices, clients, packages and leads.</p>
+ <div class="stats"><div class="stat"><b>${clMoney(paidSum)}</b><span>Collected from paid invoices</span></div><div class="stat"><b>${clMoney(open.sum)}</b><span>${open.n} open invoice${open.n===1?"":"s"}</span></div><div class="stat"><b>${clMoney(bookedVal)}</b><span>Package value booked</span></div><div class="stat"><b>${won+lost?Math.round(won/(won+lost)*100)+"%":"–"}</b><span>Leads booked</span></div></div></section>
+ <section class="card stack"><h3>Collected by month</h3>${paidSum?rpBars(ms,ms.map(m=>paid[m]||0),rpShort,"Money collected from paid invoices, by month"):'<p class="small muted m0">Paid invoices will show here.</p>'}</section>
+ <section class="card stack"><h3>New clients by month</h3>${newSum?rpBars(ms,ms.map(m=>newC[m]||0),v=>String(v),"New clients, by month"):'<p class="small muted m0">New clients will show here.</p>'}</section>
+ <section class="card stack"><h3>Best-selling packages</h3>${pks.length?`<div class="stack tight">${pks.map(p=>`<div class="small"><div class="row between"><b>${esc(p.name)}</b><span class="muted">${p.n} client${p.n===1?"":"s"} · ${clMoney(p.v)}</span></div><div class="rpbar"><i style="width:${Math.round(p.n/pmax*100)}%"></i></div></div>`).join("")}</div>`:'<p class="small muted m0">Add a package to a client and it shows here.</p>'}</section>
+ <section class="card stack"><h3>Where leads come from</h3>${lds.length?`<div class="stack tight">${Object.keys(src).sort((a,b)=>src[b]-src[a]).map(s=>`<div class="row between small"><span>Your ${esc(s)}</span><b>${src[s]}</b></div>`).join("")}</div><span class="small muted">${won} booked · ${lost} not booked · ${lds.length-won-lost} still open</span>`:'<p class="small muted m0">Inquiries from your form and Showcase page show here.</p>'}</section>`}
+
+/* ---- public: the Showcase page and the inquiry form (games.html?p=<planner>&show=1 or &inquire=1) ---- */
+function shConnect(){if(!PSP){L.loaded=true;renderSoon();return}
+ RT(PSP+"brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
+ RT(PSP+"showcase").on("value",s=>{D.show=s.val();L.loaded=true;if(!QS.has("inquire"))shGallery(D.show).forEach(g=>{if(!D.showImg[g.k]){D.showImg[g.k]={};RT(PSP+"showImg/"+g.k).once("value").then(x=>{D.showImg[g.k]=x.val()||{};renderSoon()}).catch(()=>{})}});renderSoon()},()=>{L.loaded=true;renderSoon()})}
+function inqForm(solo){const b=D.brand||{},d=k=>esc(dv("iq_"+k,"")),bk=bookHref(b),nm=b.name||"the planner";
+ if(L.inqDone)return `<section class="card stack" id="inquire"><h3 class="m0">Thank you!</h3><p class="m0">${esc(nm)} will get back to you soon.</p>${bk?`<a class="btn primary as" href="${esc(bk)}" target="_blank" rel="noopener">📅 Book a meeting now</a>`:""}</section>`;
+ const f=(k,l,tp,ph,mx,req)=>`<label class="stack tight"><span class="small">${l}${req?" *":""}</span><input type="${tp}" data-draft="iq_${k}" value="${d(k)}" placeholder="${esc(ph)}" maxlength="${mx}"${req?" required":""}></label>`;
+ return `<section class="card stack" id="inquire">${solo&&(b.logo||b.name)?`<div class="row">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}<b>${esc(b.name||"")}</b></div>`:""}<h3 class="m0">Tell us about your event</h3><p class="small muted m0">Fill this in and ${esc(nm)} will get back to you.</p>
+ <div class="grid2 g8">${f("name","Your name","text","Maya Jordan",80,1)}${f("email","Email","email","you@example.com",120,1)}${f("phone","Phone","tel","704-555-0100",30)}
+ <label class="stack tight"><span class="small">Type of event</span><select data-draft="iq_type"><option value="">Pick one</option>${EV_KINDS.map(x=>`<option ${dv("iq_type","")===x?"selected":""}>${x}</option>`).join("")}</select></label>
+ ${f("date","Event date","date","",10)}${f("guests","About how many guests","number","100",6)}${f("budget","Budget (optional)","text","$5,000",30)}</div>
+ <label class="stack tight"><span class="small">Anything else we should know?</span><textarea rows="4" data-draft="iq_msg" maxlength="2000" placeholder="Theme, venue ideas, questions…">${d("msg")}</textarea></label>
+ <input type="text" data-draft="iq_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
+ <button class="btn primary" data-act="inqSend">Send</button>${bk?`<a class="btn as" href="${esc(bk)}" target="_blank" rel="noopener">📅 Or book a meeting</a>`:""}<p class="small muted m0">Your details only go to ${esc(nm)}.</p></section>`}
+function showView(){if(!PSP)return `<section class="card stack narrow"><h2>This link isn't working</h2><p class="muted m0">Ask for the link again.</p></section>`;
+ if(!L.loaded)return loadingView();
+ const b=D.brand||{},sh=D.show||{},bk=bookHref(b),foot='<p class="small muted tc">Powered by Host Mode</p>';
+ if(QS.has("inquire"))return inqForm(true)+foot;
+ if(!sh.on)return `<section class="card stack narrow"><h2>${esc(b.name||"Coming soon")}</h2><p class="muted m0">This page isn't published yet. You can still send an inquiry.</p></section>`+inqForm(false)+foot;
+ const gal=shGallery(sh),links=brLinks(b);
+ return `<section class="card stack shhero">${b.logo?`<img class="shlogo" src="${esc(b.logo)}" alt="${esc(b.name||"")}">`:""}<h2 class="m0">${esc(sh.headline||b.name||"")}</h2>${b.tag?`<p class="muted m0">${esc(b.tag)}</p>`:""}${b.city?`<p class="small muted m0">📍 ${esc(b.city)}</p>`:""}
+ <div class="row" style="justify-content:center"><a class="btn primary" href="#inquire" data-act="shGoForm">Ask about your event</a>${bk?`<a class="btn" href="${esc(bk)}" target="_blank" rel="noopener">📅 Book a meeting</a>`:""}</div>${sh.about?`<p class="m0" style="white-space:pre-line;text-align:left">${esc(sh.about)}</p>`:""}</section>
+ ${gal.length?`<section class="card stack"><h3>Past events</h3><div class="stack">${gal.map(g=>{const ph=Object.values(D.showImg[g.k]||{}).filter(Boolean);return `<div class="stack tight shev">${ph.length?`<div class="shgal">${ph.map(src=>`<img src="${esc(src)}" alt="${esc(g.title)}" loading="lazy">`).join("")}</div>`:""}<b>${esc(g.title)}</b>${g.kind||g.date?`<span class="small muted">${esc([g.kind,g.date?clFmtDate(g.date):""].filter(Boolean).join(" · "))}</span>`:""}${g.story?`<p class="m0 small" style="white-space:pre-line">${esc(g.story)}</p>`:""}</div>`}).join("")}</div></section>`:""}
+ ${(sh.pkgs||[]).length?`<section class="card stack"><h3>Packages</h3><div class="stack tight">${sh.pkgs.map(p=>`<div class="mrow2"><div class="row between"><b>${esc(p.name)}</b><b>${clMoney(p.price)}</b></div>${pkLines(p).length?`<ul class="small m0">${pkLines(p).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</div>`).join("")}</div></section>`:""}
+ ${(sh.reviews||[]).length?`<section class="card stack"><h3>What clients say</h3><div class="stack tight">${sh.reviews.map(r=>`<blockquote class="shq"><p class="m0">“${esc(r.text)}”</p><span class="small muted">${"★".repeat(Math.max(0,Math.min(5,Math.round(+r.rating||0))))}${r.name?" · "+esc(r.name):""}</span></blockquote>`).join("")}</div></section>`:""}
+ ${inqForm(false)}
+ ${links.length?`<section class="card stack"><h3>Contact</h3><div class="row small">${links.map(([h,l])=>`<a class="btn xs" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div></section>`:""}${foot}`}
+
+Object.assign(ACT,{
+ leadF:el=>{L.leadF=el.dataset.k;render(true)},
+ leadOpen:el=>{L.leadOpen=L.leadOpen===el.dataset.k?null:el.dataset.k;render(true)},
+ leadSt:async el=>{await RT(PSP+"inquiries/"+el.dataset.k+"/status").set(el.value);toast("Marked "+LEAD_ST[el.value][0].toLowerCase())},
+ leadDel:async el=>{const k=el.dataset.k;if(L.confirm!=="ld"+k){L.confirm="ld"+k;return render(true)}L.confirm=null;await RT(PSP+"inquiries/"+k).remove();toast("Lead deleted")},
+ leadBook:async el=>{const k=el.dataset.k,x=(D.inq||{})[k];if(!x)return;const tm=Date.now(),r=RT(PSP+"clients").push();
+  const o={name:String(x.name||"New client").slice(0,40),ev:"",evName:"",date:/^\d{4}-\d{2}-\d{2}$/.test(x.date||"")?x.date:"",t:tm,lead:k};
+  if(x.email)o.email=String(x.email).slice(0,120);if(x.phone)o.phone=String(x.phone).slice(0,40);if(x.type)o.evType=String(x.type).slice(0,40);if(+x.guests>0)o.guests=Math.round(+x.guests);
+  const bd=imNum(x.budget);if(bd)o.budget=bd;o.notes=[x.msg,"Came in through your "+(x.src||"inquiry form")+"."].filter(Boolean).join("\n").slice(0,1000);
+  await r.set(o);await RT(PSP+"inquiries/"+k).update({status:"booked",cid:r.key});toast(o.name+" is now a client. Send them their link.");
+  /* wait until the new client is in the list, then land on it */
+  let n=0;const go=()=>{if((D.clients||{})[r.key]||n++>20)ACT.plJump({dataset:{k:"clients",m:r.key,s:"list"}});else setTimeout(go,100)};go()},
+ shPk:el=>{const sh=D.show||{};if(!L.shPk)L.shPk=new Set((sh.pkgs||[]).map(p=>p.k));if(el.checked)L.shPk.add(el.dataset.k);else L.shPk.delete(el.dataset.k)},
+ shRev:el=>{L.shRev=el.checked},
+ shGalAdd:async()=>{const title=dv("sg_title","").trim().slice(0,80);if(!title)return toast("Give the event a title");if(shGallery(D.show).length>=SH_MAX_EV)return toast(`You can show up to ${SH_MAX_EV} events`);
+  await RT(PSP+"showcase/gallery").push().set({title,kind:dv("sg_kind",""),date:dv("sg_date",""),story:dv("sg_story","").trim().slice(0,600),t:Date.now()});
+  ["sg_title","sg_kind","sg_date","sg_story"].forEach(k=>delete L.drafts[k]);L.shAdd=false;toast("Added. Now add a few photos.");render(true)},
+ shGalDel:async el=>{const k=el.dataset.k;if(L.confirm!=="sg"+k){L.confirm="sg"+k;return render(true)}L.confirm=null;await RT(PSP+"showcase/gallery/"+k).remove();await RT(PSP+"showImg/"+k).remove();toast("Removed")},
+ shImg:async el=>{const k=el.dataset.k,f=el.files&&el.files[0];el.value="";if(!f)return;if(!/^image\//.test(f.type))return toast("That isn't a photo");if(Object.keys((D.showImg||{})[k]||{}).length>=SH_MAX_PH)return toast(`Up to ${SH_MAX_PH} photos per event`);
+  toast("Adding the photo…");try{let r=await clShrink(f,1200,.78);if(r.data.length>380000)r=await clShrink(f,900,.7);await RT(PSP+`showImg/${k}/p${Date.now().toString(36)}`).set(r.data);toast("Photo added")}catch(e){toast("Couldn't add that photo")}},
+ shImgDel:async el=>{await RT(PSP+`showImg/${el.dataset.k}/${el.dataset.n}`).remove()},
+ shPublish:async()=>{const sh=D.show||{},chosen=L.shPk||new Set((sh.pkgs||[]).map(p=>p.k)),revOn=L.shRev!=null?L.shRev:sh.reviews?sh.reviews.length>0:true;
+  const pkgs=pkList().filter(p=>chosen.has(p.k)).map(p=>({k:p.k,name:p.name,price:+p.price||0,items:p.items||""}));
+  await RT(PSP+"showcase").update({on:true,headline:dv("sh_headline",sh.headline||"").trim().slice(0,80),about:dv("sh_about",sh.about||"").trim().slice(0,1500),pkgs,reviews:revOn?shQuotes().slice(0,6):[],t:Date.now()});
+  ["sh_headline","sh_about"].forEach(k=>delete L.drafts[k]);L.shPk=null;L.shRev=null;toast(sh.on?"Changes published":"Your page is live");render(true)},
+ shOff:async()=>{if(L.confirm!=="shoff"){L.confirm="shoff";return render(true)}L.confirm=null;await RT(PSP+"showcase/on").set(false);toast("Your page is unpublished")},
+ shGoForm:(el,e)=>{const s=document.getElementById("inquire");if(s)s.scrollIntoView({behavior:reduceMotion()?"auto":"smooth",block:"start"})},
+ inqSend:async()=>{const g=(k,n)=>String(dv("iq_"+k,"")).trim().slice(0,n),name=g("name",80),email=g("email",120).toLowerCase();
+  if(g("hp",60))return;if(!name)return toast("Type your name");if(!email||!imOkEmail(email))return toast("Type your email so they can reply");
+  if(Date.now()-(+(store.get("inqLast_"+PLID(),0))||0)<60000)return toast("Thanks, your inquiry was already sent");
+  const dt=g("date",10),o={name,email,phone:g("phone",30),type:g("type",40),date:/^\d{4}-\d{2}-\d{2}$/.test(dt)?dt:"",guests:Math.max(0,parseInt(g("guests",6),10)||0),budget:g("budget",30),msg:g("msg",2000),src:QS.has("inquire")?(QS.has("embed")?"website form":"form link"):"Showcase page",status:"new",t:Date.now()};
+  try{await RT(PSP+"inquiries").push().set(o)}catch(e){return toast("Couldn't send. Check your connection and try again.")}
+  store.set("inqLast_"+PLID(),Date.now());Object.keys(L.drafts).filter(k=>k.startsWith("iq_")).forEach(k=>delete L.drafts[k]);L.inqDone=true;render(true);
+  const s=document.getElementById("inquire");if(s)s.scrollIntoView({block:"center"})},
+ calIcs:()=>{const today=mateToday(),items=plCalItems().filter(x=>x.date>=clDays(-30)).map((x,i)=>({k:"c"+i,date:x.date,time:x.time||"",title:CAL_K[x.kind][1]+": "+x.title,note:x.who}));
+  if(!items.length)return toast("Nothing on your calendar yet");clDownload("host-mode-calendar.ics",clIcs(items,((D.plMe||{}).biz||"Host Mode")+" calendar"),"text/calendar");toast("Open the file to add it to your calendar app")}
+});
+
+/* the public page's header carries the planner's brand, not an event's title */
+const _hvShow=headerView;headerView=function(){const h=_hvShow();if(VIEW!=="show")return h;const b=D.brand||{};document.title=(b.name||"Host Mode")+(QS.has("inquire")?" · Inquiry":"");
+ return h.replace(/<div class="brand">[\s\S]*?<\/div>/,`<div class="brand"><h1 class="brandrow">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}${esc(b.name||"Host Mode")}</h1>${b.tag?`<p>${esc(b.tag)}</p>`:""}</div>`)};
+
 /* scroll so a section sits just under anything fixed at the top (the demo bar), then flash it so the eye finds it */
 function plLand(sec,smooth){if(!sec){scrollTo({top:0,behavior:"auto"});return}
  const bar=document.querySelector(".demobar"),off=(bar&&getComputedStyle(bar).position==="fixed"?bar.getBoundingClientRect().bottom:0)+12;
  scrollTo({top:Math.max(0,sec.getBoundingClientRect().top+scrollY-off),behavior:smooth&&!reduceMotion()?"smooth":"auto"});
  sec.classList.remove("landed");void sec.offsetWidth;sec.classList.add("landed")}
 /* the planner's contact details, from Branding, on the client portal */
-function brContactCard(){const b=D.brand||{},links=brLinks(b);if(!links.length&&!b.tag)return "";
- return `<section class="card stack"><h3>Your planner</h3><div class="row">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}<div class="mw0"><b>${esc(b.name||"")}</b>${b.tag?`<div class="small muted">${esc(b.tag)}</div>`:""}${b.city?`<div class="small muted">${esc(b.city)}</div>`:""}</div></div>${links.length?`<div class="row small">${links.map(([h,l])=>`<a class="btn xs" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div>`:""}</section>`}
+function brContactCard(){const b=D.brand||{},links=brLinks(b),bk=bookHref(b);if(!links.length&&!b.tag&&!bk)return "";
+ return `<section class="card stack"><h3>Your planner</h3><div class="row">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}<div class="mw0"><b>${esc(b.name||"")}</b>${b.tag?`<div class="small muted">${esc(b.tag)}</div>`:""}${b.city?`<div class="small muted">${esc(b.city)}</div>`:""}</div></div>${bk?`<a class="btn primary as" href="${esc(bk)}" target="_blank" rel="noopener">📅 Book a meeting</a>`:""}${links.length?`<div class="row small">${links.map(([h,l])=>`<a class="btn xs" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div>`:""}</section>`}
 function brLinks(b){const o=[];if(b.phone)o.push(["tel:"+String(b.phone).replace(/[^+\d]/g,""),"📞 "+b.phone]);if(b.email)o.push(["mailto:"+b.email,"✉️ "+b.email]);
  if(b.web)o.push([/^https?:\/\//i.test(b.web)?b.web:"https://"+b.web,"🌐 "+String(b.web).replace(/^https?:\/\//i,"").replace(/\/$/,"")]);
  if(b.ig)o.push(["https://instagram.com/"+b.ig,"Instagram @"+b.ig]);if(b.fb)o.push([/^https?:\/\//i.test(b.fb)?b.fb:"https://facebook.com/"+b.fb,"Facebook"]);return o}
 Object.assign(ACT,{
- plJump:el=>{const k=el.dataset.k,id=el.dataset.m;L.plTab=k;L.confirm=null;if(id){L.cliOpen=id;L.cliTab=el.dataset.s||"list"}render(true);
+ plJump:el=>{const k=el.dataset.k,id=el.dataset.m;L.plTab=k;L.confirm=null;if(id){L.cliOpen=id;L.cliTab=el.dataset.s||"list";L.landId=id;L.landT=Date.now()}render(true);
   const t=id&&document.querySelector(`[data-act="cliOpen"][data-k="${CSS.escape(id)}"]`);plLand(t&&t.closest("section"),false)},
  plScroll:el=>plLand(document.getElementById(el.dataset.k),true),
  calMove:el=>{const d=+el.dataset.k,t=mateToday().slice(0,7);if(!d){L.calYM=t;L.calSel=null;return render(true)}const [y,m]=(L.calYM||t).split("-").map(Number),n=new Date(y,m-1+d,1);L.calYM=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}`;L.calSel=null;render(true)},
