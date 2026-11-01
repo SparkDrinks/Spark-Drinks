@@ -863,6 +863,7 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .calday i{display:flex;gap:2px;height:6px}.calday b,.caldot{display:inline-block;width:7px;height:7px;border-radius:50%}
 .calday.today{border:2px solid var(--btn1)}.calday.sel{background:var(--btn1);color:#fff;border-color:var(--btn1)}.calday.sel b{box-shadow:0 0 0 1px #fff}
 .cd-event{background:#e0338f}.cd-pay{background:#e8a20c}.cd-date{background:#3f74d6}.cd-task{background:#2f9e44}
+.landed{animation:landed 1.4s ease-out}@keyframes landed{0%{box-shadow:0 0 0 3px var(--btn1)}100%{box-shadow:0 0 0 3px transparent}}
 </style>
 </head><body>
 <div class="wrap">
@@ -5718,9 +5719,9 @@ function plHome(){const me=D.plMe||{},cs=D.clients||{},ids=Object.keys(cs),today
  Object.keys(D.mates||{}).forEach(k=>{const m=D.mates[k];if(m&&m.help&&!m.help.ok)att.push([`🆘 <b>${esc(m.name||"A teammate")}</b> asked for help`,null,"team"])});
  const waitAp=ids.reduce((n,id)=>n+clApPending(id),0),nu=baseURL()+"?"+(window.__HMPDEMO?"pdemo=1&":"")+"planner=1#new";
  return `<section class="card stack"><div class="eyebrow">${esc(me.biz||"Planner portal")}</div><h2 class="m0">${hi}${me.name?", "+esc(String(me.name).split(" ")[0]):""}</h2>
- <div class="stats"><button class="stat" data-act="plJump" data-k="clients"><b>${ids.length}</b><span>Clients</span></button><button class="stat" data-act="plJump" data-k="cal"><b>${soon}</b><span>Events in the next 30 days</span></button><button class="stat" data-act="plJump" data-k="pkg"><b>${clMoney(due)}</b><span>Client payments still due</span></button><button class="stat ${att.length?"hot":""}" data-act="plJump" data-k="home"><b>${att.length}</b><span>Need your attention</span></button></div>
+ <div class="stats"><button class="stat" data-act="plJump" data-k="clients"><b>${ids.length}</b><span>Clients</span></button><button class="stat" data-act="plJump" data-k="cal"><b>${soon}</b><span>Events in the next 30 days</span></button><button class="stat" data-act="plJump" data-k="pkg"><b>${clMoney(due)}</b><span>Client payments still due</span></button><button class="stat ${att.length?"hot":""}" data-act="plScroll" data-k="plAtt"><b>${att.length}</b><span>Need your attention</span></button></div>
  <div class="row"><button class="btn sm primary" data-act="plJump" data-k="clients">Add a client</button><a class="btn sm" href="${esc(nu)}">New event</a><button class="btn sm" data-act="plJump" data-k="pkg">Packages and invoices</button><button class="btn sm" data-act="plJump" data-k="data">Import clients</button></div></section>
- <section class="card stack"><h3>Needs your attention</h3>${att.length?`<div class="stack tight">${att.map(([t,id,s])=>`<div class="row between small clrow"><span class="mw0">${t}</span>${id?`<button class="btn xs" data-act="plJump" data-k="clients" data-m="${esc(id)}" data-s="${s}">Open</button>`:`<button class="btn xs" data-act="plJump" data-k="${s}">Open</button>`}</div>`).join("")}</div>`:'<p class="small muted m0">You\'re all caught up.</p>'}
+ <section class="card stack" id="plAtt"><h3>Needs your attention</h3>${att.length?`<div class="stack tight">${att.map(([t,id,s])=>`<div class="row between small clrow"><span class="mw0">${t}</span>${id?`<button class="btn xs" data-act="plJump" data-k="clients" data-m="${esc(id)}" data-s="${s}">Open</button>`:`<button class="btn xs" data-act="plJump" data-k="${s}">Open</button>`}</div>`).join("")}</div>`:'<p class="small muted m0">You\'re all caught up.</p>'}
  ${waitAp?`<span class="small muted">Waiting on clients: ${waitAp} approval${waitAp===1?"":"s"} they haven't answered yet.</span>`:""}</section>
  <section class="card stack"><div class="row between"><h3>This week</h3><button class="btn xs" data-act="plJump" data-k="cal">Calendar</button></div>${week.length?`<div class="stack tight">${week.slice(0,12).map(plCalRow).join("")}</div>${week.length>12?`<span class="small muted">and ${week.length-12} more on the calendar</span>`:""}`:'<p class="small muted m0">Nothing due in the next seven days.</p>'}</section>`}
 function plCal(){const items=plCalItems(),by={};items.forEach(x=>(by[x.date]=by[x.date]||[]).push(x));
@@ -5758,6 +5759,11 @@ function plSettings(){const me=D.plMe||{},st=D.invSet||{},fld=(k,l,v,ph,tp,mx)=>
  ${window.__HMPDEMO?`<p class="small muted m0">This is the demo, so there's nothing to sign out of.</p>`:`<button class="btn as" data-act="acOut">Sign out</button>`}</section>`}
 function plTabBody(k){return ({home:plHome,clients:hClients,events:plEvents,cal:plCal,team:hTeam,pkg:plPkgTab,tpl:plTplTab,data:plDataTab,brand:hBrandCard,fb:hFeedbackCard,set:plSettings}[k]||plHome)()}
 function plTabBadge(k){const n=k==="home"?0:k==="clients"?clAttention():k==="team"?mateBehind():k==="pkg"?Object.keys(D.clients||{}).reduce((s,id)=>s+invList(id).filter(x=>invStatus(id,x)==="Overdue").length,0):0;return n?` <span class="pill warn">${n}</span>`:""}
+/* scroll so a section sits just under anything fixed at the top (the demo bar), then flash it so the eye finds it */
+function plLand(sec,smooth){if(!sec){scrollTo({top:0,behavior:"auto"});return}
+ const bar=document.querySelector(".demobar"),off=(bar&&getComputedStyle(bar).position==="fixed"?bar.getBoundingClientRect().bottom:0)+12;
+ scrollTo({top:Math.max(0,sec.getBoundingClientRect().top+scrollY-off),behavior:smooth&&!reduceMotion()?"smooth":"auto"});
+ sec.classList.remove("landed");void sec.offsetWidth;sec.classList.add("landed")}
 /* the planner's contact details, from Branding, on the client portal */
 function brContactCard(){const b=D.brand||{},links=brLinks(b);if(!links.length&&!b.tag)return "";
  return `<section class="card stack"><h3>Your planner</h3><div class="row">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}<div class="mw0"><b>${esc(b.name||"")}</b>${b.tag?`<div class="small muted">${esc(b.tag)}</div>`:""}${b.city?`<div class="small muted">${esc(b.city)}</div>`:""}</div></div>${links.length?`<div class="row small">${links.map(([h,l])=>`<a class="btn xs" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div>`:""}</section>`}
@@ -5765,8 +5771,9 @@ function brLinks(b){const o=[];if(b.phone)o.push(["tel:"+String(b.phone).replace
  if(b.web)o.push([/^https?:\/\//i.test(b.web)?b.web:"https://"+b.web,"🌐 "+String(b.web).replace(/^https?:\/\//i,"").replace(/\/$/,"")]);
  if(b.ig)o.push(["https://instagram.com/"+b.ig,"Instagram @"+b.ig]);if(b.fb)o.push([/^https?:\/\//i.test(b.fb)?b.fb:"https://facebook.com/"+b.fb,"Facebook"]);return o}
 Object.assign(ACT,{
- plJump:el=>{const k=el.dataset.k,id=el.dataset.m;L.plTab=k;L.confirm=null;if(id){L.cliOpen=id;L.cliTab=el.dataset.s||"list"}render();
-  setTimeout(()=>{const t=id&&document.querySelector(`[data-act="cliOpen"][data-k="${CSS.escape(id)}"]`);if(t&&t.closest("section"))t.closest("section").scrollIntoView({block:"start",behavior:"smooth"});else scrollTo(0,0)},60)},
+ plJump:el=>{const k=el.dataset.k,id=el.dataset.m;L.plTab=k;L.confirm=null;if(id){L.cliOpen=id;L.cliTab=el.dataset.s||"list"}render(true);
+  const t=id&&document.querySelector(`[data-act="cliOpen"][data-k="${CSS.escape(id)}"]`);plLand(t&&t.closest("section"),false)},
+ plScroll:el=>plLand(document.getElementById(el.dataset.k),true),
  calMove:el=>{const d=+el.dataset.k,t=mateToday().slice(0,7);if(!d){L.calYM=t;L.calSel=null;return render(true)}const [y,m]=(L.calYM||t).split("-").map(Number),n=new Date(y,m-1+d,1);L.calYM=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}`;L.calSel=null;render(true)},
  calSel:el=>{L.calSel=el.dataset.k;render(true)},
  seSave:async()=>{const me=D.plMe||{},g=(k,v,n)=>dv(k,v||"").trim().slice(0,n),name=g("se_name",me.name,40);if(!name)return toast("Type your name");const em=g("se_email",me.email,120);if(em&&!imOkEmail(em))return toast("That email doesn't look right");
