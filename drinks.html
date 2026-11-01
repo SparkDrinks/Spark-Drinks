@@ -36,6 +36,14 @@ label{color:var(--mute)}
 </style>
 </head>
 <body>
+<section id="lock" class="card" style="max-width:360px;margin:40px auto;text-align:center">
+  <h1 style="margin-top:0">Order a Drink</h1>
+  <p class="mute">Enter the admin PIN to open this page.</p>
+  <form id="lockf"><input type="password" id="pin" inputmode="numeric" autocomplete="off" placeholder="Admin PIN" aria-label="Admin PIN" style="text-align:center">
+  <button class="pri" id="unlock" type="submit" style="margin-top:10px;width:100%">Unlock</button></form>
+  <p id="lockmsg" class="mute" role="alert" style="min-height:1.4em;margin-bottom:0"></p>
+</section>
+<div id="app" class="hide">
 <h1>Order a Drink</h1>
 <p class="sub">Pick your drink &middot; we will bring it to your table</p>
 <div class="tabs"><button id="tg" class="on">Guest</button><button id="tb">Bartender</button></div>
@@ -60,6 +68,8 @@ label{color:var(--mute)}
     <div class="row" style="margin-top:8px"><label><input type="checkbox" id="newspiked"> Spiked</label><button class="pri" id="add">Add drink</button></div>
   </div>
 </section>
+<p style="text-align:center;margin-top:24px"><button id="relock">Lock this page</button></p>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -67,7 +77,9 @@ label{color:var(--mute)}
 /* STEP 1: paste your Firebase settings below, replacing the placeholder values */
 var FIREBASE_CONFIG={apiKey:"AIzaSyAMWgxbGsq4yiQrsuLYJ1pEb5Qc-8o4zg0",authDomain:"spark-drinks-2d185.firebaseapp.com",databaseURL:"https://spark-drinks-2d185-default-rtdb.firebaseio.com",projectId:"spark-drinks-2d185",appId:"1:497288236361:web:468bd29601daa92e621e98"};
 /* STEP 2: choose your bartender PIN */
-var BARTENDER_PIN="1234", barOK=false;
+/* The page opens only with the Host Mode admin PIN (the one set in the admin console, partygames/admin/pinHash).
+   PINs are compared as hashes, the same way the admin console does it, so the PIN itself never appears in this page. */
+var DEFAULT_ADMIN_PIN="0102";
 var DEFAULT_MENU=[{name:"Enchanted Bloom",spiked:false,out:false},{name:"Sunlit Rose",spiked:false,out:false},{name:"Velvet Spark",spiked:true,out:false}];
 var menu=DEFAULT_MENU.slice(), orders=[], myIds=[], db=null;
 var $=function(i){return document.getElementById(i)};
@@ -102,7 +114,7 @@ function saveOrder(o){
 }
 
 $("tg").onclick=function(){$("guest").classList.remove("hide");$("bar").classList.add("hide");$("tg").className="on";$("tb").className=""};
-$("tb").onclick=function(){if(!barOK){var p=prompt("Bartender PIN");if(p!==BARTENDER_PIN)return;barOK=true}$("bar").classList.remove("hide");$("guest").classList.add("hide");$("tb").className="on";$("tg").className=""};
+$("tb").onclick=function(){$("bar").classList.remove("hide");$("guest").classList.add("hide");$("tb").className="on";$("tg").className=""};
 
 $("menu").onclick=function(e){
   var b=e.target.closest("button[data-i]");if(!b)return;
@@ -128,15 +140,27 @@ $("add").onclick=function(){
   $("newname").value="";$("newspiked").checked=false;saveMenu();
 };
 
-render();
+function hashPin(pin){var str="pg|"+String(pin).trim();
+  if(window.crypto&&crypto.subtle&&window.TextEncoder)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(str)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")});
+  var h=0;for(var i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))|0;return Promise.resolve("x"+h)}
+function lockMsg(t){$("lockmsg").textContent=t||""}
+function expectedHash(){return db.ref("partygames/admin/pinHash").once("value").then(function(x){return x.val()||hashPin(DEFAULT_ADMIN_PIN)})}
+function openApp(h){try{localStorage.setItem("drinks_ok",h)}catch(e){}$("lock").classList.add("hide");$("app").classList.remove("hide");
+  db.ref("menu").on("value",function(x){var v=x.val();if(v){menu=(Array.isArray(v)?v:Object.values(v)).filter(Boolean);render()}});
+  db.ref("orders").on("value",function(x){var v=x.val()||{};orders=Object.keys(v).map(function(k){return Object.assign({id:k},v[k])});render()});
+  render()}
+$("lockf").onsubmit=function(e){e.preventDefault();if(!db)return lockMsg("Can't check the PIN without a connection. Try again in a moment.");
+  var p=$("pin").value;if(!p.trim())return lockMsg("Type the admin PIN.");lockMsg("Checking…");$("unlock").disabled=true;
+  Promise.all([hashPin(p),expectedHash()]).then(function(r){$("unlock").disabled=false;$("pin").value="";if(r[0]===r[1]){lockMsg("");openApp(r[0])}else lockMsg("That PIN isn't right.")})
+   .catch(function(){$("unlock").disabled=false;lockMsg("Couldn't check the PIN. Try again.")})};
+$("relock").onclick=function(){try{localStorage.removeItem("drinks_ok")}catch(e){}location.reload()};
 (function(){
-  if(!window.firebase||!FIREBASE_CONFIG.apiKey){$("note").textContent="Demo mode: add your Firebase settings to share orders between phones.";return}
-  try{
-    firebase.initializeApp(FIREBASE_CONFIG);
-    db=firebase.database();
-    db.ref("menu").on("value",function(x){var v=x.val();if(v){menu=(Array.isArray(v)?v:Object.values(v)).filter(Boolean);render()}});
-    db.ref("orders").on("value",function(x){var v=x.val()||{};orders=Object.keys(v).map(function(k){return Object.assign({id:k},v[k])});render()});
-  }catch(e){db=null;$("note").textContent="Demo mode: could not connect to Firebase."}
+  if(!window.firebase||!FIREBASE_CONFIG.apiKey){lockMsg("This page can't open without its connection settings.");return}
+  try{firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database()}catch(e){db=null;lockMsg("Couldn't connect. Reload to try again.");return}
+  /* a phone that unlocked before stays unlocked, until the admin PIN changes or someone taps Lock this page */
+  var saved=null;try{saved=localStorage.getItem("drinks_ok")}catch(e){}
+  if(saved)expectedHash().then(function(h){if(saved===h)openApp(h);else try{localStorage.removeItem("drinks_ok")}catch(e){}}).catch(function(){});
+  $("pin").focus();
 })();
 </script>
 </body>
