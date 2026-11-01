@@ -869,6 +869,7 @@ header.top:has(.demoslot){flex-wrap:wrap!important}
 .shev+.shev{border-top:1px solid var(--line);padding-top:14px}.shq{margin:0;padding:12px 14px;border-left:4px solid var(--btn1);background:var(--ground);border-radius:10px}
 .shthumb{position:relative;display:inline-block}.shthumb img{width:76px;height:57px;object-fit:cover;border-radius:8px;display:block}.shthumb button{position:absolute;top:2px;right:2px;min-height:0;padding:0 7px}
 .rpbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:4px}.rpbar i{display:block;height:100%;background:var(--btn1);border-radius:99px}
+.shcovercard{padding:0!important;overflow:hidden}.shcover{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
 </style>
 </head><body>
 <div class="wrap">
@@ -5496,7 +5497,7 @@ Object.assign(ACT,{
    A pretend planning business, Northlight Events, with Dublin Investments as its main client.
    Runs on demo.js's in-browser database (its own storage, separate from the Rosa's 30th demo).
    The console opens without a PIN; client and teammate portals are one tap away in the demo bar. */
-const PDEMO_V=6;
+const PDEMO_V=7;
 const pdemoOn=()=>!!window.__HMPDEMO;
 function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"{}");if(cur.pdemoV===PDEMO_V&&cur.partygames)return;
  const day=n=>{const x=new Date();x.setHours(12,0,0,0);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)},ago=h=>Date.now()-h*36e5;
@@ -5565,7 +5566,8 @@ function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"
     b:{title:"Run registration and hand out badges",ev:"DUBLIN",evName:"Annual Company Conference",due:day(EVD),done:false,t:2},
     c:{title:"Update the seating chart",ev:"WHELAN",evName:"Sarah & James's Wedding",due:day(60),done:false,t:3}}}};
  /* a year of past clients, leads and a published Showcase page, so Reports and Showcase have something to show */
- const art=(a,b,e)=>"data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><circle cx="320" cy="60" r="70" fill="#fff" opacity=".18"/><circle cx="70" cy="250" r="90" fill="#fff" opacity=".12"/><text x="200" y="182" font-size="96" text-anchor="middle">${e}</text></svg>`);
+ /* demo photos: real event photos from Pexels (pexels.com/license), loaded from Pexels at a phone-friendly size */
+ const px=id=>`https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1000`;
  const past=[["Keisha & Andre Brooks","pk_wedding_2",11,-320],["The Patel family","pk_baby_2",10,-290],["Marcus Hill's 40th","pk_birthday_3",9,-262],["Queen City Credit Union","pk_corporate_2",7,-200],["Tonya & Ray Simmons","pk_anniversary_1",6,-170],["Lauren & Mike Chen","pk_wedding_2",4,-110],["Ashley Grant","pk_baby_2",2,-50]];
  past.forEach(([nm,pk,mAgo,dOff],i)=>{const pp=pl.packages[pk],id="past"+i,t=Date.now()-mAgo*30*864e5;
   pl.clients[id]={name:nm,ev:"",evName:"",date:day(dOff),t,plSeen:t,pkg:{k:pk,name:pp.name,price:pp.price,deposit:pp.deposit,items:pp.items}};
@@ -5580,10 +5582,12 @@ function pdemoSeed(){const cur=JSON.parse(localStorage.getItem("hm_pdemo_db")||"
  pl.showcase={on:true,headline:"Celebrations Charlotte talks about for years",about:"Northlight Events plans weddings, showers, milestone birthdays and corporate events across Charlotte. We handle the planning, the vendors and the day itself, so you get to enjoy your own party.\n\nEvery event also gets Host Mode games and a big screen, so guests are mixing and laughing from the moment they walk in.",
   pkgs:["pk_wedding_2","pk_baby_2","pk_corporate_2"].map(k=>({k,name:pl.packages[k].name,price:pl.packages[k].price,items:pl.packages[k].items})),
   reviews:[{text:"Claire thought of everything. Our guests are still talking about the trivia and the photo slideshow.",name:"Lauren C.",rating:5},{text:"The portal kept us organized for eight months. We always knew what was next and what we owed.",name:"Keisha B.",rating:5}],t:ago(48),
-  gallery:{g1:{title:"A garden wedding in Myers Park",kind:"Wedding",date:day(-110),story:"160 guests, a string quartet and a midnight taco bar. Trivia about the couple during dinner had the whole room competing.",t:1},
-   g2:{title:"The Patel family baby shower",kind:"Baby shower",date:day(-290),story:"Enchanted garden theme with a brunch spread, a wishes wall and a gender reveal on the big screen.",t:2},
-   g3:{title:"Queen City Credit Union awards night",kind:"Corporate event",date:day(-200),story:"Networking, dinner and an awards show for 220 staff, with live voting on everyone's phones.",t:3}}};
- pl.showImg={g1:{a:art("#c08497","#6d597a","💍"),b:art("#d4a373","#c9a227","🥂"),c:art("#6a994e","#2f5d3a","🌿")},g2:{a:art("#f2b5d4","#7bdff2","🍼"),b:art("#b8e0d2","#95b8d1","🎁")},g3:{a:art("#0b1f3a","#0f7c80","🏆"),b:art("#3b5b92","#b8a46a","🎤")}};
+  gallery:{g1:{title:"A garden wedding in Myers Park",kind:"Wedding",date:day(-110),story:"160 guests under the oaks, a string quartet and a candlelit dinner. Trivia about the couple during dinner had the whole room competing, and the first dance closed out the night.",t:1},
+   g2:{title:"The Patel family baby shower",kind:"Baby shower",date:day(-290),story:"A soft, elegant shower with a dessert table, a wishes wall and games on the big screen that had both families laughing.",t:2},
+   g3:{title:"Queen City Credit Union awards night",kind:"Corporate event",date:day(-200),story:"Networking, a keynote and an awards show for 220 staff, with live voting on everyone's phones.",t:3},
+   g4:{title:"Tonya and Ray's 50th anniversary",kind:"Anniversary",date:day(-170),story:"Fifty years celebrated with family from three states, a photo slideshow through the decades and a cake cutting that brought the room to its feet.",t:4},
+   g5:{title:"Jaden's 15th birthday party",kind:"Birthday",date:day(-75),story:"Balloons, music and a scavenger hunt that kept forty teenagers and their parents busy all night.",t:5}}};
+ pl.showImg={cover:{p:px(30298624)},g1:{a:px(2074911),b:px(16935912)},g2:{a:px(7802442),b:px(29964260)},g3:{a:px(31129059),b:px(29708266)},g4:{a:px(7867778)},g5:{a:px(7159852),b:px(7180612)}};
  const evs=pl.events_;delete pl.events_;const idx=pl._idx;delete pl._idx;
  pl.tv={DUBLIN:{}};Object.keys(pl.clientVendors.dublin).forEach(k=>{const v=pl.clientVendors.dublin[k];if(v.team)pl.tv.DUBLIN["dublin_"+k]={name:v.name,role:v.role||"",phone:v.phone||"",email:v.email||"",arrive:v.arrive||"",delivers:v.delivers||"",note:v.note||""}});
  const pg={admin:{},index:idx,events:evs,planners:{northlight:pl}};
@@ -5838,6 +5842,7 @@ function plShowTab(){const sh=D.show||{},b=D.brand||{},v=k=>dv("sh_"+k,sh[k]||""
  <label class="stack tight"><span class="small">Headline</span><input type="text" data-draft="sh_headline" maxlength="80" value="${esc(v("headline"))}" placeholder="${esc(b.name?b.name+": events people talk about for years":"Events people talk about for years")}"></label>
  <label class="stack tight"><span class="small">About you</span><textarea rows="5" data-draft="sh_about" maxlength="1500" placeholder="Who you are, what you love planning, and what makes working with you different.">${esc(v("about"))}</textarea></label>
  <p class="small muted m0">Your logo, tagline, contact details and booking link come from Branding. ${b.book?"":`<button class="btn xs" data-act="plJump" data-k="brand">Add a booking link</button>`}</p></section>
+ <section class="card stack"><h3>Cover photo</h3>${(()=>{const cv=Object.values((D.showImg||{}).cover||{}).filter(Boolean)[0];return cv?`<img src="${esc(cv)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px"><div class="row"><label class="btn xs upl">Change<input type="file" accept="image/*" data-act="shCover"></label><button class="btn xs" data-act="shCoverDel">Remove</button></div>`:`<p class="small muted m0">One wide photo across the top of your page. Your best event photo works well.</p><label class="btn sm upl as">Add a cover photo<input type="file" accept="image/*" data-act="shCover"></label>`})()}</section>
  <section class="card stack"><div class="row between"><h3>Past events</h3><span class="small muted">${gal.length} of ${SH_MAX_EV}</span></div>
  ${gal.length?`<div class="stack tight">${gal.map(shGalRow).join("")}</div>`:'<p class="small muted m0">Add the events you are proudest of. A title, a few photos and a short story is plenty.</p>'}
  ${gal.length<SH_MAX_EV?`<details ${L.shAdd?"open":""}><summary class="small"><b>Add a past event</b></summary><div class="stack tight" style="margin-top:8px"><div class="grid2 g8"><label class="stack tight" style="grid-column:1/-1"><span class="small">Title</span><input type="text" data-draft="sg_title" maxlength="80" value="${esc(dv("sg_title",""))}" placeholder="The Whelan wedding at the Mint Museum"></label>
@@ -5878,9 +5883,10 @@ function plReports(){const cs=D.clients||{},ids=Object.keys(cs),ms=rpMonths(),in
 /* ---- public: the Showcase page and the inquiry form (games.html?p=<planner>&show=1 or &inquire=1) ---- */
 function shConnect(){if(!PSP){L.loaded=true;renderSoon();return}
  RT(PSP+"brand").on("value",s=>{D.brand=s.val();applyTheme();renderSoon()});
+ if(!QS.has("inquire"))RT(PSP+"showImg/cover").once("value").then(x=>{D.showImg.cover=x.val()||{};renderSoon()}).catch(()=>{});
  RT(PSP+"showcase").on("value",s=>{D.show=s.val();L.loaded=true;if(!QS.has("inquire"))shGallery(D.show).forEach(g=>{if(!D.showImg[g.k]){D.showImg[g.k]={};RT(PSP+"showImg/"+g.k).once("value").then(x=>{D.showImg[g.k]=x.val()||{};renderSoon()}).catch(()=>{})}});renderSoon()},()=>{L.loaded=true;renderSoon()})}
 function inqForm(solo){const b=D.brand||{},d=k=>esc(dv("iq_"+k,"")),bk=bookHref(b),nm=b.name||"the planner";
- if(L.inqDone)return `<section class="card stack" id="inquire"><h3 class="m0">Thank you!</h3><p class="m0">${esc(nm)} will get back to you soon.</p>${bk?`<a class="btn primary as" href="${esc(bk)}" target="_blank" rel="noopener">📅 Book a meeting now</a>`:""}</section>`;
+ if(L.inqDone)return `<section class="card stack" id="inquire"><h3 class="m0">Thank you!</h3><p class="m0">${esc(nm)} will get back to you soon.</p>${bk?`<a class="btn primary as" href="${esc(bk)}" target="_blank" rel="noopener">Book a meeting now</a>`:""}</section>`;
  const f=(k,l,tp,ph,mx,req)=>`<label class="stack tight"><span class="small">${l}${req?" *":""}</span><input type="${tp}" data-draft="iq_${k}" value="${d(k)}" placeholder="${esc(ph)}" maxlength="${mx}"${req?" required":""}></label>`;
  return `<section class="card stack" id="inquire">${solo&&(b.logo||b.name)?`<div class="row">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}<b>${esc(b.name||"")}</b></div>`:""}<h3 class="m0">Tell us about your event</h3><p class="small muted m0">Fill this in and ${esc(nm)} will get back to you.</p>
  <div class="grid2 g8">${f("name","Your name","text","Maya Jordan",80,1)}${f("email","Email","email","you@example.com",120,1)}${f("phone","Phone","tel","704-555-0100",30)}
@@ -5888,15 +5894,15 @@ function inqForm(solo){const b=D.brand||{},d=k=>esc(dv("iq_"+k,"")),bk=bookHref(
  ${f("date","Event date","date","",10)}${f("guests","About how many guests","number","100",6)}${f("budget","Budget (optional)","text","$5,000",30)}</div>
  <label class="stack tight"><span class="small">Anything else we should know?</span><textarea rows="4" data-draft="iq_msg" maxlength="2000" placeholder="Theme, venue ideas, questions…">${d("msg")}</textarea></label>
  <input type="text" data-draft="iq_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
- <button class="btn primary" data-act="inqSend">Send</button>${bk?`<a class="btn as" href="${esc(bk)}" target="_blank" rel="noopener">📅 Or book a meeting</a>`:""}<p class="small muted m0">Your details only go to ${esc(nm)}.</p></section>`}
+ <button class="btn primary" data-act="inqSend">Send</button>${bk?`<a class="btn as" href="${esc(bk)}" target="_blank" rel="noopener">Or book a meeting</a>`:""}<p class="small muted m0">Your details only go to ${esc(nm)}.</p></section>`}
 function showView(){if(!PSP)return `<section class="card stack narrow"><h2>This link isn't working</h2><p class="muted m0">Ask for the link again.</p></section>`;
  if(!L.loaded)return loadingView();
- const b=D.brand||{},sh=D.show||{},bk=bookHref(b),foot='<p class="small muted tc">Powered by Host Mode</p>';
+ const b=D.brand||{},sh=D.show||{},bk=bookHref(b),foot=`<p class="small muted tc">Powered by Host Mode${window.__HMPDEMO?' · Demo photos from <a href="https://www.pexels.com" target="_blank" rel="noopener">Pexels</a>':""}</p>`;
  if(QS.has("inquire"))return inqForm(true)+foot;
  if(!sh.on)return `<section class="card stack narrow"><h2>${esc(b.name||"Coming soon")}</h2><p class="muted m0">This page isn't published yet. You can still send an inquiry.</p></section>`+inqForm(false)+foot;
- const gal=shGallery(sh),links=brLinks(b);
- return `<section class="card stack shhero">${b.logo?`<img class="shlogo" src="${esc(b.logo)}" alt="${esc(b.name||"")}">`:""}<h2 class="m0">${esc(sh.headline||b.name||"")}</h2>${b.tag?`<p class="muted m0">${esc(b.tag)}</p>`:""}${b.city?`<p class="small muted m0">📍 ${esc(b.city)}</p>`:""}
- <div class="row" style="justify-content:center"><a class="btn primary" href="#inquire" data-act="shGoForm">Ask about your event</a>${bk?`<a class="btn" href="${esc(bk)}" target="_blank" rel="noopener">📅 Book a meeting</a>`:""}</div>${sh.about?`<p class="m0" style="white-space:pre-line;text-align:left">${esc(sh.about)}</p>`:""}</section>
+ const gal=shGallery(sh),links=brLinks(b),cov=Object.values(D.showImg.cover||{}).filter(Boolean)[0];
+ return `${cov?`<section class="card shcovercard"><img class="shcover" src="${esc(cov)}" alt="${esc(b.name||"")}"></section>`:""}<section class="card stack shhero">${b.logo?`<img class="shlogo" src="${esc(b.logo)}" alt="${esc(b.name||"")}">`:""}<h2 class="m0">${esc(sh.headline||b.name||"")}</h2>${b.tag?`<p class="muted m0">${esc(b.tag)}</p>`:""}${b.city?`<p class="small muted m0">${esc(b.city)}</p>`:""}
+ <div class="row" style="justify-content:center"><a class="btn primary" href="#inquire" data-act="shGoForm">Ask about your event</a>${bk?`<a class="btn" href="${esc(bk)}" target="_blank" rel="noopener">Book a meeting</a>`:""}</div>${sh.about?`<p class="m0" style="white-space:pre-line;text-align:left">${esc(sh.about)}</p>`:""}</section>
  ${gal.length?`<section class="card stack"><h3>Past events</h3><div class="stack">${gal.map(g=>{const ph=Object.values(D.showImg[g.k]||{}).filter(Boolean);return `<div class="stack tight shev">${ph.length?`<div class="shgal">${ph.map(src=>`<img src="${esc(src)}" alt="${esc(g.title)}" loading="lazy">`).join("")}</div>`:""}<b>${esc(g.title)}</b>${g.kind||g.date?`<span class="small muted">${esc([g.kind,g.date?clFmtDate(g.date):""].filter(Boolean).join(" · "))}</span>`:""}${g.story?`<p class="m0 small" style="white-space:pre-line">${esc(g.story)}</p>`:""}</div>`}).join("")}</div></section>`:""}
  ${(sh.pkgs||[]).length?`<section class="card stack"><h3>Packages</h3><div class="stack tight">${sh.pkgs.map(p=>`<div class="mrow2"><div class="row between"><b>${esc(p.name)}</b><b>${clMoney(p.price)}</b></div>${pkLines(p).length?`<ul class="small m0">${pkLines(p).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</div>`).join("")}</div></section>`:""}
  ${(sh.reviews||[]).length?`<section class="card stack"><h3>What clients say</h3><div class="stack tight">${sh.reviews.map(r=>`<blockquote class="shq"><p class="m0">“${esc(r.text)}”</p><span class="small muted">${"★".repeat(Math.max(0,Math.min(5,Math.round(+r.rating||0))))}${r.name?" · "+esc(r.name):""}</span></blockquote>`).join("")}</div></section>`:""}
@@ -5923,6 +5929,9 @@ Object.assign(ACT,{
  shGalDel:async el=>{const k=el.dataset.k;if(L.confirm!=="sg"+k){L.confirm="sg"+k;return render(true)}L.confirm=null;await RT(PSP+"showcase/gallery/"+k).remove();await RT(PSP+"showImg/"+k).remove();toast("Removed")},
  shImg:async el=>{const k=el.dataset.k,f=el.files&&el.files[0];el.value="";if(!f)return;if(!/^image\//.test(f.type))return toast("That isn't a photo");if(Object.keys((D.showImg||{})[k]||{}).length>=SH_MAX_PH)return toast(`Up to ${SH_MAX_PH} photos per event`);
   toast("Adding the photo…");try{let r=await clShrink(f,1200,.78);if(r.data.length>380000)r=await clShrink(f,900,.7);await RT(PSP+`showImg/${k}/p${Date.now().toString(36)}`).set(r.data);toast("Photo added")}catch(e){toast("Couldn't add that photo")}},
+ shCover:async el=>{const f=el.files&&el.files[0];el.value="";if(!f)return;if(!/^image\//.test(f.type))return toast("That isn't a photo");toast("Adding the cover photo…");
+  try{let r=await clShrink(f,1600,.8);if(r.data.length>520000)r=await clShrink(f,1200,.74);await RT(PSP+"showImg/cover").set({p:r.data});toast("Cover photo added")}catch(e){toast("Couldn't add that photo")}},
+ shCoverDel:async()=>{await RT(PSP+"showImg/cover").remove();toast("Cover photo removed")},
  shImgDel:async el=>{await RT(PSP+`showImg/${el.dataset.k}/${el.dataset.n}`).remove()},
  shPublish:async()=>{const sh=D.show||{},chosen=L.shPk||new Set((sh.pkgs||[]).map(p=>p.k)),revOn=L.shRev!=null?L.shRev:sh.reviews?sh.reviews.length>0:true;
   const pkgs=pkList().filter(p=>chosen.has(p.k)).map(p=>({k:p.k,name:p.name,price:+p.price||0,items:p.items||""}));
@@ -5952,9 +5961,9 @@ function plLand(sec,smooth){if(!sec){scrollTo({top:0,behavior:"auto"});return}
  sec.classList.remove("landed");void sec.offsetWidth;sec.classList.add("landed")}
 /* the planner's contact details, from Branding, on the client portal */
 function brContactCard(){const b=D.brand||{},links=brLinks(b),bk=bookHref(b);if(!links.length&&!b.tag&&!bk)return "";
- return `<section class="card stack"><h3>Your planner</h3><div class="row">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}<div class="mw0"><b>${esc(b.name||"")}</b>${b.tag?`<div class="small muted">${esc(b.tag)}</div>`:""}${b.city?`<div class="small muted">${esc(b.city)}</div>`:""}</div></div>${bk?`<a class="btn primary as" href="${esc(bk)}" target="_blank" rel="noopener">📅 Book a meeting</a>`:""}${links.length?`<div class="row small">${links.map(([h,l])=>`<a class="btn xs" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div>`:""}</section>`}
-function brLinks(b){const o=[];if(b.phone)o.push(["tel:"+String(b.phone).replace(/[^+\d]/g,""),"📞 "+b.phone]);if(b.email)o.push(["mailto:"+b.email,"✉️ "+b.email]);
- if(b.web)o.push([/^https?:\/\//i.test(b.web)?b.web:"https://"+b.web,"🌐 "+String(b.web).replace(/^https?:\/\//i,"").replace(/\/$/,"")]);
+ return `<section class="card stack"><h3>Your planner</h3><div class="row">${b.logo?`<img class="brandlogo" src="${esc(b.logo)}" alt="">`:""}<div class="mw0"><b>${esc(b.name||"")}</b>${b.tag?`<div class="small muted">${esc(b.tag)}</div>`:""}${b.city?`<div class="small muted">${esc(b.city)}</div>`:""}</div></div>${bk?`<a class="btn primary as" href="${esc(bk)}" target="_blank" rel="noopener">Book a meeting</a>`:""}${links.length?`<div class="row small">${links.map(([h,l])=>`<a class="btn xs" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}</div>`:""}</section>`}
+function brLinks(b){const o=[];if(b.phone)o.push(["tel:"+String(b.phone).replace(/[^+\d]/g,""),b.phone]);if(b.email)o.push(["mailto:"+b.email,b.email]);
+ if(b.web)o.push([/^https?:\/\//i.test(b.web)?b.web:"https://"+b.web,String(b.web).replace(/^https?:\/\//i,"").replace(/\/$/,"")]);
  if(b.ig)o.push(["https://instagram.com/"+b.ig,"Instagram @"+b.ig]);if(b.fb)o.push([/^https?:\/\//i.test(b.fb)?b.fb:"https://facebook.com/"+b.fb,"Facebook"]);return o}
 Object.assign(ACT,{
  plJump:el=>{const k=el.dataset.k,id=el.dataset.m;L.plTab=k;L.confirm=null;if(id){L.cliOpen=id;L.cliTab=el.dataset.s||"list";L.landId=id;L.landT=Date.now()}render(true);
