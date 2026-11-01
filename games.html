@@ -4625,7 +4625,7 @@ function clConnect(){const id=clKey();if(!id){L.loaded=true;renderSoon();return}
  RT(PSP+"clientMsgs/"+id).on("value",s=>{D.cmsgs=Object.assign({},D.cmsgs,{[id]:s.val()||{}});renderSoon()});
  RT(PSP+"clientFiles/"+id).on("value",s=>{D.cfiles=Object.assign({},D.cfiles,{[id]:s.val()||{}});renderSoon()});
  RT(PSP+"clientApprovals/"+id).on("value",s=>{D.caps=Object.assign({},D.caps,{[id]:s.val()||{}});renderSoon()});
- [["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(PSP+p+"/"+id).on("value",s=>{D[k]=Object.assign({},D[k],{[id]:s.val()||{}});renderSoon()}))}
+ [["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"],["clientInvoices","cinv"]].forEach(([p,k])=>RT(PSP+p+"/"+id).on("value",s=>{D[k]=Object.assign({},D[k],{[id]:s.val()||{}});renderSoon()}))}
 const clList=(src,id)=>{const o=(D[src]||{})[id]||{};return Object.keys(o).map(k=>Object.assign({k},o[k]))};
 const clVisible=x=>x.owner==="client"||!!x.show;
 const clTasksOf=(id,all)=>clList("ctasks",id).filter(x=>all||clVisible(x)).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||String(a.due||"9999").localeCompare(String(b.due||"9999"))||(a.t||0)-(b.t||0));
@@ -4708,7 +4708,7 @@ function hClients(){
    <label class="row small"><input type="checkbox" data-act="cltShow" ${dv("clt_show","")==="1"?"checked":""}> If it's my job, show it to the client</label><button class="btn primary as" data-act="clTaskAdd" data-m="${id}">Add item</button>
    <div class="card stack tight"><b>Templates</b><div class="row"><select data-draft="tpl_apply_${id}" aria-label="Template">${clTplSelect(dv("tpl_apply_"+id,""))}</select><button class="btn sm" data-act="clTplApply" data-m="${id}">Add its items</button></div>${c.date?"":'<span class="small muted">Set the event date above and due dates are filled in for you.</span>'}
    <div class="row"><input type="text" class="grow" data-draft="tpl_name_${id}" maxlength="50" value="${esc(dv("tpl_name_"+id,""))}" placeholder="Name this checklist to reuse it"><button class="btn sm" data-act="clTplSave" data-m="${id}">Save as template</button></div></div>`}
-  if(open&&tab==="money")body=clPlanMoney(id);
+  if(open&&tab==="money")body=pkPlanBox(id)+invPlanBox(id)+clPlanMoney(id);
   if(open&&tab==="dates")body=clPlanDates(id);
   if(open&&tab==="ven")body=clPlanVendors(id);
   if(open&&tab==="approve"){const l=clAps(id);body=`<div class="stack tight">${l.map(a=>clApCard(id,a,"planner")).join("")||'<p class="small muted m0">Nothing sent yet.</p>'}</div>
@@ -4727,6 +4727,7 @@ function hClients(){
  <button class="btn primary as" data-act="clAdd">Add client</button></section>
  ${imCard()}
  ${clTplCard()}
+ ${pkCard()}
  ${ids3.map(card).join("")||'<section class="card"><p class="small muted m0">No clients yet. Add the first one above, then copy their link and send it.</p></section>'}`}
 function clGuestApprove(id,f,c){const open=L.clPrev===f.k,pv=L.clPrevList||[];
  return `<div class="card stack tight clapp"><b>Guest list from ${esc(c.name)}: ${f.count||0} names</b>${c.ev?"":`<span class="small bad">Link this client to an event above first.</span>`}
@@ -4922,8 +4923,8 @@ function imCard(){imSubLog();const I=L.im,type=(I&&I.type)||L.imType||"clients",
   <span class="small muted">Your column matches are saved, so the next file like this one is quicker. Undo removes this whole import for the next 24 hours.</span>
   <div class="row"><button class="btn primary" data-act="imCancel">Done</button></div>`}
  return `<section class="card stack">${head}${body}${undoBox}</section>`}
-const clInfo=c=>{const p=[c.evType,c.venue,c.guests?c.guests+" guests":"",c.budget?clMoney(c.budget)+" budget":"",c.status,c.email,c.phone].filter(Boolean);return p.length?`<div class="small muted">${p.map(esc).join(" · ")}</div>`:""};
-const IM_CL_PATHS=["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clients"];
+const clInfo=c=>{const p=[c.pkg?c.pkg.name:"",c.evType,c.venue,c.guests?c.guests+" guests":"",c.budget?clMoney(c.budget)+" budget":"",c.status,c.email,c.phone].filter(Boolean);return p.length?`<div class="small muted">${p.map(esc).join(" · ")}</div>`:""};
+const IM_CL_PATHS=["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clientInvoices","clients"];
 
 Object.assign(ACT,{
  imType:el=>{L.imType=el.dataset.k;render(true)},
@@ -4977,13 +4978,128 @@ Object.assign(ACT,{
   download(`Host Mode ${T.one} import template.csv`,new Blob([T.tpl.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(",")).join("\r\n")],{type:"text/csv"}))}
 });
 
+/* ---- packages and invoices ----
+   planners/{uid}/packages/{k}             = {name, price, deposit, items, t}   (items: one included thing per line)
+   planners/{uid}/clientInvoices/{cid}/{k} = {no, lines:[{d,amt}], total, issued, due, note, pay, status: sent|paid, paidAt, payKeys, t}
+   planners/{uid}/invSettings              = {next, pay}
+   Tracked only: the app never takes or sends money. Every invoice is tied to entries in the client's payments,
+   so Paid and Left stay right and ticking a payment off counts toward the invoice. */
+D.pkgs={};D.cinv={};D.invSet={};
+const pkList=()=>Object.keys(D.pkgs||{}).map(k=>Object.assign({k},D.pkgs[k])).sort((a,b)=>(+a.price||0)-(+b.price||0)||String(a.name).localeCompare(String(b.name)));
+const pkLines=p=>String((p&&p.items)||"").split("\n").map(x=>x.trim()).filter(Boolean);
+const invList=id=>clList("cinv",id).sort((a,b)=>(b.t||0)-(a.t||0));
+const invNo=()=>"INV-"+((D.invSet||{}).next||1001);
+const invTotal=lines=>Math.round((lines||[]).reduce((n,l)=>n+(+l.amt||0),0)*100)/100;
+const invParse=v=>{const s=String(v==null?"":v).replace(/[$,\s]/g,"");if(!s)return null;const n=Number(s);return isFinite(n)?Math.round(n*100)/100:null};
+const invLinked=(id,k)=>clPays(id).filter(p=>p.inv===k);
+const invIsPaid=(id,x)=>x.status==="paid"||(()=>{const l=invLinked(id,x.k);return l.length>0&&l.every(p=>p.paid)})();
+const invStatus=(id,x)=>invIsPaid(id,x)?"Paid":x.due&&x.due<mateToday()?"Overdue":"Sent";
+const invClient=id=>(D.clients||{})[id]||D.cliMe||{};
+const invFrom=()=>{const b=D.brand||{},me=D.plMe||{};return {name:b.name||me.biz||me.name||"Your planner",logo:b.logo||"",color:b.color||"#0c2147"}};
+function invMailto(id,x){const c=invClient(id),f=invFrom();
+ const body=[`Hi ${c.name||"there"},`,"",`Here's invoice ${x.no} for ${clMoney(x.total)}${x.due?", due "+clFmtDate(x.due):""}.`,"",...(x.lines||[]).map(l=>`${l.d}: ${clMoney(l.amt)}`),"",x.pay?"How to pay: "+x.pay:"",x.note||"","",`You can see it any time in your portal: ${clLink(id)}`,"",`Thank you,`,f.name].filter((l,i,a)=>l||a[i-1]).join("\n");
+ return `mailto:${encodeURIComponent(c.email||"")}?subject=${encodeURIComponent(`Invoice ${x.no} from ${f.name}`)}&body=${encodeURIComponent(body)}`}
+function invHTML(id,x){const c=invClient(id),f=invFrom(),st=invStatus(id,x);
+ return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(x.no)} · ${esc(f.name)}</title>
+<style>body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d2433;background:#f4f1ea}.pg{max-width:760px;margin:24px auto;background:#fff;padding:40px 44px;border-radius:14px;box-shadow:0 10px 40px -20px rgba(0,0,0,.3)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:4px solid ${esc(f.color)};padding-bottom:18px}.top img{max-height:64px;max-width:200px}.biz{font-weight:800;font-size:20px}
+h1{margin:0;font-size:30px;letter-spacing:-.02em;color:${esc(f.color)};text-align:right}.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}.meta div span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#6b7385}
+table{width:100%;border-collapse:collapse;margin:8px 0 4px}th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#6b7385;border-bottom:1px solid #ddd;padding:8px 0}td{padding:10px 0;border-bottom:1px solid #eee}td.a,th.a{text-align:right}
+.tot td{border:0;font-weight:800;font-size:20px;padding-top:14px}.st{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:700;font-size:13px;background:${st==="Paid"?"#e3f4df;color:#2b6e1e":st==="Overdue"?"#fde8d6;color:#a4480b":"#e8edf7;color:#1f3f78"}}
+.box{background:#f7f5f0;border-radius:10px;padding:14px 16px;margin-top:18px;white-space:pre-line}.foot{margin-top:26px;font-size:12px;color:#8a90a0;text-align:center}.bar{max-width:760px;margin:16px auto 0;display:flex;gap:10px;justify-content:flex-end;padding:0 16px}
+.bar button{font:inherit;font-weight:700;padding:10px 18px;border-radius:99px;border:0;background:${esc(f.color)};color:#fff;cursor:pointer}@media(max-width:600px){.pg{margin:0;border-radius:0;padding:24px 18px}}@media print{body{background:#fff}.bar{display:none}.pg{box-shadow:none;margin:0;max-width:none}}</style></head><body>
+<div class="bar"><button onclick="print()">Print or save as PDF</button></div>
+<div class="pg"><div class="top"><div>${f.logo?`<img src="${esc(f.logo)}" alt="">`:""}<div class="biz">${esc(f.name)}</div></div><div><h1>Invoice</h1><div style="text-align:right">${esc(x.no)}</div></div></div>
+<div class="meta"><div><span>Billed to</span><b>${esc(c.name||"")}</b>${c.email?`<br>${esc(c.email)}`:""}</div><div><span>Issued</span>${esc(clFmtDate(x.issued))}</div><div><span>Due</span>${esc(x.due?clFmtDate(x.due):"On receipt")}</div><div><span>Status</span><span class="st">${st}</span></div></div>
+${c.evName||c.evTitle?`<p style="margin:0 0 6px"><b>For:</b> ${esc(c.evName||c.evTitle)}${c.date?" · "+esc(clFmtDate(c.date)):""}</p>`:""}
+<table><thead><tr><th>Description</th><th class="a">Amount</th></tr></thead><tbody>${(x.lines||[]).map(l=>`<tr><td>${esc(l.d)}</td><td class="a">${clMoney(l.amt)}</td></tr>`).join("")}<tr class="tot"><td>Total</td><td class="a">${clMoney(x.total)}</td></tr></tbody></table>
+${x.pay?`<div class="box"><b>How to pay</b>\n${esc(x.pay)}</div>`:""}${x.note?`<div class="box">${esc(x.note)}</div>`:""}
+<div class="foot">Thank you for your business · Sent with Host Mode</div></div></body></html>`}
+function pkCard(){const l=pkList(),open=L.pkNew;
+ return `<section class="card stack"><div class="row between"><h3>Packages</h3><button class="btn sm" data-act="pkToggle">${open?"Close":"New package"}</button></div>
+ <p class="small muted m0">Your standard offers, like a Gold Wedding or a Birthday Basic. Add one to a client and their deposit and balance are set up for you.</p>
+ ${l.length?`<div class="stack tight">${l.map(p=>`<div class="mrow2 small"><div class="row between"><span><b>${esc(p.name)}</b> · ${clMoney(p.price)}${+p.deposit?` <span class="muted">(${clMoney(p.deposit)} deposit)</span>`:""}</span><button class="btn xs" data-act="pkDel" data-k="${esc(p.k)}">${L.confirm==="pd"+p.k?"Tap again to delete":"Delete"}</button></div>${pkLines(p).length?`<div class="muted">${pkLines(p).map(esc).join(" · ")}</div>`:""}</div>`).join("")}</div>`:(open?"":'<p class="small muted m0">No packages yet.</p>')}
+ ${open?`<div class="grid2 g8"><label class="stack tight" style="grid-column:1/-1"><span class="small">Package name</span><input type="text" data-draft="pk_name" maxlength="60" value="${esc(dv("pk_name",""))}" placeholder="Gold Wedding"></label>
+  <label class="stack tight"><span class="small">Price ($)</span><input type="text" inputmode="decimal" data-draft="pk_price" value="${esc(dv("pk_price",""))}" placeholder="5000"></label>
+  <label class="stack tight"><span class="small">Deposit ($, optional)</span><input type="text" inputmode="decimal" data-draft="pk_dep" value="${esc(dv("pk_dep",""))}" placeholder="1500"></label>
+  <label class="stack tight" style="grid-column:1/-1"><span class="small">What's included (one per line)</span><textarea rows="4" data-draft="pk_items" maxlength="1500" placeholder="Full planning&#10;Day-of coordination&#10;Vendor booking">${esc(dv("pk_items",""))}</textarea></label></div>
+  <button class="btn primary as" data-act="pkSave">Save package</button>`:""}</section>`}
+function pkPlanBox(id){const c=(D.clients||{})[id]||{},l=pkList(),p=c.pkg;
+ return `<div class="card stack tight"><b>Package</b>${p?`<div class="small"><b>${esc(p.name)}</b> · ${clMoney(p.price)}${pkLines(p).length?`<div class="muted">${pkLines(p).map(esc).join(" · ")}</div>`:""}</div>`:""}
+ ${l.length?`<div class="row"><select data-draft="pk_pick_${id}" aria-label="Package">${l.map(x=>`<option value="${esc(x.k)}" ${dv("pk_pick_"+id,(p&&p.k)||"")===x.k?"selected":""}>${esc(x.name)} · ${clMoney(x.price)}</option>`).join("")}</select><button class="btn sm" data-act="pkApply" data-m="${id}">${p?"Change package":"Add package"}</button></div><span class="small muted">Adds the deposit and the balance to their payments${c.date?", with the balance due two weeks before the event":""}.</span>`:'<span class="small muted">Make your packages in the Packages card on this page, then add one here.</span>'}</div>`}
+function invPlanBox(id){const c=(D.clients||{})[id]||{},l=invList(id),f=L.inv&&L.inv.cid===id?L.inv:null,unpaid=clPays(id).filter(x=>!x.paid&&!x.inv);
+ const rows=l.map(x=>{const st=invStatus(id,x);return `<div class="mrow2 small"><div class="row between"><span><b>${esc(x.no)}</b> · ${clMoney(x.total)} <span class="pill ${st==="Paid"?"ok":st==="Overdue"?"warn":""}">${st}</span></span><span class="muted">${x.due?"due "+esc(mateDue(x.due)):""}</span></div>
+  <div class="row"><button class="btn xs" data-act="invPaid" data-m="${id}" data-k="${esc(x.k)}">${st==="Paid"?"Mark unpaid":"Mark paid"}</button><button class="btn xs" data-act="invView" data-m="${id}" data-k="${esc(x.k)}">Print or PDF</button>${c.email?`<a class="btn xs" href="${esc(invMailto(id,x))}">Email it</a>`:""}<button class="btn xs" data-act="invDel" data-m="${id}" data-k="${esc(x.k)}">${L.confirm==="vd"+x.k?"Tap again to delete":"Delete"}</button></div></div>`}).join("");
+ const form=f?`<div class="card stack tight"><div class="row between"><b>New invoice ${esc(invNo())}</b><button class="btn xs" data-act="invNew" data-m="${id}">Close</button></div>
+  ${c.pkg||unpaid.length?`<div class="row">${c.pkg?`<button class="btn xs" data-act="invFill" data-m="${id}" data-k="pkg">Fill from their package</button>`:""}${unpaid.length?`<button class="btn xs" data-act="invFill" data-m="${id}" data-k="pays">Fill from unpaid payments</button>`:""}</div>`:""}
+  ${f.lines.map((ln,i)=>`<div class="row"><input type="text" class="grow" data-act="invLine" data-i="${i}" data-f="d" maxlength="100" value="${esc(ln.d)}" placeholder="What it's for" aria-label="Line ${i+1}"><input type="text" inputmode="decimal" style="width:7.5em" data-act="invLine" data-i="${i}" data-f="amt" value="${esc(ln.amt)}" placeholder="Amount" aria-label="Line ${i+1} amount"><button class="btn xs" data-act="invLineDel" data-i="${i}" aria-label="Remove line">×</button></div>`).join("")}
+  <button class="btn xs as" data-act="invLineAdd">Add a line</button>
+  <div class="row between"><b>Total</b><b id="invTot">${clMoney(invTotal(f.lines.map(x=>({amt:invParse(x.amt)||0}))))}</b></div>
+  <div class="grid2 g8"><label class="stack tight"><span class="small">Due</span><input type="date" data-draft="inv_due" value="${esc(dv("inv_due",clDays(14)))}"></label><label class="stack tight"><span class="small">Note (optional)</span><input type="text" data-draft="inv_note" maxlength="400" value="${esc(dv("inv_note",""))}" placeholder="Thank you!"></label>
+  <label class="stack tight" style="grid-column:1/-1"><span class="small">How to pay (saved for next time)</span><textarea rows="2" data-draft="inv_pay" maxlength="400" placeholder="Zelle to pay@yourbusiness.com, or pay by card at yourbusiness.com/pay">${esc(dv("inv_pay",(D.invSet||{}).pay||""))}</textarea></label></div>
+  <button class="btn primary as" data-act="invSend" data-m="${id}">Send invoice</button><span class="small muted">It shows up in ${esc(c.name||"the client")}'s portal and messages${c.email?", and you can email it too":""}. Host Mode keeps track only; it never takes or sends money.</span></div>`:"";
+ return `<div class="card stack tight"><div class="row between"><b>Invoices</b>${f?"":`<button class="btn sm" data-act="invNew" data-m="${id}">New invoice</button>`}</div>${rows?`<div class="stack tight">${rows}</div>`:(f?"":'<span class="small muted">No invoices yet.</span>')}${form}</div>`}
+function invClientCard(id){const me=D.cliMe||{},p=me.pkg,l=invList(id);
+ return `${p?`<section class="card stack"><h3>Your package</h3><div><b>${esc(p.name)}</b> · ${clMoney(p.price)}</div>${pkLines(p).length?`<ul class="small m0">${pkLines(p).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</section>`:""}
+ ${l.length?`<section class="card stack"><h3>Invoices</h3><div class="stack tight">${l.map(x=>{const st=invStatus(id,x);return `<div class="row between small clrow"><span class="mw0"><b>${esc(x.no)}</b> · ${clMoney(x.total)}<span class="db ${st==="Overdue"?"bad":"muted"}">${st==="Paid"?"Paid":(st==="Overdue"?"Overdue · was due ":"Due ")+esc(x.due?clFmtDate(x.due):"on receipt")}</span></span><button class="btn xs" data-act="invView" data-m="${id}" data-k="${esc(x.k)}">View</button></div>`}).join("")}</div></section>`:""}`}
+
+Object.assign(ACT,{
+ pkToggle:()=>{L.pkNew=!L.pkNew;render(true)},
+ pkSave:async()=>{const name=dv("pk_name","").trim().slice(0,60),price=invParse(dv("pk_price","")),dep=invParse(dv("pk_dep",""));
+  if(!name)return toast("Give the package a name");if(price==null||price<0)return toast("Type a price, like 5000");if(dv("pk_dep","").trim()&&(dep==null||dep<0))return toast("Type the deposit as a number, like 1500");if(dep>price)return toast("The deposit can't be more than the price");
+  await RT(PSP+"packages").push().set({name,price,deposit:dep||0,items:dv("pk_items","").split("\n").map(x=>x.trim()).filter(Boolean).join("\n").slice(0,1500),t:Date.now()});
+  ["pk_name","pk_price","pk_dep","pk_items"].forEach(k=>delete L.drafts[k]);L.pkNew=false;toast("Package saved");render(true)},
+ pkDel:async el=>{const k=el.dataset.k;if(L.confirm!=="pd"+k){L.confirm="pd"+k;return render(true)}L.confirm=null;await RT(PSP+"packages/"+k).remove();toast("Package deleted")},
+ pkApply:async el=>{const id=el.dataset.m,c=(D.clients||{})[id]||{},l=pkList(),k=dv("pk_pick_"+id,(c.pkg&&c.pkg.k)||(l[0]&&l[0].k)||""),p=(D.pkgs||{})[k];if(!p)return toast("Pick a package");
+  await Promise.all(clPays(id).filter(x=>x.pkg&&!x.paid&&!x.inv).map(x=>RT(PSP+`clientPayments/${id}/${x.k}`).remove()));
+  const price=+p.price||0,dep=Math.min(+p.deposit||0,price),bal=Math.round((price-dep)*100)/100,tm=Date.now(),u={};
+  if(dep>0)u[RT(PSP+"clientPayments/"+id).push().key]={title:"Deposit: "+p.name,amount:dep,due:mateToday(),paid:false,pkg:true,t:tm};
+  if(bal>0)u[RT(PSP+"clientPayments/"+id).push().key]={title:(dep>0?"Balance: ":"")+p.name,amount:bal,due:clDueFrom(c.date,14)||"",paid:false,pkg:true,t:tm+1};
+  if(Object.keys(u).length)await RT(PSP+"clientPayments/"+id).update(u);
+  await RT(PSP+`clients/${id}/pkg`).set({k,name:p.name,price,deposit:dep,items:p.items||""});delete L.drafts["pk_pick_"+id];
+  toast(`${p.name} added to ${c.name}`);render(true)},
+ invNew:el=>{const id=el.dataset.m;L.inv=L.inv&&L.inv.cid===id?null:{cid:id,lines:[{d:"",amt:""}],payKeys:null};render(true)},
+ invFill:el=>{const id=el.dataset.m,f=L.inv,c=(D.clients||{})[id]||{};if(!f)return;
+  if(el.dataset.k==="pkg"&&c.pkg){const paid=clPays(id).filter(x=>x.pkg&&x.paid).reduce((n,x)=>n+(+x.amount||0),0);f.lines=[{d:c.pkg.name+" package",amt:String(c.pkg.price)}].concat(paid?[{d:"Already paid",amt:String(-paid)}]:[]);f.payKeys=Object.fromEntries(clPays(id).filter(x=>x.pkg&&!x.paid&&!x.inv).map(x=>[x.k,1]))}
+  else{const l=clPays(id).filter(x=>!x.paid&&!x.inv);f.lines=l.map(x=>({d:x.title,amt:String(x.amount)}));f.payKeys=Object.fromEntries(l.map(x=>[x.k,1]))}
+  render(true)},
+ invLine:el=>{const f=L.inv;if(!f)return;const ln=f.lines[+el.dataset.i];if(!ln)return;ln[el.dataset.f]=el.value;
+  const t=$("#invTot");if(t)t.textContent=clMoney(invTotal(f.lines.map(x=>({amt:invParse(x.amt)||0}))))},
+ invLineAdd:()=>{if(L.inv){L.inv.lines.push({d:"",amt:""});render(true)}},
+ invLineDel:el=>{const f=L.inv;if(!f)return;f.lines.splice(+el.dataset.i,1);if(!f.lines.length){f.lines.push({d:"",amt:""});f.payKeys=null}render(true)},
+ invSend:async el=>{const id=el.dataset.m,f=L.inv,c=(D.clients||{})[id]||{};if(!f||f.cid!==id||f.busy)return;
+  const lines=f.lines.map(x=>({d:String(x.d||"").trim().slice(0,100),amt:invParse(x.amt)})).filter(x=>x.d||x.amt!=null);
+  if(!lines.length)return toast("Add at least one line");if(lines.some(x=>x.amt==null))return toast("Each line needs an amount, like 500");if(lines.some(x=>!x.d))return toast("Say what each line is for");
+  const total=invTotal(lines);if(total<=0)return toast("The total needs to be more than $0");
+  f.busy=true;const st=D.invSet||{},n=+st.next||1001,no="INV-"+n,due=dv("inv_due",clDays(14)),pay=dv("inv_pay",st.pay||"").trim().slice(0,400),note=dv("inv_note","").trim().slice(0,400),tm=Date.now();
+  const k=RT(PSP+"clientInvoices/"+id).push().key,pk=Object.keys(f.payKeys||{}).filter(p=>((D.cpay||{})[id]||{})[p]);
+  try{await RT(PSP+`clientInvoices/${id}/${k}`).set(Object.assign({no,lines,total,issued:mateToday(),due,note,pay,status:"sent",t:tm},pk.length?{payKeys:Object.fromEntries(pk.map(p=>[p,1]))}:{}));
+   await RT(PSP+"invSettings").update({next:n+1,pay});
+   /* link the payments this invoice covers; anything beyond them becomes one new payment so nothing is counted twice */
+   if(pk.length)await Promise.all(pk.map(p=>RT(PSP+`clientPayments/${id}/${p}/inv`).set(k)));
+   const covered=pk.reduce((n,p)=>n+(+(((D.cpay||{})[id]||{})[p]||{}).amount||0),0),extra=Math.round((total-covered)*100)/100;
+   if(extra>0)await RT(PSP+"clientPayments/"+id).push().set({title:"Invoice "+no+(pk.length?" (added items)":""),amount:extra,due,paid:false,inv:k,auto:true,t:tm});
+   await RT(PSP+"clientMsgs/"+id).push().set({from:"planner",text:`New invoice ${no} for ${clMoney(total)}${due?", due "+clFmtDate(due):""}. You'll find it under Plan.`,t:tm});
+   await RT(PSP+`clients/${id}/plSeen`).set(tm)}catch(e){f.busy=false;return toast("Couldn't send that invoice. Check your connection.")}
+  L.inv=null;["inv_due","inv_note","inv_pay"].forEach(x=>delete L.drafts[x]);toast(`${no} sent to ${c.name||"your client"}`);render(true)},
+ invPaid:async el=>{const id=el.dataset.m,k=el.dataset.k,x=((D.cinv||{})[id]||{})[k];if(!x)return;const on=!invIsPaid(id,Object.assign({k},x)),tm=Date.now();
+  await RT(PSP+`clientInvoices/${id}/${k}`).update({status:on?"paid":"sent",paidAt:on?tm:null});
+  await Promise.all(invLinked(id,k).map(p=>RT(PSP+`clientPayments/${id}/${p.k}`).update({paid:on,paidAt:on?tm:null})));
+  toast(on?`${x.no} marked paid`:`${x.no} marked unpaid`);render(true)},
+ invDel:async el=>{const id=el.dataset.m,k=el.dataset.k;if(L.confirm!=="vd"+k){L.confirm="vd"+k;return render(true)}L.confirm=null;
+  await Promise.all(invLinked(id,k).map(p=>p.auto?RT(PSP+`clientPayments/${id}/${p.k}`).remove():RT(PSP+`clientPayments/${id}/${p.k}/inv`).remove()));
+  await RT(PSP+`clientInvoices/${id}/${k}`).remove();toast("Invoice deleted");render(true)},
+ invView:el=>{const id=el.dataset.m,k=el.dataset.k,x=((D.cinv||{})[id]||{})[k];if(!x)return;const html=invHTML(id,Object.assign({k},x));
+  const w=window.open("","_blank");if(w){w.document.open();w.document.write(html);w.document.close()}else download(x.no+".html",new Blob([html],{type:"text/html"}))}
+});
+
 Object.assign(ACT,{
  /* planner */
  clAdd:async()=>{const n=dv("cl_name","").trim().slice(0,40);if(!n)return toast("Type the client's name");const ev=dv("cl_ev",""),en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";const r=RT(PSP+"clients").push();await r.set({name:n,ev,evName:en,date:dv("cl_date",""),t:Date.now()});const tk=dv("cl_tpl","");let nt=0;if(tk)nt=await clApplyTpl(r.key,tk,dv("cl_date",""));["cl_name","cl_date","cl_tpl"].forEach(k=>delete L.drafts[k]);L.cliOpen=r.key;L.cliTab="list";toast(nt?`Added with ${nt} checklist items. Copy their link and send it.`:"Added. Copy their link and send it.");render(true)},
  cliOpen:el=>{L.cliOpen=L.cliOpen===el.dataset.k?null:el.dataset.k;L.cliTab="list";L.clPrev=null;render(true)},
  cliSub:async el=>{L.cliTab=el.dataset.k;L.clPrev=null;if(L.cliTab==="chat"&&L.cliOpen)await RT(PSP+`clients/${L.cliOpen}/plSeen`).set(Date.now());render(true)},
  clSetEv:async el=>{const id=el.dataset.m,ev=el.value,en=ev&&(D.events||{})[ev]?(D.events[ev].name||ev):"";await RT(PSP+"clients/"+id).update({ev,evName:en});toast(ev?"Linked to "+en:"Unlinked")},
- clDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="cd"+id){L.confirm="cd"+id;return render(true)}L.confirm=null;await Promise.all(["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clients"].map(p=>RT(PSP+p+"/"+id).remove()));L.cliOpen=null;toast("Removed")},
+ clDelete:async el=>{const id=el.dataset.k;if(L.confirm!=="cd"+id){L.confirm="cd"+id;return render(true)}L.confirm=null;await Promise.all(["clientTasks","clientMsgs","clientFiles","clientBlobs","clientApprovals","clientPayments","clientDates","clientVendors","clientInvoices","clients"].map(p=>RT(PSP+p+"/"+id).remove()));L.cliOpen=null;toast("Removed")},
  cltShow:el=>{L.drafts.clt_show=el.checked?"1":"0"},
  clTaskAdd:async el=>{const id=el.dataset.m,title=dv("clt_title","").trim().slice(0,120);if(!title)return toast("Type the item first");const owner=dv("clt_owner","client");
   await RT(PSP+`clientTasks/${id}`).push().set({title,owner,due:dv("clt_due",""),note:dv("clt_note","").trim().slice(0,160),show:owner==="client"?true:dv("clt_show","")==="1",done:false,t:Date.now()});["clt_title","clt_note","clt_due"].forEach(k=>delete L.drafts[k]);toast("Item added");render(true)},
@@ -5123,6 +5239,7 @@ function clWeekCard(id){const s=clSummary(id);if(!s.done.length&&!s.soon.length&
 function clPlanView(id){const tl=clTimeline(id),ps=clPays(id),st5=clPayStats(id),vs=clVendors(id,true);
  return `<section class="card stack"><div class="row between"><h3>Key dates</h3>${tl.length?`<button class="btn xs" data-act="clIcsAll">Add all to my calendar</button>`:""}</div>
  ${tl.length?`<div class="stack tight">${tl.map(x=>`<div class="row between small clrow"><span class="mw0"><b>${esc(clFmtDate(x.date))}</b>${x.time?` · ${esc(clFmtTime(x.time))}`:""}<span class="db">${esc(x.title)}${x.note?` <span class="muted">· ${esc(x.note)}</span>`:""}</span></span><button class="btn xs" data-act="clIcsOne" data-k="${x.k}" aria-label="Add to calendar">+ 📅</button></div>`).join("")}</div>`:'<p class="small muted m0">Dates your planner adds will show up here.</p>'}</section>
+ ${invClientCard(id)}
  <section class="card stack"><h3>Payments</h3>${ps.length?`<div class="row between small"><span>Paid <b>${clMoney(st5.paid)}</b></span><span>Still to pay <b>${clMoney(st5.left)}</b></span><span class="muted">of ${clMoney(st5.total)}</span></div>${mateBar(st5.total?Math.round(st5.paid/st5.total*100):0)}
  <div class="stack tight">${ps.map(x=>`<div class="row between small clrow ${x.paid?"done":""}"><span class="mw0"><b>${esc(x.title)}</b><span class="db ${!x.paid&&x.due&&x.due<mateToday()?"bad":"muted"}">${x.paid?"Paid"+(x.paidAt?" · "+esc(clAgo(x.paidAt)):""):x.due?(x.due<mateToday()?"Overdue · ":"Due ")+esc(clFmtDate(x.due)):"No due date"}${x.note?" · "+esc(x.note):""}</span></span><b>${clMoney(x.amount)}</b></div>`).join("")}</div>
  <p class="small muted m0">This page only keeps track. Payments are made directly to each vendor.</p>`:'<p class="small muted m0">No payments are being tracked yet.</p>'}</section>
@@ -5453,11 +5570,11 @@ Object.assign(ACT,{
 /* ---- the planner portal ---- */
 let plSubbed=false;
 function plSubs(){if(plSubbed||!db)return;plSubbed=true;
- RT(PSP+"profile").on("value",s=>{D.plMe=s.val();renderSoon()});
+ RT(PSP+"profile").on("value",s=>{D.plMe=s.val();renderSoon()});RT(PSP+"invSettings").on("value",s=>{D.invSet=s.val()||{};renderSoon()});
  RT(PSP+"events").on("value",s=>{D.events=s.val()||{};L.loaded=true;renderSoon()});
  RT(PSP+"feedback").on("value",s=>{D.fbk=s.val()||{};renderSoon()});RT(PSP+"brand").on("value",s=>{D.brand=s.val();renderSoon()});RT(PSP+"dayOf").on("value",s=>{D.dayOf=!!s.val();renderSoon()});
  RT(PSP+"mates").on("value",s=>{D.mates=s.val()||{};renderSoon()});RT(PSP+"mateTasks").on("value",s=>{D.mtasks=s.val()||{};renderSoon()});
- [["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"]].forEach(([p,k])=>RT(PSP+p).on("value",s=>{D[k]=s.val()||{};if(k==="cven"||k==="clients")tvSyncSoon();renderSoon()}))}
+ [["clients","clients"],["clientTasks","ctasks"],["clientMsgs","cmsgs"],["clientFiles","cfiles"],["clientTemplates","ctpl"],["clientApprovals","caps"],["clientPayments","cpay"],["clientDates","cdates"],["clientVendors","cven"],["clientInvoices","cinv"],["packages","pkgs"]].forEach(([p,k])=>RT(PSP+p).on("value",s=>{D[k]=s.val()||{};if(k==="cven"||k==="clients")tvSyncSoon();renderSoon()}))}
 /* teammates can't list a planner's clients, so the vendors marked "teammates see" are copied per event into tv/{EV} */
 let tvT=null;function tvSyncSoon(){clearTimeout(tvT);tvT=setTimeout(tvSync,600)}
 function tvSync(){if(!PSP||VIEW!=="planner")return;const out={};Object.keys(D.clients||{}).forEach(cid=>{const ev=D.clients[cid].ev;if(!ev)return;clVendors(cid).filter(v=>v.team).forEach(v=>{(out[ev]=out[ev]||{})[cid+"_"+v.k]={name:v.name,role:v.role||"",phone:v.phone||"",email:v.email||"",arrive:v.arrive||"",delivers:v.delivers||"",note:v.note||""}})});

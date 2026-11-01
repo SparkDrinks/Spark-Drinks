@@ -135,6 +135,11 @@
                 ".write": "!data.exists() && root.child('partygames/planners/' + $uid + '/profile').exists()"
               }
             }
+          },
+          "clientInvoices": {
+            "$id": {
+              ".read": true
+            }
           }
         }
       },
@@ -201,6 +206,14 @@
       "$other": {
         ".read": true,
         ".write": true
+      },
+      "clientInvoices": {
+        ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
+      },
+      "packages": {
+        ".read": "auth != null && auth.uid === root.child('partygames/owner').val()",
+        ".write": "auth != null && auth.uid === root.child('partygames/owner').val()"
       }
     },
     "$top": {
